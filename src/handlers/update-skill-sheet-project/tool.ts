@@ -22,11 +22,11 @@ export const updateSkillSheetProjectTool: ToolHandler = {
         },
         start_period: {
           type: 'string',
-          description: '開始期間（YYYY-MM-DD形式）',
+          description: '開始期間（YYYY-MM形式）',
         },
         end_period: {
           type: 'string',
-          description: '終了期間（YYYY-MM-DD形式）',
+          description: '終了期間（YYYY-MM形式）',
         },
         description: {
           type: 'string',
