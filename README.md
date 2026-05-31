@@ -1,50 +1,42 @@
 # PaPut MCP サーバー
 
 [PaPut](https://paput.io) と連携する Model Context Protocol (MCP) サーバーです。
-AI アシスタント（Windsurf、Cursor、Claude Desktop 等）から PaPut の様々な機能を利用できます。
+Claude、Codex、Cursor などの AI アシスタントから PaPut のメモ、ノート、アイデア、スキルシートを操作できます。
 
 ## 機能
 
-### メモ管理
+### PaPut データ管理
 
-- メモの作成、検索、取得、更新、削除
-- カテゴリの設定と管理
-- 公開/非公開設定
-
-### ノート管理
-
-- ノートの作成、検索、取得、更新、削除
-- メモとの関連付け
-
-### アイデア管理
-
+- メモの作成、検索、取得、更新
+- ノートの作成、検索、取得、更新
 - アイデアの作成、一覧表示、更新、削除
+- スキルシートの取得、基本情報更新、自己PR更新
+- スキルシートのスキル/プロジェクト管理
 
-### スキルシート管理
+### AI セッションの知見保存
 
-- スキルシートの取得
-- 基本情報の更新（生年月日、性別、最寄駅、経験年数）
-- 自己PRの更新
-- スキル情報の個別管理（追加、更新、削除、一括更新）
-- プロジェクト情報の個別管理（追加、更新、削除、検索）
+- Claude/Codex のセッションログを検出
+- AI が抽出した知見候補を pending に一時保存
+- 既存 PaPut メモをローカルキャッシュへ同期
+- fingerprint による重複登録の抑制
+- pending 候補を確認してから PaPut に本保存
+- Claude/Codex 向け Skill とグローバルルールのセットアップ
 
 ## インストール
 
-npm を使用してグローバルにインストールする場合:
+npx で直接実行できます。
+
+```bash
+npx -y paput-mcp
+```
+
+グローバルにインストールする場合:
 
 ```bash
 npm install -g paput-mcp
 ```
 
-または、npx を使用して直接実行することもできます:
-
-```bash
-npx paput-mcp
-```
-
-## 設定方法
-
-### 各 AI アシスタントの設定
+## MCP 設定
 
 API キーは PaPut の設定画面から取得できます。
 
@@ -59,27 +51,83 @@ API キーは PaPut の設定画面から取得できます。
 }
 ```
 
-### プロジェクト自動紐付け機能
+### 環境変数
 
-`PAPUT_PROJECT_MATCH` 環境変数を設定すると、メモ作成・更新時に自動的にプロジェクトが紐付けられます。
+- `PAPUT_API_KEY` - 必須。PaPut API キー
+- `PAPUT_API_URL` - 任意。API URL。未指定時は `https://api.paput.io`
+- `PAPUT_PROJECT_MATCH` - 任意。メモ作成/更新時に紐付けるプロジェクト名の一部
+- `PAPUT_CACHE_DIR` - 任意。知見保存用ローカルキャッシュの保存先。未指定時は `~/.paput-mcp`
+- `PAPUT_HOME` - 任意。PaPut Skill 正本の保存先。未指定時は `~/.paput`
 
-```json
-"env": {
-  "PAPUT_API_KEY": "your-api-key",
-  "PAPUT_PROJECT_MATCH": "ECサイト"  // プロジェクトタイトルの一部を指定
-}
+`PAPUT_PROJECT_MATCH` を設定すると、メモ作成・更新時に、指定文字列を含むスキルシートプロジェクトが自動で紐付けられます。複数マッチした場合は最初のプロジェクトが使われます。
+
+## AI 連携の初期設定
+
+Claude/Codex で PaPut Skill とグローバルルールを使う場合は、次を実行します。
+
+```bash
+npx -y paput-mcp setup-ai
 ```
 
-- 指定した文字列を含むプロジェクトが自動的に選択されます
-- 複数マッチした場合は最初のプロジェクトが選択されます
+このコマンドは、実行時に変更内容を表示したうえで以下を行います。
 
-## 使用方法
+- `~/.paput/skills` に PaPut Skill の正本を作成
+- Claude が存在する場合、`~/.claude/skills` に symlink を作成
+- Codex が存在する場合、`~/.agents/skills` に symlink を作成
+- Claude/Codex のグローバルルールに PaPut 利用ルールを追記
 
-設定が完了したら、AI アシスタントから以下のツールを利用できます：
+オプション:
 
-### 利用可能なツール
+```bash
+# グローバルルールを変更しない
+npx -y paput-mcp setup-ai --no-rules
 
-#### メモ管理
+# PaPut 管理のリンクやルールを更新
+npx -y paput-mcp setup-ai --force
+
+# Claude または Codex だけ設定
+npx -y paput-mcp setup-ai --claude-only
+npx -y paput-mcp setup-ai --codex-only
+```
+
+生成される Skill:
+
+- `paput-init` - 初回設定、既存メモ同期、未処理セッション確認
+- `paput-sync` - 既存 PaPut メモをローカルキャッシュへ同期
+- `paput-capture` - 現在の会話や指定テーマから知見候補を pending に保存
+- `paput-save` - pending 候補を確認し、承認したものだけ PaPut に保存
+
+## 知見保存ワークフロー
+
+PaPut への保存は、意図しないメモ登録を避けるために 2 段階で行います。
+
+```text
+知見候補を抽出
+  ↓
+pending に保存
+  ↓
+確認後に PaPut へ本保存
+```
+
+通常は、`setup-ai` が追記するグローバルルールにより、AI が作業完了時や問題解決時に PaPut へ残す候補を自発的に提示します。
+
+AI が候補提示を行わなかった場合は、`paput-capture` を使います。
+
+```text
+PaPut に残す知見候補を作って
+```
+
+pending 候補を PaPut に本保存する場合は、`paput-save` を使います。
+
+```text
+PaPut の保存候補を確認して
+```
+
+Claude では `/paput-save` のように Skill を呼び出せます。Codex では `$paput-save` または自然言語で利用します。
+
+## 利用可能なツール
+
+### メモ管理
 
 - `paput_create_memo` - メモを作成
 - `paput_search_memo` - メモを検索
@@ -87,21 +135,21 @@ API キーは PaPut の設定画面から取得できます。
 - `paput_update_memo` - メモを更新
 - `paput_get_categories` - カテゴリー一覧を取得
 
-#### ノート管理
+### ノート管理
 
 - `paput_create_note` - ノートを作成
 - `paput_search_notes` - ノートを検索
 - `paput_get_note` - ノートの詳細を取得
 - `paput_update_note` - ノートを更新
 
-#### アイデア管理
+### アイデア管理
 
 - `paput_list_ideas` - アイデア一覧を取得
 - `paput_create_idea` - アイデアを作成
 - `paput_update_idea` - アイデアを更新
 - `paput_delete_idea` - アイデアを削除
 
-#### スキルシート管理
+### スキルシート管理
 
 - `paput_get_skill_sheet` - スキルシートを取得
 - `paput_update_skill_sheet_basic_info` - スキルシート基本情報を更新
@@ -116,93 +164,13 @@ API キーは PaPut の設定画面から取得できます。
 - `paput_update_skill_sheet_project` - スキルシートのプロジェクトを更新
 - `paput_delete_skill_sheet_project` - スキルシートからプロジェクトを削除
 
-以下、推奨する使用方法です。
+### 知見保存・ローカルキャッシュ
 
-### AI アシスタントのルール設定
-
-AI アシスタントの設定（.windsurfrules など）に以下を追加してください。（あくまで例です。ご自身の要件に応じて調整してください。）
-
-```
-## メモ作成依頼について（paput-mcp）
-メモ作成を依頼した場合、以下を準拠する
-- 一つのメモが大きくなりすぎないように、最小の粒度でメモを作成する
-- タイトル、内容、カテゴリー（複数可）を提示する
-- 文章は、です/ます 調にしない
-- カテゴリーは、言語、フレームワーク、ツールくらいの粒度で設定する（例: バックエンド のような大きな括りは設定しない）
-- プロジェクト固有のコードを含めない
-- 勝手に MCP を経由してメモを作成せず、明示的に指示するまではチャット上にメモを提示すること
-- 基本的に非公開に設定し、明示的に指示した場合のみ公開にする
-- 内容には、マークダウンの # で始まる行を含めない（タイトルに相当するため）
-```
-
-### プロンプト例
-
-1. 登録すべきメモを提示してもらう（推奨）
-
-```
-ここまでの開発をメモにして提示してください。
-```
-
-2. メモ確認し問題がなかったら、登録する
-
-```
-提案された内容で、PaPut にメモを作成してください。
-```
-
-いきなり 2 の方法を実施すると、意図しないメモが登録されてしまう可能性があるため、1 の方法を挟んでからメモを登録することを推奨します。
-また、各 AI アシスタントのルール設定で、自分好みのメモを作成してもらえるように、ある程度コントロールすることが可能です。
-
-## Claude Code の Custom Slash Command の使用例
-
-以下の設定を `~/.claude/commands/paput.md` ファイルとして保存すると、Claude Code で `/paput` コマンドが使用できます：
-
-````markdown
----
-allowed-tools: mcp__paput__paput_create_memo, mcp__paput__paput_search_memo, mcp__paput__paput_get_categories
-description: 問題解決時の知見やベストプラクティスをPaPutにメモとして保存
-argument-hint: (任意) 保存したい知見の概要
----
-
-## PaPut メモ作成コマンド
-
-このコマンドは、コーディング中に得られた知見を PaPut にメモとして保存します。
-
-### 使用方法
-
-```bash
-# 会話全体から知見を自動抽出
-/paput
-
-# 特定の知見についてメモ化（例）
-/paput Bunでのマイグレーション手順
-/paput JWT認証のエラーハンドリング方法
-/paput クリーンアーキテクチャでのリポジトリ実装パターン
-```
-
-### メモ作成のタイミング
-
-以下のような場面で、自動的にメモの下書きを提示します：
-
-1. **問題解決時の知見** - バグ修正や問題解決で得られた知識
-2. **設計・アーキテクチャ決定** - システム設計の重要な決定事項
-3. **ベストプラクティスの発見** - より良い実装方法の発見
-4. **デバッグ手法の確立** - 効果的なデバッグ方法の発見
-5. **タスク完了時に得られた知見** - タスク完了後の学び
-
-### 処理フロー
-
-1. 現在の会話内容から、保存すべき知見を分析
-2. メモの下書きを提示（タイトル、内容、カテゴリー）
-3. ユーザーの確認・修正を待つ
-4. 承認されたら PaPut に登録
-
-### メモ作成ルール
-
-- 一つのメモが大きくなりすぎないよう、最小の粒度で作成
-- タイトル、内容、カテゴリー（複数可）を提示
-- 文章は「です/ます」調にしない
-- カテゴリーは言語、フレームワーク、ツールレベルの粒度
-- プロジェクト固有のコードは含めない
-- 基本的に非公開設定（明示的な指示がない限り）
-- 内容にマークダウンの # で始まる行は含めない
-````
+- `paput_cache_status` - ローカルキャッシュ状態を取得
+- `paput_sync_remote_memos` - 既存 PaPut メモをローカルキャッシュへ同期
+- `paput_scan_sessions` - Claude/Codex のローカルセッションログを検出
+- `paput_get_session_transcript` - セッション本文を取得
+- `paput_add_knowledge_candidates` - AI が抽出した知見候補を pending に保存
+- `paput_list_pending_candidates` - 未保存の知見候補を一覧表示
+- `paput_save_pending_candidate` - pending 候補を PaPut メモとして保存
+- `paput_discard_pending_candidate` - pending 候補を破棄
