@@ -21,6 +21,7 @@ Claude、Codex、Cursor などの AI アシスタントから PaPut のメモ、
 - fingerprint による重複登録の抑制
 - pending 候補を確認してから PaPut に本保存
 - 過去セッション由来の知見は、セッション更新日時を PaPut メモの作成日時として保存
+- セッションのプロジェクト設定から `PAPUT_PROJECT_MATCH` を読み取り、pending 候補に PaPut プロジェクトを紐付け
 - Claude/Codex 向け Skill とグローバルルールのセットアップ
 
 ## インストール

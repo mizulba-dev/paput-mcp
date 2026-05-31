@@ -43,6 +43,15 @@ export async function handleSavePendingCandidate(
     typeof args.created_at === 'string'
       ? args.created_at
       : candidate.source_session_updated_at;
+  const projects = Array.isArray(args.projects)
+    ? args.projects.filter(
+        (project): project is { id: number; title?: string } =>
+          typeof project === 'object' &&
+          project !== null &&
+          'id' in project &&
+          typeof project.id === 'number',
+      )
+    : candidate.projects || [];
 
   const params: CreateMemoParams = {
     title,
@@ -53,6 +62,7 @@ export async function handleSavePendingCandidate(
         : (candidate.is_public ?? false),
     created_at: createdAt,
     categories: categories.map((name) => ({ name })),
+    projects,
   };
   const result = await createMemo(apiClient, params);
 
@@ -78,6 +88,7 @@ export async function handleSavePendingCandidate(
     title,
     body,
     categories,
+    projects,
     is_public: params.is_public,
     status: 'saved',
     fingerprint: createFingerprint(title, body),

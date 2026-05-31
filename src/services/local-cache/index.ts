@@ -176,6 +176,7 @@ export function addKnowledgeCandidates(
       title: candidate.title,
       body: candidate.body,
       categories: candidate.categories || [],
+      projects: candidate.projects || [],
       confidence: candidate.confidence,
       is_public: candidate.is_public ?? false,
       status: 'pending',

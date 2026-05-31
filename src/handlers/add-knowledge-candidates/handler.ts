@@ -1,5 +1,6 @@
 import { ApiClient } from '../../services/api/client.js';
 import { addKnowledgeCandidates } from '../../services/local-cache/index.js';
+import { resolveProjectsForCwd } from '../../services/project-match/index.js';
 import { scanSessions } from '../../services/session/index.js';
 import {
   KnowledgeCandidateInput,
@@ -8,7 +9,7 @@ import {
 
 export async function handleAddKnowledgeCandidates(
   args: Record<string, unknown> | undefined,
-  _apiClient: ApiClient,
+  apiClient: ApiClient,
 ) {
   if (!args || typeof args.session_id !== 'string') {
     return {
@@ -75,14 +76,19 @@ export async function handleAddKnowledgeCandidates(
   );
 
   const source = args.source as SessionSource;
-  const sourceSessionUpdatedAt = scanSessions([source], true).find(
+  const sourceSession = scanSessions([source], true).find(
     (session) => session.session_id === args.session_id,
-  )?.updated_at;
+  );
+  const sourceSessionUpdatedAt = sourceSession?.updated_at;
+  const projects = await resolveProjects(apiClient, sourceSession?.cwd);
 
   const result = addKnowledgeCandidates(
     source,
     args.session_id,
-    candidates,
+    candidates.map((candidate) => ({
+      ...candidate,
+      projects,
+    })),
     sourceSessionUpdatedAt,
   );
 
@@ -103,4 +109,16 @@ export async function handleAddKnowledgeCandidates(
       },
     ],
   };
+}
+
+async function resolveProjects(
+  apiClient: ApiClient,
+  cwd: string | undefined,
+): Promise<Array<{ id: number; title?: string }>> {
+  try {
+    return await resolveProjectsForCwd(apiClient, cwd);
+  } catch (error) {
+    console.error('Failed to resolve projects for pending candidate:', error);
+    return [];
+  }
 }

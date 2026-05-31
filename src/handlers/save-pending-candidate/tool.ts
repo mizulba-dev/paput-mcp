@@ -17,6 +17,18 @@ export const savePendingCandidateTool: ToolHandler = {
             'PaPut メモとして保存する作成日時。未指定時はセッション更新日時を使用します',
         },
         categories: { type: 'array', items: { type: 'string' } },
+        projects: {
+          type: 'array',
+          description: '保存時に紐付けるプロジェクト',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'number' },
+              title: { type: 'string' },
+            },
+            required: ['id'],
+          },
+        },
         is_public: { type: 'boolean', default: false },
       },
       required: ['candidate_id'],

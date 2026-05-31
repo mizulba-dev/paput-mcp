@@ -17,6 +17,7 @@ export interface KnowledgeCandidateInput {
   categories?: string[];
   confidence?: number;
   is_public?: boolean;
+  projects?: Array<{ id: number; title?: string }>;
 }
 
 export interface PendingKnowledgeCandidate extends KnowledgeCandidateInput {
@@ -50,6 +51,7 @@ export interface SessionSummary {
   session_id: string;
   source: SessionSource;
   path: string;
+  cwd?: string;
   updated_at: string;
   message_count: number;
   processed: boolean;

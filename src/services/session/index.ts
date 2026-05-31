@@ -27,6 +27,7 @@ export function scanSessions(
         session_id: sessionId,
         source,
         path,
+        cwd: readSessionCwd(source, path),
         updated_at: statSync(path).mtime.toISOString(),
         message_count: readSessionMessages(source, path).length,
         processed: processed.has(`${source}:${sessionId}`),
@@ -37,6 +38,27 @@ export function scanSessions(
   return sessions
     .filter((session) => includeProcessed || !session.processed)
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+function readSessionCwd(
+  source: SessionSource,
+  path: string,
+): string | undefined {
+  const lines = readFileSync(path, 'utf8').split('\n').filter(Boolean);
+  for (const line of lines) {
+    try {
+      const item = JSON.parse(line) as any;
+      const cwd =
+        source === 'codex'
+          ? item.payload?.cwd
+          : item.cwd || item.message?.cwd || item.payload?.cwd;
+      if (typeof cwd === 'string' && cwd) return cwd;
+    } catch {
+      continue;
+    }
+  }
+
+  return undefined;
 }
 
 export function getSessionTranscript(
