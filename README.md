@@ -56,8 +56,8 @@ API キーは PaPut の設定画面から取得できます。
 - `PAPUT_API_KEY` - 必須。PaPut API キー
 - `PAPUT_API_URL` - 任意。API URL。未指定時は `https://api.paput.io`
 - `PAPUT_PROJECT_MATCH` - 任意。メモ作成/更新時に紐付けるプロジェクト名の一部
-- `PAPUT_CACHE_DIR` - 任意。知見保存用ローカルキャッシュの保存先。未指定時は `~/.paput-mcp`
-- `PAPUT_HOME` - 任意。PaPut Skill 正本の保存先。未指定時は `~/.paput`
+- `PAPUT_HOME` - 任意。PaPut ローカルデータの保存先。未指定時は `~/.paput`
+- `PAPUT_CACHE_DIR` - 任意。知見保存用ローカルキャッシュだけ別の場所に置く場合に指定
 
 `PAPUT_PROJECT_MATCH` を設定すると、メモ作成・更新時に、指定文字列を含むスキルシートプロジェクトが自動で紐付けられます。複数マッチした場合は最初のプロジェクトが使われます。
 
@@ -174,3 +174,13 @@ Claude では `/paput-save` のように Skill を呼び出せます。Codex で
 - `paput_list_pending_candidates` - 未保存の知見候補を一覧表示
 - `paput_save_pending_candidate` - pending 候補を PaPut メモとして保存
 - `paput_discard_pending_candidate` - pending 候補を破棄
+
+## ローカルデータ
+
+PaPut MCP が作成するローカルデータは、デフォルトで `~/.paput` に保存されます。
+
+```text
+~/.paput/
+  skills/  # Claude/Codex にリンクする Skill の正本
+  cache/   # メモ同期、pending 候補、処理済みセッション情報
+```

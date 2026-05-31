@@ -31,7 +31,10 @@ interface CacheData {
 const SIMILARITY_THRESHOLD = 0.78;
 
 export function getCacheDir(): string {
-  return expandHome(process.env.PAPUT_CACHE_DIR || '~/.paput-mcp');
+  return expandHome(
+    process.env.PAPUT_CACHE_DIR ||
+      `${process.env.PAPUT_HOME || '~/.paput'}/cache`,
+  );
 }
 
 export function normalizeText(text: string): string {
