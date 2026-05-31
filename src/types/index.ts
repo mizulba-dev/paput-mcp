@@ -9,3 +9,4 @@ export * from './idea.js';
 export * from './skill-sheet.js';
 export * from './tool.js';
 export * from './constants.js';
+export * from './knowledge.js';

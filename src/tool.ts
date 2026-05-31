@@ -32,6 +32,14 @@ import {
   addSkillSheetProjectTool,
   updateSkillSheetProjectTool,
   deleteSkillSheetProjectTool,
+  cacheStatusTool,
+  syncRemoteMemosTool,
+  scanSessionsTool,
+  getSessionTranscriptTool,
+  addKnowledgeCandidatesTool,
+  listPendingCandidatesTool,
+  savePendingCandidateTool,
+  discardPendingCandidateTool,
 } from './handlers/index.js';
 import { ToolHandler } from './types/index.js';
 
@@ -68,6 +76,14 @@ export function setupTool(
     addSkillSheetProjectTool,
     updateSkillSheetProjectTool,
     deleteSkillSheetProjectTool,
+    cacheStatusTool,
+    syncRemoteMemosTool,
+    scanSessionsTool,
+    getSessionTranscriptTool,
+    addKnowledgeCandidatesTool,
+    listPendingCandidatesTool,
+    savePendingCandidateTool,
+    discardPendingCandidateTool,
   ];
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
