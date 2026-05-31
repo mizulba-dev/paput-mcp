@@ -39,6 +39,10 @@ export async function handleCreateMemo(
     is_public: typeof args.is_public === 'boolean' ? args.is_public : false,
   };
 
+  if (typeof args.created_at === 'string') {
+    params.created_at = args.created_at;
+  }
+
   // カテゴリの処理
   if (Array.isArray(args.categories)) {
     params.categories = args.categories

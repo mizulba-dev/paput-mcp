@@ -39,6 +39,10 @@ export async function handleSavePendingCandidate(
         (category): category is string => typeof category === 'string',
       )
     : candidate.categories || [];
+  const createdAt =
+    typeof args.created_at === 'string'
+      ? args.created_at
+      : candidate.source_session_updated_at;
 
   const params: CreateMemoParams = {
     title,
@@ -47,6 +51,7 @@ export async function handleSavePendingCandidate(
       typeof args.is_public === 'boolean'
         ? args.is_public
         : (candidate.is_public ?? false),
+    created_at: createdAt,
     categories: categories.map((name) => ({ name })),
   };
   const result = await createMemo(apiClient, params);

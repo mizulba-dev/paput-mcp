@@ -21,6 +21,7 @@ export async function createMemo(
       title: params.title,
       body: params.body,
       is_public: params.is_public || false,
+      created_at: params.created_at,
       categories: params.categories || [],
       projects: params.projects || [],
     });

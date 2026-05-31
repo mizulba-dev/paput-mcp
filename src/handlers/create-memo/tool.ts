@@ -21,6 +21,11 @@ export const createMemoTool: ToolHandler = {
           description: 'メモを公開するかどうか',
           default: false,
         },
+        created_at: {
+          type: 'string',
+          description:
+            'メモの作成日時。ISO 8601 形式で指定します（例: 2026-05-30T12:34:56Z）',
+        },
         categories: {
           type: 'array',
           items: {

@@ -11,6 +11,11 @@ export const savePendingCandidateTool: ToolHandler = {
         candidate_id: { type: 'string', description: '保存する候補ID' },
         title: { type: 'string', description: '保存時に上書きするタイトル' },
         body: { type: 'string', description: '保存時に上書きする本文' },
+        created_at: {
+          type: 'string',
+          description:
+            'PaPut メモとして保存する作成日時。未指定時はセッション更新日時を使用します',
+        },
         categories: { type: 'array', items: { type: 'string' } },
         is_public: { type: 'boolean', default: false },
       },

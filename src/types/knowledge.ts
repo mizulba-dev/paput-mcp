@@ -23,6 +23,7 @@ export interface PendingKnowledgeCandidate extends KnowledgeCandidateInput {
   id: string;
   session_id: string;
   source: SessionSource;
+  source_session_updated_at?: string;
   status: 'pending' | 'saved' | 'discarded';
   fingerprint: string;
   similar_memos: SimilarMemo[];

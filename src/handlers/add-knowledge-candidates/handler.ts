@@ -1,5 +1,6 @@
 import { ApiClient } from '../../services/api/client.js';
 import { addKnowledgeCandidates } from '../../services/local-cache/index.js';
+import { scanSessions } from '../../services/session/index.js';
 import {
   KnowledgeCandidateInput,
   SessionSource,
@@ -73,10 +74,16 @@ export async function handleAddKnowledgeCandidates(
     },
   );
 
+  const source = args.source as SessionSource;
+  const sourceSessionUpdatedAt = scanSessions([source], true).find(
+    (session) => session.session_id === args.session_id,
+  )?.updated_at;
+
   const result = addKnowledgeCandidates(
-    args.source as SessionSource,
+    source,
     args.session_id,
     candidates,
+    sourceSessionUpdatedAt,
   );
 
   return {

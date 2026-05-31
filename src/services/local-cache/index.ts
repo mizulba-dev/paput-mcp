@@ -118,6 +118,7 @@ export function addKnowledgeCandidates(
   source: SessionSource,
   sessionId: string,
   candidates: KnowledgeCandidateInput[],
+  sourceSessionUpdatedAt?: string,
 ): {
   added: PendingKnowledgeCandidate[];
   duplicates: Array<{
@@ -171,6 +172,7 @@ export function addKnowledgeCandidates(
       id: randomUUID(),
       session_id: sessionId,
       source,
+      source_session_updated_at: sourceSessionUpdatedAt,
       title: candidate.title,
       body: candidate.body,
       categories: candidate.categories || [],
