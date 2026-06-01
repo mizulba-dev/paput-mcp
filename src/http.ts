@@ -2,6 +2,7 @@
 
 import {
   createServer,
+  type IncomingMessage,
   type Server as HttpServer,
   type ServerResponse,
 } from 'node:http';
@@ -12,25 +13,57 @@ import { createMcpServer, type MCPServerOptions } from './server.js';
 export interface HttpMcpServerOptions extends MCPServerOptions {
   endpoint?: string;
   host?: string;
+  oauthRequired?: boolean;
   port?: number;
 }
+
+const OAUTH_SCOPES = ['paput.read', 'paput.write'] as const;
 
 export async function startHttpMcpServer(
   options: HttpMcpServerOptions = {},
 ): Promise<HttpServer> {
-  const endpoint = options.endpoint ?? '/mcp';
+  const endpoint = options.endpoint ?? '/';
   const port = options.port ?? Number(process.env.PORT ?? 3000);
   const host = options.host ?? process.env.HOST;
+  const apiUrl =
+    options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
+  const apiOrigin = new URL(apiUrl).origin;
+  const oauthRequired =
+    options.oauthRequired ?? (!options.apiKey && !process.env.PAPUT_API_KEY);
 
   const httpServer = createServer(async (req, res) => {
     const requestUrl = new URL(
       req.url ?? '/',
       `http://${req.headers.host ?? 'localhost'}`,
     );
+    const publicOrigin = getPublicOrigin(req, requestUrl);
+    const resourceUrl = getResourceUrl(publicOrigin, endpoint);
+    const protectedResourceMetadataUrl = getProtectedResourceMetadataUrl(
+      publicOrigin,
+      endpoint,
+    );
 
     if (requestUrl.pathname === '/healthz') {
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+
+    if (requestUrl.pathname === '/.well-known/oauth-protected-resource') {
+      sendJson(res, 200, {
+        resource: resourceUrl,
+        authorization_servers: [apiOrigin],
+        scopes_supported: OAUTH_SCOPES,
+        bearer_methods_supported: ['header'],
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === '/.well-known/oauth-authorization-server') {
+      res.writeHead(307, {
+        location: `${apiOrigin}/.well-known/oauth-authorization-server`,
+      });
+      res.end();
       return;
     }
 
@@ -45,7 +78,13 @@ export async function startHttpMcpServer(
       return;
     }
 
-    const mcpServer = createMcpServer(options);
+    const accessToken = extractBearerToken(req.headers.authorization);
+    if (oauthRequired && !accessToken) {
+      sendOAuthChallenge(res, protectedResourceMetadataUrl);
+      return;
+    }
+
+    const mcpServer = createMcpServer({ ...options, accessToken });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });
@@ -85,6 +124,61 @@ export async function startHttpMcpServer(
   return httpServer;
 }
 
+function getPublicOrigin(req: IncomingMessage, requestUrl: URL): string {
+  const protoHeader = req.headers['x-forwarded-proto'];
+  const forwardedProto = Array.isArray(protoHeader)
+    ? protoHeader[0]
+    : protoHeader;
+  const scheme = forwardedProto ?? requestUrl.protocol.replace(':', '');
+  return `${scheme}://${req.headers.host ?? 'localhost'}`;
+}
+
+function getResourceUrl(publicOrigin: string, endpoint: string): string {
+  return endpoint === '/' ? publicOrigin : `${publicOrigin}${endpoint}`;
+}
+
+function getProtectedResourceMetadataUrl(
+  publicOrigin: string,
+  endpoint: string,
+): string {
+  return endpoint === '/'
+    ? `${publicOrigin}/.well-known/oauth-protected-resource`
+    : `${publicOrigin}/.well-known/oauth-protected-resource${endpoint}`;
+}
+
+function extractBearerToken(authorizationHeader?: string): string | undefined {
+  if (!authorizationHeader?.toLowerCase().startsWith('bearer ')) {
+    return undefined;
+  }
+  const token = authorizationHeader.slice('bearer '.length).trim();
+  return token || undefined;
+}
+
+function sendOAuthChallenge(
+  res: ServerResponse,
+  resourceMetadataUrl: string,
+): void {
+  res.writeHead(401, {
+    'content-type': 'application/json',
+    'www-authenticate': `Bearer resource_metadata="${resourceMetadataUrl}", scope="${OAUTH_SCOPES.join(' ')}"`,
+  });
+  res.end(
+    JSON.stringify({
+      error: 'unauthorized',
+      error_description: 'OAuth authentication is required.',
+    }),
+  );
+}
+
+function sendJson(
+  res: ServerResponse,
+  statusCode: number,
+  body: unknown,
+): void {
+  res.writeHead(statusCode, { 'content-type': 'application/json' });
+  res.end(JSON.stringify(body));
+}
+
 function sendJsonRpcError(
   res: ServerResponse,
   statusCode: number,
@@ -113,7 +207,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       console.error(
         `PaPut MCP Streamable HTTP server listening on ${listeningOn}`,
       );
-      console.error('MCP endpoint: /mcp');
+      console.error('MCP endpoint: /');
     })
     .catch((error) => {
       console.error('Unexpected error:', error);

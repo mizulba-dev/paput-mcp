@@ -7,7 +7,7 @@ const endpoint = process.env.MCP_HTTP_URL ?? process.argv[2];
 
 if (!endpoint) {
   console.error(
-    'Usage: MCP_HTTP_URL=https://example.onrender.com/mcp npm run check:http',
+    'Usage: MCP_HTTP_URL=https://example.onrender.com npm run check:http',
   );
   process.exit(1);
 }

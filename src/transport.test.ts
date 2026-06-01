@@ -46,6 +46,7 @@ describe('MCP transports', () => {
     const httpServer = await startHttpMcpServer({
       ...testServerOptions,
       host: '127.0.0.1',
+      oauthRequired: false,
       port: 0,
     });
 
@@ -54,7 +55,7 @@ describe('MCP transports', () => {
       const client = createTestClient();
       clients.push(client);
       const transport = new StreamableHTTPClientTransport(
-        new URL(`http://127.0.0.1:${address.port}/mcp`),
+        new URL(`http://127.0.0.1:${address.port}`),
       );
 
       await client.connect(transport);
@@ -79,7 +80,7 @@ describe('MCP transports', () => {
     }
   });
 
-  it('returns an explicit error when a tool needs an API key but none is configured', async () => {
+  it('returns an explicit error when a tool needs authentication but none is configured', async () => {
     const mcpServer = createMcpServer(testServerOptions);
     const client = createTestClient();
     clients.push(client);
@@ -102,12 +103,66 @@ describe('MCP transports', () => {
       expect.arrayContaining([
         expect.objectContaining({
           type: 'text',
-          text: expect.stringContaining('PAPUT_API_KEY is not configured'),
+          text: expect.stringContaining(
+            'PaPut authentication is not configured',
+          ),
         }),
       ]),
     );
 
     await mcpServer.close();
+  });
+
+  it('publishes OAuth protected resource metadata', async () => {
+    const httpServer = await startHttpMcpServer({
+      ...testServerOptions,
+      host: '127.0.0.1',
+      port: 0,
+    });
+
+    try {
+      const address = httpServer.address() as AddressInfo;
+      const response = await fetch(
+        `http://127.0.0.1:${address.port}/.well-known/oauth-protected-resource`,
+      );
+      const metadata = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(metadata.resource).toBe(`http://127.0.0.1:${address.port}`);
+      expect(metadata.authorization_servers).toEqual([
+        'https://api.example.test',
+      ]);
+      expect(metadata.scopes_supported).toEqual(['paput.read', 'paput.write']);
+    } finally {
+      await closeHttpServer(httpServer);
+    }
+  });
+
+  it('challenges unauthenticated HTTP MCP requests when no API key is configured', async () => {
+    const httpServer = await startHttpMcpServer({
+      ...testServerOptions,
+      host: '127.0.0.1',
+      port: 0,
+    });
+
+    try {
+      const address = httpServer.address() as AddressInfo;
+      const response = await fetch(`http://127.0.0.1:${address.port}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
+      });
+
+      expect(response.status).toBe(401);
+      expect(response.headers.get('www-authenticate')).toContain(
+        `resource_metadata="http://127.0.0.1:${address.port}/.well-known/oauth-protected-resource"`,
+      );
+      expect(response.headers.get('www-authenticate')).toContain(
+        'scope="paput.read paput.write"',
+      );
+    } finally {
+      await closeHttpServer(httpServer);
+    }
   });
 });
 
@@ -121,4 +176,18 @@ function createTestClient(): Client {
       capabilities: {},
     },
   );
+}
+
+async function closeHttpServer(
+  httpServer: Awaited<ReturnType<typeof startHttpMcpServer>>,
+) {
+  await new Promise<void>((resolve, reject) => {
+    httpServer.close((error) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
 }

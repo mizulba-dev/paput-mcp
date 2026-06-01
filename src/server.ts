@@ -10,10 +10,12 @@ const packageJson = require('../package.json') as { version: string };
 export interface MCPServerOptions {
   apiKey?: string;
   apiUrl?: string;
+  accessToken?: string;
 }
 
 export function createMcpServer(options: MCPServerOptions = {}): Server {
   const apiKey = options.apiKey ?? process.env.PAPUT_API_KEY;
+  const accessToken = options.accessToken;
   const apiUrl =
     options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
 
@@ -30,7 +32,7 @@ export function createMcpServer(options: MCPServerOptions = {}): Server {
     },
   );
 
-  setupTool(server, apiUrl, apiKey);
+  setupTool(server, apiUrl, apiKey, accessToken);
   setupErrorHandling(server);
 
   return server;

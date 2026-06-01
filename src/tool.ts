@@ -38,8 +38,9 @@ export function setupTool(
   server: Server,
   apiUrl: string,
   apiKey?: string,
+  accessToken?: string,
 ): void {
-  const apiClient = createApiClient(apiUrl, apiKey);
+  const apiClient = createApiClient(apiUrl, apiKey, accessToken);
   const tools = getRegisteredTools();
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({

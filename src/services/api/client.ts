@@ -3,6 +3,7 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 interface ApiConfig {
   apiUrl: string;
   apiKey?: string;
+  accessToken?: string;
 }
 
 export async function apiRequest<T = unknown>(
@@ -11,9 +12,9 @@ export async function apiRequest<T = unknown>(
   method: HttpMethod,
   body?: unknown,
 ): Promise<T> {
-  if (!config.apiKey) {
+  if (!config.accessToken && !config.apiKey) {
     throw new Error(
-      'PAPUT_API_KEY is not configured. Set PAPUT_API_KEY or use OAuth authentication when it is available.',
+      'PaPut authentication is not configured. Set PAPUT_API_KEY or connect with OAuth.',
     );
   }
 
@@ -24,7 +25,9 @@ export async function apiRequest<T = unknown>(
   const options: RequestInit = {
     method,
     headers: {
-      'X-API-Key': config.apiKey,
+      ...(config.accessToken
+        ? { Authorization: `Bearer ${config.accessToken}` }
+        : { 'X-API-Key': config.apiKey ?? '' }),
       ...(method !== 'GET' && method !== 'DELETE'
         ? { 'Content-Type': 'application/json' }
         : {}),
@@ -62,8 +65,12 @@ export async function apiRequest<T = unknown>(
   }
 }
 
-export function createApiClient(apiUrl: string, apiKey?: string) {
-  const config: ApiConfig = { apiUrl, apiKey };
+export function createApiClient(
+  apiUrl: string,
+  apiKey?: string,
+  accessToken?: string,
+) {
+  const config: ApiConfig = { apiUrl, apiKey, accessToken };
 
   return {
     get: <T = unknown>(endpoint: string) =>
