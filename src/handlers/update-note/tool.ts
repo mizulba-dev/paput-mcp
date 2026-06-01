@@ -4,28 +4,29 @@ import { handleUpdateNote } from './handler.js';
 export const updateNoteTool: ToolHandler = {
   definition: {
     name: 'paput_update_note',
-    description: 'PaPut のノートを更新します',
+    description:
+      'Update an existing PaPut note by changing its title, visibility, or attached memo IDs.',
     inputSchema: {
       type: 'object',
       properties: {
         id: {
           type: 'number',
-          description: 'ノートのID',
+          description: 'Note ID',
         },
         title: {
           type: 'string',
-          description: 'ノートの新しいタイトル',
+          description: 'New note title',
         },
         is_public: {
           type: 'boolean',
-          description: 'ノートを公開するかどうか',
+          description: 'Whether to publish the note',
         },
         memo_ids: {
           type: 'array',
           items: {
             type: 'number',
           },
-          description: 'ノートに含めるメモのIDリスト',
+          description: 'Memo IDs to include in the note',
         },
       },
       required: ['id'],

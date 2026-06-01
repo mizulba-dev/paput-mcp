@@ -4,22 +4,23 @@ import { handleSavePendingCandidate } from './handler.js';
 export const savePendingCandidateTool: ToolHandler = {
   definition: {
     name: 'paput_save_pending_candidate',
-    description: 'pending の知見候補を PaPut メモとして保存します',
+    description:
+      'Save an approved pending knowledge candidate as a PaPut memo. Use only when the user explicitly approves saving a pending candidate.',
     inputSchema: {
       type: 'object',
       properties: {
-        candidate_id: { type: 'string', description: '保存する候補ID' },
-        title: { type: 'string', description: '保存時に上書きするタイトル' },
-        body: { type: 'string', description: '保存時に上書きする本文' },
+        candidate_id: { type: 'string', description: 'Candidate ID to save' },
+        title: { type: 'string', description: 'Title override when saving' },
+        body: { type: 'string', description: 'Body override when saving' },
         created_at: {
           type: 'string',
           description:
-            'PaPut メモとして保存する作成日時。未指定時はセッション更新日時を使用します',
+            'Creation timestamp to use for the PaPut memo. Defaults to the source session updated timestamp.',
         },
         categories: { type: 'array', items: { type: 'string' } },
         projects: {
           type: 'array',
-          description: '保存時に紐付けるプロジェクト',
+          description: 'Projects to link when saving',
           items: {
             type: 'object',
             properties: {

@@ -21,11 +21,11 @@ describe('getGeneratedInputSchema', () => {
     });
     expect(schema?.properties.title).toMatchObject({
       type: 'string',
-      description: 'プロジェクトタイトル',
+      description: 'Project title',
     });
     expect(schema?.properties.id).toMatchObject({
       type: 'number',
-      description: '更新対象のプロジェクトID。新規追加時は省略します',
+      description: 'Project ID to update. Omit when creating a new project.',
     });
   });
 

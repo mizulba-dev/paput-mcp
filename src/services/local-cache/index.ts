@@ -152,7 +152,7 @@ export function addKnowledgeCandidates(
     if (memoFingerprints.has(fingerprint)) {
       duplicates.push({
         title: candidate.title,
-        reason: '既存メモと完全一致しました',
+        reason: 'Exact match with an existing memo',
         similar_memos: similarMemos,
       });
       continue;
@@ -161,7 +161,7 @@ export function addKnowledgeCandidates(
     if (pendingFingerprints.has(fingerprint)) {
       duplicates.push({
         title: candidate.title,
-        reason: 'pending 候補と完全一致しました',
+        reason: 'Exact match with a pending candidate',
         similar_memos: similarMemos,
       });
       continue;

@@ -27,159 +27,157 @@ const SKILLS: SkillSpec[] = [
   {
     name: 'paput-init',
     description:
-      'PaPut の初期設定、既存メモ同期、未処理セッション確認を行いたい時に使う。',
-    body: `# PaPut 初期設定
+      'Use this to initialize PaPut usage, sync existing memos, and inspect unprocessed sessions.',
+    body: `# PaPut Init
 
-PaPut の知見保存運用を始めるための初期設定を行う。
+Initialize PaPut knowledge capture.
 
-## 手順
+## Steps
 
-1. \`paput_cache_status\` でローカルキャッシュ状態を確認する。
-2. \`paput_sync_remote_memos\` で既存 PaPut メモをローカルキャッシュへ同期する。
-3. \`paput_scan_sessions\` で Claude/Codex の未処理セッションを確認する。
-4. 未処理セッションがある場合は、件数と概要をユーザーに提示する。
-5. ユーザーが希望した場合のみ、\`paput_get_session_transcript\` で本文を取得し、下記の抽出基準を満たす知見候補だけを作る。
-6. \`paput_add_knowledge_candidates\` で pending に保存する前に、候補内にプロジェクト固有の仕様、実装詳細、運用ルール、コード、顧客情報が含まれていないか精査し、含まれる候補は追加しない。
-7. pending 保存後、追加した件数、重複として除外された件数、基準外として追加しなかった件数を簡潔に報告する。
+1. Check the local cache with \`paput_cache_status\`.
+2. Sync existing PaPut memos into the local cache with \`paput_sync_remote_memos\`.
+3. Scan unprocessed Claude/Codex sessions with \`paput_scan_sessions\`.
+4. If unprocessed sessions exist, report the count and a short summary to the user.
+5. Only when the user wants it, read the transcript with \`paput_get_session_transcript\` and create candidates that meet the extraction criteria below.
+6. Before adding candidates with \`paput_add_knowledge_candidates\`, check that they do not contain project-specific specifications, implementation details, operational rules, code, customer data, or secrets.
+7. After adding pending candidates, briefly report added candidates, duplicates, and rejected candidates.
 
-## 抽出基準
+## Extraction Criteria
 
-保存候補にするのは、第三者が別プロジェクトでも再利用できる技術知見、判断基準、手順だけに限定する。
+Only add technical knowledge, decision criteria, and procedures that can be reused in other projects.
 
-以下は pending に追加しない。
+Do not add these to pending:
 
-- プロジェクト固有の仕様、画面名、ボタン名、業務フロー、運用ルール、ローカル事情。
-- PR、GitHub、Codex、Claude、AI レビュー、エディタ、OS 操作など、個人運用や作業記録に近いもの。
-- 「詳細画面」「集計値」など、タイトルや本文だけでは第三者が対象を理解できないもの。
-- 採用しなかった設計、単なる体験談、作業ログ、感想、意思決定の経緯だけで終わるもの。
-- 既存メモや pending と意味が近いもの。
-- セキュリティ、権限制御、テナント分離などの一般論で、既に同種の知見があるもの。
-- コード断片やプロジェクト内の命名に依存し、一般化できていないもの。
+- Project-specific specifications, screen names, button names, business workflows, operational rules, or local context.
+- Personal workflow notes about PRs, GitHub, Codex, Claude, AI review, editors, or OS operations.
+- Content that third parties cannot understand from the title and body alone.
+- Rejected designs, anecdotes, work logs, impressions, or decision histories without reusable guidance.
+- Content semantically close to existing memos or pending candidates.
+- Generic security, authorization, or tenant-isolation notes when similar knowledge already exists.
+- Code fragments or project-specific naming that has not been generalized.
 
-迷う候補は追加せず、「今回は保存対象なし」または「基準外として除外」と判断する。
+When unsure, do not add the candidate. Report that there is no knowledge to save or that the candidate was rejected.
 
-## 注意
+## Notes
 
-- PaPut への本保存は行わない。
-- 候補はまず pending に保存する。
-- 重複や類似メモがある場合は、その情報を提示する。
-- pending を増やすことより、後で破棄が不要な候補だけに絞ることを優先する。`,
+- Do not save directly to PaPut.
+- Add candidates to pending first.
+- Report duplicates or similar memos when found.
+- Prefer high-quality pending candidates over increasing the pending count.`,
   },
   {
     name: 'paput-sync',
     description:
-      'PaPut の既存メモをローカルキャッシュへ同期し、重複判定の精度を上げたい時に使う。',
-    body: `# PaPut 同期
+      'Use this to sync existing PaPut memos into the local cache and improve duplicate detection.',
+    body: `# PaPut Sync
 
-PaPut の既存メモをローカルキャッシュへ同期する。
+Sync existing PaPut memos into the local cache.
 
-## 手順
+## Steps
 
-1. \`paput_cache_status\` で同期前の状態を確認する。
-2. \`paput_sync_remote_memos\` を実行する。
-3. 再度 \`paput_cache_status\` を実行し、同期後の件数を確認する。
-4. 同期結果を簡潔にユーザーへ報告する。
+1. Check the current cache state with \`paput_cache_status\`.
+2. Run \`paput_sync_remote_memos\`.
+3. Run \`paput_cache_status\` again and confirm the synced counts.
+4. Briefly report the sync result to the user.
 
-## 注意
+## Notes
 
-- 同期は重複判定のために行う。
-- pending 候補の保存や破棄は行わない。
-- PaPut への新規メモ作成は行わない。`,
+- Syncing is for duplicate detection.
+- Do not save or discard pending candidates.
+- Do not create new PaPut memos.`,
   },
   {
     name: 'paput-save',
     description:
-      'PaPut の pending 候補を確認し、ユーザーが承認したものだけ PaPut に保存したい時に使う。',
-    body: `# PaPut 保存
+      'Use this to review pending candidates first, then save only candidates explicitly approved by the user. This skill never saves automatically.',
+    body: `# PaPut Save
 
-pending に保存された知見候補を確認し、ユーザーが承認したものだけ PaPut に保存する。
+Review pending knowledge candidates first, then save only candidates explicitly approved by the user. This skill never saves automatically.
 
-## 手順
+## Steps
 
-1. \`paput_list_pending_candidates\` で pending 候補を取得する。
-2. 候補ごとにタイトル、カテゴリ、要約、類似メモ情報を簡潔に提示する。
-3. ユーザーが保存を承認した候補だけ \`paput_save_pending_candidate\` で PaPut に保存する。
-4. ユーザーが不要と判断した候補は \`paput_discard_pending_candidate\` で破棄する。
-5. 保存・破棄した件数を報告する。
+1. Fetch pending candidates with \`paput_list_pending_candidates\`.
+2. Briefly show each candidate title, categories, summary, and similar memo information.
+3. Save only candidates approved by the user with \`paput_save_pending_candidate\`.
+4. Discard candidates the user rejects with \`paput_discard_pending_candidate\`.
+5. Report the number of saved and discarded candidates.
 
-## 注意
+## Notes
 
-- ユーザー承認なしに PaPut へ保存しない。
-- 「全部保存して」と明示された場合のみ複数候補をまとめて保存する。
-- 候補のタイトルや本文の修正を求められた場合は、保存時に上書きする。
-- 迷う候補や重複が疑われる候補は、保存しない選択肢も提示する。`,
+- Do not save to PaPut without user approval.
+- Save multiple candidates only when the user explicitly asks to save all of them.
+- If the user asks to modify a title or body, apply the override when saving.
+- For ambiguous or likely duplicate candidates, present not saving as an option.`,
   },
   {
     name: 'paput-capture',
     description:
-      '作業中の会話や指定テーマから PaPut に残す知見候補を抽出し、pending に保存したい時に使う。',
-    body: `# PaPut 知見候補作成
+      'Use this to extract reusable knowledge candidates from the current conversation or a specified topic and add them to pending.',
+    body: `# PaPut Capture
 
-現在の会話やユーザーが指定したテーマから、PaPut に残すべき知見候補を抽出して pending に保存する。グローバルルールで自動提案されなかった時の手動バックアップとして使う。
+Extract reusable knowledge candidates from the current conversation or a user-specified topic and add them to pending. Use this as a manual fallback when the global rules did not suggest candidates automatically.
 
-## 使う場面
+## When To Use
 
-- 問題解決で得た知見を残したい時
-- 設計判断やその理由を残したい時
-- ベストプラクティスやデバッグ手法を残したい時
-- ユーザーが特定テーマのメモ化を依頼した時
+- The user wants to keep knowledge learned while solving a problem.
+- The user wants to keep a design decision and its rationale.
+- The user wants to keep a best practice or debugging method.
+- The user asks to create notes for a specific topic.
 
-## 手順
+## Steps
 
-1. \`paput_list_pending_candidates\` で既存 pending 候補を確認する。
-2. 現在の会話、またはユーザーが指定したテーマに関連する会話内容から、再利用可能な知見だけを抽出する。
-3. 候補は小さい単位に分け、タイトル、本文、カテゴリ、公開設定を整える。
-4. 既存 pending と重複しそうな候補は追加せず、既存候補の利用を提案する。
-5. 重複・機密・プロジェクト固有情報の混入がなく、汎用的な知見だと判断できる候補は、ユーザー承認を待たずに \`paput_add_knowledge_candidates\` で pending に保存する。
-6. pending 保存後、タイトル、カテゴリ、候補 ID を簡潔に報告する。
+1. Check existing pending candidates with \`paput_list_pending_candidates\`.
+2. Extract only reusable knowledge from the current conversation or the user-specified topic.
+3. Keep candidates small, and prepare a title, body, categories, and visibility.
+4. Do not add candidates that may duplicate existing pending candidates. Suggest using the existing candidate instead.
+5. If a candidate is reusable, non-duplicate, non-sensitive, and not project-specific, add it to pending with \`paput_add_knowledge_candidates\` without waiting for user approval.
+6. After adding candidates, briefly report the title, categories, and candidate ID.
 
-## メモ作成ルール
+## Candidate Rules
 
-- 一つの候補が大きくなりすぎないよう、最小の粒度で作成する。
-- タイトルは簡潔で検索しやすくする。
-- 本文は具体的な手順、原因、理由、判断基準を含める。
-- 文章は「です/ます」調にしない。
-- カテゴリは言語、フレームワーク、ツール程度の粒度にする。
-- プロジェクト固有の仕様、実装詳細、運用ルール、コード、秘密情報、顧客情報は含めない。
-- メモ化するのは、別プロジェクトでも再利用できる技術知見、判断基準、手順に限定する。
-- 基本的に非公開として扱う。
-- 本文に Markdown の \`#\` で始まる見出し行を含めない。
+- Keep each candidate small.
+- Make titles concise and searchable.
+- Include concrete procedures, causes, reasons, and decision criteria in the body.
+- Do not include project-specific specifications, implementation details, operational rules, code, secrets, or customer data.
+- Only capture technical knowledge, decision criteria, or procedures that can be reused in other projects.
+- Treat candidates as private by default.
+- Do not include Markdown heading lines that start with \`#\` in the body.
 
-## 除外する候補
+## Rejected Candidates
 
-以下は pending に追加しない。
+Do not add these to pending:
 
-- プロジェクト固有の仕様、画面名、ボタン名、業務フロー、運用ルール、ローカル事情。
-- PR、GitHub、Codex、Claude、AI レビュー、エディタ、OS 操作など、個人運用や作業記録に近いもの。
-- 「詳細画面」「集計値」など、タイトルや本文だけでは第三者が対象を理解できないもの。
-- 採用しなかった設計、単なる体験談、作業ログ、感想、意思決定の経緯だけで終わるもの。
-- 既存メモや pending と意味が近いもの。
-- セキュリティ、権限制御、テナント分離などの一般論で、既に同種の知見があるもの。
-- コード断片やプロジェクト内の命名に依存し、一般化できていないもの。
+- Project-specific specifications, screen names, button names, business workflows, operational rules, or local context.
+- Personal workflow notes about PRs, GitHub, Codex, Claude, AI review, editors, or OS operations.
+- Content that third parties cannot understand from the title and body alone.
+- Rejected designs, anecdotes, work logs, impressions, or decision histories without reusable guidance.
+- Content semantically close to existing memos or pending candidates.
+- Generic security, authorization, or tenant-isolation notes when similar knowledge already exists.
+- Code fragments or project-specific naming that has not been generalized.
 
-## 注意
+## Notes
 
-- PaPut へ直接保存しない。
-- 保存先は pending のみ。PaPut への本保存は \`paput-save\` で行う。
-- pending への追加はユーザー承認を待たずに行う。ただし、重複の可能性、機密情報の混入、汎用性の低さ、判断に迷う内容がある場合は、追加前に懸念点を提示してユーザー確認を求める。
-- 過去セッションから作成した候補は、PaPut 本保存時にそのセッションの更新日時が作成日時として使われる。
-- 候補がない場合は、無理に作らず「保存すべき知見は見つからない」と伝える。`,
+- Do not save directly to PaPut.
+- Save only to pending. Final PaPut saves are handled by \`paput-save\`.
+- Add safe candidates to pending without waiting for user approval. If a candidate may be duplicate, sensitive, project-specific, too narrow, or ambiguous, present the concern and ask before adding it.
+- Candidates created from past sessions use the source session updated timestamp as the PaPut memo creation timestamp when saved.
+- If there are no candidates, say that no reusable knowledge was found.`,
   },
 ];
 
-const RULES = `## PaPut 知見保存ルール
+const RULES = `## PaPut Knowledge Capture Rules
 
-作業完了時、問題解決時、設計判断が固まった時、または再利用可能な知見が発生した時は、PaPut に保存すべき候補がないか自動で確認する。
+When work is completed, a problem is solved, a design decision is settled, or reusable knowledge appears, automatically check whether there are candidates worth keeping in PaPut.
 
-保存対象は、別プロジェクトでも再利用できる技術知見、判断基準、手順に限定する。プロジェクト固有の仕様、実装詳細、運用ルール、コード、秘密情報、顧客情報は保存候補にしない。
+Only keep technical knowledge, decision criteria, and procedures that can be reused in other projects. Do not keep project-specific specifications, implementation details, operational rules, code, secrets, or customer data.
 
-候補がある場合は、保存前にローカルキャッシュや類似メモ情報を使って重複の可能性を確認する。重複・機密・プロジェクト固有情報の混入がなく、汎用的な知見だと判断できる候補は、ユーザー承認を待たずに \`paput_add_knowledge_candidates\` で pending に保存する。保存後はタイトル・カテゴリ・候補 ID を簡潔に報告する。
+When candidates exist, check for duplicates with the local cache or similar memo information before saving. If a candidate is reusable, non-duplicate, non-sensitive, and not project-specific, add it to pending with \`paput_add_knowledge_candidates\` without waiting for user approval. After adding it, briefly report the title, categories, and candidate ID.
 
-PaPut への本保存は、ユーザーが明示的に保存を承認した場合のみ \`paput_save_pending_candidate\` を使う。
+Use \`paput_save_pending_candidate\` only when the user explicitly approves saving a pending candidate to PaPut.
 
-重複の可能性、機密情報の混入、汎用性の低さ、判断に迷う内容がある場合は、pending 追加前にタイトル・本文・カテゴリと懸念点を提示し、ユーザー確認を求める。
+If a candidate may be duplicate, sensitive, project-specific, too narrow, or ambiguous, present its title, body, categories, and concern before adding it to pending, and ask the user to confirm.
 
-pending 候補の確認や PaPut への保存をユーザーが求めた場合は、\`paput-save\` の手順に従う。`;
+When the user asks to review pending candidates or save them to PaPut, follow the \`paput-save\` workflow.`;
 
 const RULE_START = '<!-- paput-mcp:start -->';
 const RULE_END = '<!-- paput-mcp:end -->';
@@ -206,7 +204,7 @@ function parseOptions(args: string[]): SetupOptions {
   const codexOnly = args.includes('--codex-only');
 
   if (claudeOnly && codexOnly) {
-    console.error('--claude-only と --codex-only は同時に指定できません。');
+    console.error('--claude-only and --codex-only cannot be used together.');
     process.exitCode = 1;
     return {
       force: false,
@@ -225,25 +223,23 @@ function parseOptions(args: string[]): SetupOptions {
 }
 
 function printSetupNotice(options: SetupOptions): void {
-  console.log('PaPut AI 連携の初期設定を行います。');
+  console.log('Setting up PaPut AI integration.');
   console.log('');
-  console.log('このコマンドは以下を実行します。');
-  console.log('- ~/.paput/skills に PaPut Skill の正本を作成');
+  console.log('This command will:');
+  console.log('- Create canonical PaPut skills under ~/.paput/skills');
   if (options.claude) {
-    console.log('- Claude が存在する場合、~/.claude/skills にリンクを作成');
+    console.log('- Link skills into ~/.claude/skills when Claude is available');
   }
   if (options.codex) {
-    console.log('- Codex が存在する場合、~/.agents/skills にリンクを作成');
+    console.log('- Link skills into ~/.agents/skills when Codex is available');
   }
   if (!options.noRules) {
-    console.log('- Claude/Codex のグローバルルールに PaPut 利用ルールを追記');
+    console.log('- Add PaPut usage rules to Claude/Codex global rules');
   }
   console.log('');
+  console.log('Use --no-rules if you do not want to update global rules.');
   console.log(
-    'グローバルルールを変更したくない場合は --no-rules を指定してください。',
-  );
-  console.log(
-    '既存の PaPut 管理ブロックやリンクを更新する場合は --force を指定してください。',
+    'Use --force to refresh existing PaPut-managed blocks and links.',
   );
   console.log('');
 }
@@ -256,7 +252,7 @@ function createSourceSkills(sourceSkillsDir: string, force: boolean): void {
     const skillPath = join(skillDir, 'SKILL.md');
 
     if (existsSync(skillPath) && !force) {
-      console.log(`Skip source skill: ${skillPath} は既に存在します。`);
+      console.log(`Skip source skill: ${skillPath} already exists.`);
       continue;
     }
 
@@ -269,7 +265,7 @@ function createSourceSkills(sourceSkillsDir: string, force: boolean): void {
 function setupClaude(sourceSkillsDir: string, options: SetupOptions): void {
   const claudeHome = process.env.CLAUDE_HOME || join(homedir(), '.claude');
   if (!existsSync(claudeHome)) {
-    console.log('Skip Claude: ~/.claude が見つかりません。');
+    console.log('Skip Claude: ~/.claude was not found.');
     return;
   }
 
@@ -289,7 +285,7 @@ function setupCodex(sourceSkillsDir: string, options: SetupOptions): void {
   const codexHome = process.env.CODEX_HOME || join(homedir(), '.codex');
   const agentsHome = process.env.AGENTS_HOME || join(homedir(), '.agents');
   if (!existsSync(codexHome) && !existsSync(agentsHome)) {
-    console.log('Skip Codex: ~/.codex と ~/.agents が見つかりません。');
+    console.log('Skip Codex: neither ~/.codex nor ~/.agents was found.');
     return;
   }
 
@@ -320,9 +316,7 @@ function linkSkills(
     if (existsSync(targetDir)) {
       const stat = lstatSync(targetDir);
       if (!force) {
-        console.log(
-          `Skip ${label} skill link: ${targetDir} は既に存在します。`,
-        );
+        console.log(`Skip ${label} skill link: ${targetDir} already exists.`);
         continue;
       }
       rmSync(targetDir, {
@@ -347,7 +341,7 @@ function upsertRules(path: string, force: boolean, label: string): void {
   if (pattern.test(current)) {
     if (!force) {
       console.log(
-        `Skip ${label} rules: ${path} には PaPut 管理ブロックが既に存在します。`,
+        `Skip ${label} rules: ${path} already contains a PaPut-managed block.`,
       );
       return;
     }

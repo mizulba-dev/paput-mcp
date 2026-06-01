@@ -16,7 +16,7 @@ export async function handleGetCategories(
         content: [
           {
             type: 'text',
-            text: 'カテゴリーが登録されていません。',
+            text: 'No categories are registered.',
           },
         ],
       };
@@ -33,19 +33,19 @@ export async function handleGetCategories(
       content: [
         {
           type: 'text',
-          text: `利用可能なカテゴリー:\n\n${categoryList}`,
+          text: `Available categories:\n\n${categoryList}`,
         },
       ],
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
     return {
       content: [
         {
           type: 'text',
-          text: `カテゴリーの取得中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while fetching categories: ${errorMessage}`,
         },
       ],
       isError: true,

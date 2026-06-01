@@ -4,19 +4,20 @@ import { handleAddKnowledgeCandidates } from './handler.js';
 export const addKnowledgeCandidatesTool: ToolHandler = {
   definition: {
     name: 'paput_add_knowledge_candidates',
-    description: 'AI が抽出した知見候補を pending に保存します',
+    description:
+      'Add reusable knowledge candidates extracted from a Claude or Codex session to the local pending queue. Use this before saving knowledge to PaPut when candidates still need review or deduplication.',
     inputSchema: {
       type: 'object',
       properties: {
-        session_id: { type: 'string', description: '抽出元セッションID' },
+        session_id: { type: 'string', description: 'Source session ID' },
         source: {
           type: 'string',
           enum: ['claude', 'codex'],
-          description: '抽出元セッションソース',
+          description: 'Source session provider',
         },
         candidates: {
           type: 'array',
-          description: '保存する知見候補',
+          description: 'Knowledge candidates to add',
           items: {
             type: 'object',
             properties: {

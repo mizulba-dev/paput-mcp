@@ -70,6 +70,22 @@ describe('registered tools', () => {
     }
   });
 
+  it('uses English descriptions for every registered tool', () => {
+    for (const tool of getRegisteredTools()) {
+      expect(tool.definition.description).not.toMatch(
+        /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u,
+      );
+    }
+  });
+
+  it('uses English input schemas for every registered tool', () => {
+    for (const tool of getRegisteredTools()) {
+      expect(JSON.stringify(tool.definition.inputSchema)).not.toMatch(
+        /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u,
+      );
+    }
+  });
+
   it('sets MCP annotations for every registered tool', () => {
     for (const tool of getRegisteredTools()) {
       const name = tool.definition.name;

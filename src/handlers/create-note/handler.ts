@@ -11,33 +11,33 @@ export async function handleCreateNote(
       content: [
         {
           type: 'text',
-          text: 'パラメータが不足しています',
+          text: 'Missing parameters',
         },
       ],
       isError: true,
     };
   }
 
-  // パラメータの検証
+  // Validate parameters
   if (typeof args.title !== 'string') {
     return {
       content: [
         {
           type: 'text',
-          text: 'タイトルは文字列で指定してください',
+          text: 'Title must be a string',
         },
       ],
       isError: true,
     };
   }
 
-  // パラメータの構築
+  // Build parameters
   const params: CreateNoteParams = {
     title: args.title,
     is_public: typeof args.is_public === 'boolean' ? args.is_public : false,
   };
 
-  // メモの処理
+  // Process memos
   if (Array.isArray(args.memo_ids)) {
     params.memos = args.memo_ids
       .filter((id): id is number => typeof id === 'number')
@@ -52,7 +52,7 @@ export async function handleCreateNote(
         content: [
           {
             type: 'text',
-            text: `ノートの作成に失敗しました: ${result.error || '不明なエラー'}`,
+            text: `Failed to create note: ${result.error || 'Unknown error'}`,
           },
         ],
         isError: true,
@@ -60,22 +60,32 @@ export async function handleCreateNote(
     }
 
     return {
+      structuredContent: {
+        success: true,
+        action: 'created',
+        note: {
+          id: result.id || null,
+          title: params.title,
+          is_public: params.is_public,
+          memos: params.memos || [],
+        },
+      },
       content: [
         {
           type: 'text',
-          text: `ノート「${params.title}」が正常に作成されました。${result.id ? `ID: ${result.id}` : ''}`,
+          text: `Note "" was created successfully. ${result.id ? `ID: ${result.id}` : ''}`,
         },
       ],
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
     return {
       content: [
         {
           type: 'text',
-          text: `ノートの作成中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while creating note: ${errorMessage}`,
         },
       ],
       isError: true,

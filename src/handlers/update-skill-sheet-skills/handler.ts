@@ -17,7 +17,7 @@ export async function handler(
       content: [
         {
           type: 'text',
-          text: 'スキル一覧が指定されていません',
+          text: 'Skill list is required',
         },
       ],
       isError: true,
@@ -27,10 +27,15 @@ export async function handler(
   await updateSkillSheetSkills(apiClient, { skills });
 
   return {
+    structuredContent: {
+      success: true,
+      action: 'replaced',
+      skills,
+    },
     content: [
       {
         type: 'text',
-        text: 'スキル一覧を更新しました',
+        text: 'Skill list was updated',
       },
     ],
   };

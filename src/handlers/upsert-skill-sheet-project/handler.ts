@@ -16,7 +16,7 @@ export async function handler(
       content: [
         {
           type: 'text',
-          text: 'プロジェクト情報が不足しています',
+          text: 'Project information is incomplete',
         },
       ],
       isError: true,
@@ -31,11 +31,11 @@ export async function handler(
   if (id) {
     await updateSkillSheetProject(apiClient, { ...project, id });
     return {
-      structuredContent: { action: 'updated', id },
+      structuredContent: { success: true, action: 'updated', id, project },
       content: [
         {
           type: 'text',
-          text: `プロジェクトを更新しました: ${id}`,
+          text: `Project was updated: ${id}`,
         },
       ],
     };
@@ -44,11 +44,11 @@ export async function handler(
   const response = await addSkillSheetProject(apiClient, project);
 
   return {
-    structuredContent: { action: 'created', project: response },
+    structuredContent: { success: true, action: 'created', project: response },
     content: [
       {
         type: 'text',
-        text: `プロジェクトを追加しました: ${response.title} (ID: ${response.id})`,
+        text: `Project was added: ${response.title} (ID: ${response.id})`,
       },
     ],
   };

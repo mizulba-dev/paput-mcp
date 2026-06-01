@@ -24,7 +24,7 @@ export async function handleSyncRemoteMemos(
         content: [
           {
             type: 'text',
-            text: `PaPut メモの同期に失敗しました: ${result.error || '不明なエラー'}`,
+            text: `Failed to sync PaPut memos: ${result.error || 'Unknown error'}`,
           },
         ],
         isError: true,
@@ -42,18 +42,19 @@ export async function handleSyncRemoteMemos(
     last_remote_sync_at: new Date().toISOString(),
   });
 
+  const response = {
+    success: true,
+    action: 'synced',
+    synced: fetched.length,
+    cached_memos: memos.length,
+  };
+
   return {
+    structuredContent: response,
     content: [
       {
         type: 'text',
-        text: JSON.stringify(
-          {
-            synced: fetched.length,
-            cached_memos: memos.length,
-          },
-          null,
-          2,
-        ),
+        text: JSON.stringify(response, null, 2),
       },
     ],
   };

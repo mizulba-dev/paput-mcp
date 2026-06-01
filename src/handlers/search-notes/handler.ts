@@ -6,7 +6,7 @@ export async function handleSearchNotes(
   args: Record<string, unknown> | undefined,
   apiClient: ApiClient,
 ) {
-  // パラメータの構築
+  // Build parameters
   const params: SearchNotesParams = {};
 
   if (args) {
@@ -32,7 +32,7 @@ export async function handleSearchNotes(
         content: [
           {
             type: 'text',
-            text: `ノートの検索に失敗しました: ${result.error || '不明なエラー'}`,
+            text: `Failed to search notes: ${result.error || 'Unknown error'}`,
           },
         ],
         isError: true,
@@ -48,7 +48,7 @@ export async function handleSearchNotes(
         content: [
           {
             type: 'text',
-            text: '該当するノートが見つかりませんでした。',
+            text: 'No matching notes found.',
           },
         ],
       };
@@ -56,15 +56,15 @@ export async function handleSearchNotes(
 
     const notesList = result.notes
       .map((note) => {
-        const visibility = note.is_public ? '公開' : '非公開';
+        const visibility = note.is_public ? 'Public' : 'Private';
         const memoInfo =
-          note.memo_count > 0 ? ` (メモ数: ${note.memo_count})` : '';
+          note.memo_count > 0 ? ` (Memo count: ${note.memo_count})` : '';
         return `- [${note.id}] ${note.title} (${visibility})${memoInfo}`;
       })
       .join('\n');
 
     const totalInfo = result.total
-      ? `\n\n検索結果: ${result.notes.length}件 / 全${result.total}件`
+      ? `\n\nSearch results: ${result.notes.length} / total ${result.total}`
       : '';
 
     return {
@@ -75,19 +75,19 @@ export async function handleSearchNotes(
       content: [
         {
           type: 'text',
-          text: `ノート一覧:\n${notesList}${totalInfo}`,
+          text: `Notes:\n${notesList}${totalInfo}`,
         },
       ],
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
     return {
       content: [
         {
           type: 'text',
-          text: `ノートの検索中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while searching notes: ${errorMessage}`,
         },
       ],
       isError: true,

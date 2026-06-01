@@ -54,7 +54,7 @@ export function setupTool(
         content: [
           {
             type: 'text',
-            text: `未知のツールです: ${request.params.name}`,
+            text: `Unknown tool: ${request.params.name}`,
           },
         ],
         isError: true,
@@ -64,19 +64,19 @@ export function setupTool(
     return await tool.handler(request.params.arguments, apiClient);
   });
 
-  // リソース一覧を返すハンドラー
+  // Handler that lists resources
   server.setRequestHandler(ListResourcesRequestSchema, async () => ({
     resources: [
       {
         uri: 'paput://tools',
-        name: 'PaPut MCP ツール一覧',
-        description: '利用可能なPaPut MCPツールの詳細情報',
+        name: 'PaPut MCP tools',
+        description: 'Details of available PaPut MCP tools',
         mimeType: 'application/json',
       },
     ],
   }));
 
-  // リソースコンテンツを返すハンドラー
+  // Handler that reads resource content
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     if (request.params.uri !== 'paput://tools') {
       return {
@@ -84,7 +84,7 @@ export function setupTool(
           {
             uri: request.params.uri,
             mimeType: 'text/plain',
-            text: `リソースが見つかりません: ${request.params.uri}`,
+            text: `Resource not found: ${request.params.uri}`,
           },
         ],
       };

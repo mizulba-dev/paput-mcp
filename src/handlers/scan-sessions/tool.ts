@@ -4,7 +4,8 @@ import { handleScanSessions } from './handler.js';
 export const scanSessionsTool: ToolHandler = {
   definition: {
     name: 'paput_scan_sessions',
-    description: 'Claude/Codex のローカルセッションログを検出します',
+    description:
+      'Scan local Claude and Codex session logs. Use this to find sessions that may contain reusable knowledge before reading transcripts.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -14,11 +15,11 @@ export const scanSessionsTool: ToolHandler = {
             type: 'string',
             enum: ['claude', 'codex'],
           },
-          description: '検出対象のセッションソース',
+          description: 'Session sources to scan',
         },
         include_processed: {
           type: 'boolean',
-          description: 'digest 済みセッションも含めるかどうか',
+          description: 'Whether to include already processed sessions',
           default: false,
         },
       },

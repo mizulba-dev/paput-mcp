@@ -4,13 +4,14 @@ import { handleListPendingCandidates } from './handler.js';
 export const listPendingCandidatesTool: ToolHandler = {
   definition: {
     name: 'paput_list_pending_candidates',
-    description: '未保存の知見候補を一覧表示します',
+    description:
+      'List pending knowledge candidates that have not yet been saved to PaPut. Use this when the user wants to review or decide what to save.',
     inputSchema: {
       type: 'object',
       properties: {
         limit: {
           type: 'number',
-          description: '取得件数。デフォルトは20です',
+          description: 'Number of items to return. Defaults to 20.',
         },
       },
     },

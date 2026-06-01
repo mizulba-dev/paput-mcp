@@ -4,7 +4,8 @@ import { handleGetCategories } from './handler.js';
 export const getCategoriesTool: ToolHandler = {
   definition: {
     name: 'paput_get_categories',
-    description: 'PaPut のカテゴリー一覧を取得します',
+    description:
+      'List available PaPut categories. Use this before assigning categories or checking whether a category already exists.',
     inputSchema: {
       type: 'object',
       properties: {},

@@ -13,7 +13,7 @@ export async function handleAddKnowledgeCandidates(
 ) {
   if (!args || typeof args.session_id !== 'string') {
     return {
-      content: [{ type: 'text', text: 'session_id は必須です' }],
+      content: [{ type: 'text', text: 'session_id is required' }],
       isError: true,
     };
   }
@@ -23,7 +23,7 @@ export async function handleAddKnowledgeCandidates(
       content: [
         {
           type: 'text',
-          text: 'source は claude または codex を指定してください',
+          text: 'source must be claude or codex',
         },
       ],
       isError: true,
@@ -32,7 +32,7 @@ export async function handleAddKnowledgeCandidates(
 
   if (!Array.isArray(args.candidates)) {
     return {
-      content: [{ type: 'text', text: 'candidates は配列で指定してください' }],
+      content: [{ type: 'text', text: 'candidates must be an array' }],
       isError: true,
     };
   }
@@ -92,20 +92,19 @@ export async function handleAddKnowledgeCandidates(
     sourceSessionUpdatedAt,
   );
 
+  const response = {
+    added: result.added.length,
+    duplicates: result.duplicates.length,
+    candidates: result.added,
+    duplicate_details: result.duplicates,
+  };
+
   return {
+    structuredContent: response,
     content: [
       {
         type: 'text',
-        text: JSON.stringify(
-          {
-            added: result.added.length,
-            duplicates: result.duplicates.length,
-            candidates: result.added,
-            duplicate_details: result.duplicates,
-          },
-          null,
-          2,
-        ),
+        text: JSON.stringify(response, null, 2),
       },
     ],
   };

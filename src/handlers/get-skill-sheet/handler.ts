@@ -9,7 +9,7 @@ export async function handleGetSkillSheet(
   try {
     const skillSheet = await getSkillSheet(apiClient);
 
-    // スキル情報のフォーマット
+    // Format skills
     const skillsText =
       skillSheet.skills.length > 0
         ? skillSheet.skills
@@ -17,57 +17,57 @@ export async function handleGetSkillSheet(
               const categoryType =
                 CATEGORY_TYPE[
                   skill.category_type as keyof typeof CATEGORY_TYPE
-                ] || `タイプ${skill.category_type}`;
-              return `  - ${skill.category.name} (${categoryType}): ${skill.level} (${skill.years}年)`;
+                ] || `Type ${skill.category_type}`;
+              return `  - ${skill.category.name} (${categoryType}): ${skill.level} (${skill.years}year(s))`;
             })
             .join('\n')
-        : '  なし';
+        : '  None';
 
-    // プロジェクト情報のフォーマット
+    // Format projects
     const projectsText =
       skillSheet.projects.length > 0
         ? skillSheet.projects
             .map((project) => {
               const period = project.end_period
                 ? `${project.start_period} - ${project.end_period}`
-                : `${project.start_period} - 現在`;
+                : `${project.start_period} - Present`;
               const projectType =
                 PROJECT_TYPE[project.type as keyof typeof PROJECT_TYPE] ||
-                `タイプ${project.type}`;
+                `Type ${project.type}`;
               const techNames = project.technologies
                 .map((t) => t.name)
                 .join(', ');
               const memoNames = project.memos.map((m) => m.title).join(', ');
 
               return `  【${project.title}】(ID: ${project.id}, ${projectType})
-    期間: ${period}
-    役割: ${project.role}
-    規模: ${project.scale}
-    説明: ${project.description}
-    技術: ${techNames || 'なし'}
-    メモ: ${memoNames || 'なし'}`;
+    Period: ${period}
+    Role: ${project.role}
+    Scale: ${project.scale}
+    Description: ${project.description}
+    Technologies: ${techNames || 'None'}
+    Memos: ${memoNames || 'None'}`;
             })
             .join('\n\n')
-        : '  なし';
+        : '  None';
 
-    // 性別の表示
+    // Format gender
     const genderText =
-      GENDER[skillSheet.gender as keyof typeof GENDER] || `その他`;
+      GENDER[skillSheet.gender as keyof typeof GENDER] || `Other`;
 
-    const content = `スキルシート:
+    const content = `Skill sheet:
 ID: ${skillSheet.id}
-最寄り駅: ${skillSheet.nearest_station || '未設定'}
-性別: ${genderText}
-生年月日: ${skillSheet.birth_date}
-経験年数: ${skillSheet.years_of_experience}年
+Nearest station: ${skillSheet.nearest_station || 'Not set'}
+Gender: ${genderText}
+Birth date: ${skillSheet.birth_date}
+Years of experience: ${skillSheet.years_of_experience} year(s)
 
-自己PR:
-${skillSheet.self_pr || '未設定'}
+Self PR:
+${skillSheet.self_pr || 'Not set'}
 
-スキル:
+Skills:
 ${skillsText}
 
-プロジェクト:
+Projects:
 ${projectsText}`;
 
     return {
@@ -83,15 +83,15 @@ ${projectsText}`;
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
-    // スキルシートが存在しない場合のメッセージ
+    // Message when the skill sheet does not exist
     if (errorMessage.includes('404') || errorMessage.includes('not found')) {
       return {
         content: [
           {
             type: 'text',
-            text: 'スキルシートがまだ作成されていません。',
+            text: 'Skill sheet has not been created yet.',
           },
         ],
       };
@@ -101,7 +101,7 @@ ${projectsText}`;
       content: [
         {
           type: 'text',
-          text: `スキルシートの取得中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while fetching skill sheet: ${errorMessage}`,
         },
       ],
       isError: true,

@@ -13,10 +13,15 @@ export async function handler(
   await updateSkillSheetSelfPr(apiClient, selfPr);
 
   return {
+    structuredContent: {
+      success: true,
+      action: 'updated',
+      self_pr: selfPr.self_pr || null,
+    },
     content: [
       {
         type: 'text',
-        text: '自己PRを更新しました',
+        text: 'Self PR was updated',
       },
     ],
   };

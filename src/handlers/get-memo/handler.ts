@@ -11,7 +11,7 @@ export async function handleGetMemo(
       content: [
         {
           type: 'text',
-          text: 'メモIDが指定されていません。',
+          text: 'Memo ID is required.',
         },
       ],
       isError: true,
@@ -27,14 +27,14 @@ export async function handleGetMemo(
 
     const categories =
       result.categories.length > 0
-        ? `カテゴリ: ${result.categories.map((c) => c.name).join(', ')}`
+        ? `Categories: ${result.categories.map((c) => c.name).join(', ')}`
         : '';
-    const visibility = result.is_public ? '公開' : '非公開';
-    const likeInfo = `いいね: ${result.like_count}${result.has_liked ? ' (いいね済み)' : ''}`;
-    const bookmarkInfo = `ブックマーク: ${result.bookmark_count}${result.has_bookmarked ? ' (ブックマーク済み)' : ''}`;
+    const visibility = result.is_public ? 'Public' : 'Private';
+    const likeInfo = `Likes: ${result.like_count}${result.has_liked ? ' (liked)' : ''}`;
+    const bookmarkInfo = `Bookmarks: ${result.bookmark_count}${result.has_bookmarked ? ' (bookmarked)' : ''}`;
     const projects =
       result.projects.length > 0
-        ? `プロジェクト: ${result.projects.map((p) => p.title).join(', ')}`
+        ? `Project: ${result.projects.map((p) => p.title).join(', ')}`
         : '';
 
     const memoDetail = `【${result.title}】(${visibility})
@@ -46,9 +46,9 @@ ${result.body}
 ${likeInfo}
 ${bookmarkInfo}
 
-作成日: ${result.created_at}
-更新日: ${result.updated_at}
-作成者: ${result.user.name} (@${result.user.user_id})`;
+Created at: ${result.created_at}
+Updated at: ${result.updated_at}
+Author: ${result.user.name} (@${result.user.user_id})`;
 
     return {
       structuredContent: {
@@ -63,13 +63,13 @@ ${bookmarkInfo}
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
     return {
       content: [
         {
           type: 'text',
-          text: `メモの取得中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while fetching memo: ${errorMessage}`,
         },
       ],
       isError: true,

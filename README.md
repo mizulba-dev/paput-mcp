@@ -1,177 +1,223 @@
-# PaPut MCP サーバー
+# PaPut MCP Server
 
-[PaPut](https://paput.io) と連携する Model Context Protocol (MCP) サーバーです。
-Claude、Codex、Cursor などの AI アシスタントから PaPut のメモ、ノート、アイデア、スキルシートを操作できます。
+PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the Model Context Protocol (MCP). It lets Claude, Codex, Cursor, and other MCP clients work with PaPut memos, notes, skill sheets, reusable knowledge candidates, and the local PaPut cache.
 
-## 機能
+## Features
 
-### PaPut データ管理
+### PaPut Data Management
 
-- メモの作成、検索、取得、更新
-- ノートの作成、検索、取得、更新
-- アイデアの作成、一覧表示、更新、削除
-- スキルシートの取得、基本情報更新、自己PR更新
-- スキルシートのスキル/プロジェクト管理
+- Create, search, read, and update memos
+- Create, search, read, and update notes
+- Read and update skill sheet profile fields, self PR, skills, and projects
+- Delete skill sheet projects when explicitly requested
 
-### AI セッションの知見保存
+### Knowledge Capture From AI Sessions
 
-- Claude/Codex のセッションログを検出
-- AI が抽出した知見候補を pending に一時保存
-- 既存 PaPut メモをローカルキャッシュへ同期
-- fingerprint による重複登録の抑制
-- pending 候補を確認してから PaPut に本保存
-- 過去セッション由来の知見は、セッション更新日時を PaPut メモの作成日時として保存
-- セッションのプロジェクト設定から `PAPUT_PROJECT_MATCH` を読み取り、pending 候補に PaPut プロジェクトを紐付け
-- Claude/Codex 向け Skill とグローバルルールのセットアップ
+- Scan local Claude and Codex session logs
+- Add reusable knowledge candidates to a local pending queue
+- Sync existing PaPut memos to the local cache for duplicate detection
+- Prevent duplicate candidates with fingerprints
+- Save pending candidates to PaPut only after explicit user approval
+- Preserve the source session updated timestamp as the PaPut memo creation timestamp
+- Link pending candidates to PaPut projects through `PAPUT_PROJECT_MATCH`
+- Install Claude/Codex skills and global rules for PaPut workflows
 
-## インストール
+## Installation
 
-npx で直接実行できます。
+Run directly with `npx`:
 
 ```bash
 npx -y paput-mcp
 ```
 
-グローバルにインストールする場合:
+Or install globally:
 
 ```bash
 npm install -g paput-mcp
 ```
 
-## MCP 設定
+## MCP Configuration
 
-API キーは PaPut の設定画面から取得できます。
+Create an API key in your PaPut account settings and pass it through the MCP server environment.
 
 ```json
 "paput": {
   "command": "npx",
   "args": ["-y", "paput-mcp"],
   "env": {
-    "PAPUT_API_KEY": "あなたのAPIキー",
-    "PAPUT_PROJECT_MATCH": "プロジェクト名の一部（オプション）"
+    "PAPUT_API_KEY": "your-api-key",
+    "PAPUT_PROJECT_MATCH": "optional project name fragment"
   }
 }
 ```
 
-### 環境変数
+### Environment Variables
 
-- `PAPUT_API_KEY` - 必須。PaPut API キー
-- `PAPUT_API_URL` - 任意。API URL。未指定時は `https://api.paput.io`
-- `PAPUT_PROJECT_MATCH` - 任意。メモ作成/更新時に紐付けるプロジェクト名の一部
-- `PAPUT_HOME` - 任意。PaPut ローカルデータの保存先。未指定時は `~/.paput`
-- `PAPUT_CACHE_DIR` - 任意。知見保存用ローカルキャッシュだけ別の場所に置く場合に指定
+- `PAPUT_API_KEY` - Required PaPut API key.
+- `PAPUT_API_URL` - Optional API URL. Defaults to `https://api.paput.io`.
+- `PAPUT_PROJECT_MATCH` - Optional project name fragment for automatic project linking when creating or updating memos.
+- `PAPUT_HOME` - Optional PaPut local data directory. Defaults to `~/.paput`.
+- `PAPUT_CACHE_DIR` - Optional cache directory for knowledge capture data.
 
-`PAPUT_PROJECT_MATCH` を設定すると、メモ作成・更新時に、指定文字列を含むスキルシートプロジェクトが自動で紐付けられます。複数マッチした場合は最初のプロジェクトが使われます。
+When `PAPUT_PROJECT_MATCH` is set, memo create and update operations search skill sheet projects whose title contains the configured text and link the first match.
 
-## AI 連携の初期設定
+## AI Setup
 
-Claude/Codex で PaPut Skill とグローバルルールを使う場合は、次を実行します。
+Run this command to install PaPut skills and global rules for Claude and Codex:
 
 ```bash
 npx -y paput-mcp setup-ai
 ```
 
-このコマンドは、実行時に変更内容を表示したうえで以下を行います。
+The setup command:
 
-- `~/.paput/skills` に PaPut Skill の正本を作成
-- Claude が存在する場合、`~/.claude/skills` に symlink を作成
-- Codex が存在する場合、`~/.agents/skills` に symlink を作成
-- Claude/Codex のグローバルルールに PaPut 利用ルールを追記
+- Creates canonical PaPut skills under `~/.paput/skills`
+- Creates symlinks under `~/.claude/skills` when Claude is available
+- Creates symlinks under `~/.agents/skills` when Codex is available
+- Adds PaPut usage rules to Claude/Codex global instruction files
 
-オプション:
+Options:
 
 ```bash
-# グローバルルールを変更しない
+# Do not update global rules
 npx -y paput-mcp setup-ai --no-rules
 
-# PaPut 管理のリンクやルールを更新
+# Refresh PaPut-managed links and rule blocks
 npx -y paput-mcp setup-ai --force
 
-# Claude または Codex だけ設定
+# Configure only Claude or only Codex
 npx -y paput-mcp setup-ai --claude-only
 npx -y paput-mcp setup-ai --codex-only
 ```
 
-生成される Skill:
+Generated skills:
 
-- `paput-init` - 初回設定、既存メモ同期、未処理セッション確認
-- `paput-sync` - 既存 PaPut メモをローカルキャッシュへ同期
-- `paput-capture` - 現在の会話や指定テーマから知見候補を pending に保存
-- `paput-save` - pending 候補を確認し、承認したものだけ PaPut に保存
+- `paput-init` - Initialize PaPut usage, sync existing memos, and inspect unprocessed sessions.
+- `paput-sync` - Sync existing PaPut memos into the local cache.
+- `paput-capture` - Extract reusable knowledge candidates from the current conversation or a specified topic and add them to pending.
+- `paput-save` - Review pending candidates first, then save only candidates explicitly approved by the user.
 
-## 知見保存ワークフロー
+## Knowledge Workflow
 
-PaPut への保存は、意図しないメモ登録を避けるために 2 段階で行います。
+Knowledge capture uses a two-step flow to avoid accidental memo creation.
 
 ```text
-知見候補を抽出
+Extract reusable knowledge candidates
   ↓
-pending に保存
+Add candidates to pending
   ↓
-確認後に PaPut へ本保存
+Save approved candidates to PaPut
 ```
 
-通常は、`setup-ai` が追記するグローバルルールにより、AI が作業完了時や問題解決時に PaPut へ残す候補を自動で確認し、重複・機密・プロジェクト固有情報の混入がない候補を pending に追加します。追加後はタイトル、カテゴリ、候補 ID を簡潔に報告します。
+The global rules installed by `setup-ai` ask the AI assistant to automatically check whether completed work, solved problems, or settled design decisions produced reusable knowledge. Candidates that are reusable, non-duplicate, non-sensitive, and not project-specific may be added to pending without asking for approval. The assistant should report the title, categories, and candidate ID after adding them.
 
-重複の可能性、機密情報の混入、汎用性の低さ、判断に迷う内容がある場合だけ、pending 追加前に確認を求めます。
+If a candidate may be duplicate, sensitive, project-specific, or too ambiguous, the assistant should ask before adding it to pending.
 
-AI が候補提示を行わなかった場合は、`paput-capture` を使います。
+Use `paput-capture` when the assistant did not automatically suggest candidates.
 
 ```text
-PaPut に残す知見候補を作って
+Create PaPut knowledge candidates from this conversation
 ```
 
-pending 候補を PaPut に本保存する場合は、`paput-save` を使います。
+Use `paput-save` when you want to save pending candidates to PaPut.
 
 ```text
-PaPut の保存候補を確認して
+Review my PaPut pending candidates
 ```
 
-Claude では `/paput-save` のように Skill を呼び出せます。Codex では `$paput-save` または自然言語で利用します。
+Claude can call skills such as `/paput-save`. Codex can call `$paput-save` or use natural language.
 
-## 利用可能なツール
+## Available Tools
 
-### メモ管理
+### Memo Management
 
-- `paput_create_memo` - メモを作成
-- `paput_search_memo` - メモを検索
-- `paput_get_memo` - メモの詳細を取得
-- `paput_update_memo` - メモを更新
-- `paput_get_categories` - カテゴリー一覧を取得
+- `paput_create_memo` - Create a PaPut memo directly.
+- `paput_search_memo` - Search PaPut memos by keyword, category, IDs, date, visibility, or pagination.
+- `paput_get_memo` - Get full details for a memo.
+- `paput_update_memo` - Update an existing memo.
+- `paput_get_categories` - List available categories.
 
-### ノート管理
+### Note Management
 
-- `paput_create_note` - ノートを作成
-- `paput_search_notes` - ノートを検索
-- `paput_get_note` - ノートの詳細を取得
-- `paput_update_note` - ノートを更新
+- `paput_create_note` - Create a note that groups existing memos.
+- `paput_search_notes` - Search notes by keyword, visibility, and pagination.
+- `paput_get_note` - Get full details for a note.
+- `paput_update_note` - Update a note title, visibility, or attached memo IDs.
 
-### スキルシート管理
+### Skill Sheet Management
 
-- `paput_get_skill_sheet` - スキルシートを取得
-- `paput_update_skill_sheet_basic_info` - スキルシート基本情報を更新
-- `paput_update_skill_sheet_self_pr` - スキルシート自己PRを更新
-- `paput_set_skill_sheet_skills` - スキルシートのスキル一覧を指定した最終状態に置き換え
-- `paput_upsert_skill_sheet_project` - スキルシートプロジェクトを追加または更新
-- `paput_delete_skill_sheet_project` - スキルシートからプロジェクトを削除
+- `paput_get_skill_sheet` - Get the full skill sheet.
+- `paput_update_skill_sheet_basic_info` - Update basic profile fields.
+- `paput_update_skill_sheet_self_pr` - Update the self PR section.
+- `paput_set_skill_sheet_skills` - Replace the full skill list with the provided final state.
+- `paput_upsert_skill_sheet_project` - Add or update a skill sheet project.
+- `paput_delete_skill_sheet_project` - Delete a skill sheet project.
 
-### 知見保存・ローカルキャッシュ
+### Knowledge Capture And Local Cache
 
-- `paput_cache_status` - ローカルキャッシュ状態を取得
-- `paput_sync_remote_memos` - 既存 PaPut メモをローカルキャッシュへ同期
-- `paput_scan_sessions` - Claude/Codex のローカルセッションログを検出
-- `paput_get_session_transcript` - セッション本文を取得
-- `paput_add_knowledge_candidates` - AI が抽出した知見候補を pending に保存
-- `paput_list_pending_candidates` - 未保存の知見候補を一覧表示
-- `paput_save_pending_candidate` - pending 候補を PaPut メモとして保存
-- `paput_discard_pending_candidate` - pending 候補を破棄
+- `paput_cache_status` - Inspect the local cache state.
+- `paput_sync_remote_memos` - Sync existing PaPut memos into the local cache.
+- `paput_scan_sessions` - Scan local Claude/Codex session logs.
+- `paput_get_session_transcript` - Read a session transcript.
+- `paput_add_knowledge_candidates` - Add extracted knowledge candidates to pending.
+- `paput_list_pending_candidates` - List pending candidates.
+- `paput_save_pending_candidate` - Save an approved pending candidate as a PaPut memo.
+- `paput_discard_pending_candidate` - Discard a pending candidate.
 
-## ローカルデータ
+## Confirmation Guidance
 
-PaPut MCP が作成するローカルデータは、デフォルトで `~/.paput` に保存されます。
+Write and destructive tools should be used only when the user intent is clear. In particular:
+
+- `paput_save_pending_candidate` requires explicit user approval to save a pending candidate to PaPut.
+- `paput_delete_skill_sheet_project` should be used only when the user intends to delete a project.
+- `paput_set_skill_sheet_skills` replaces the full skill list and should be used only when the desired final list is known.
+- `paput_discard_pending_candidate` removes a pending candidate from the save flow.
+- Update and upsert tools should preserve existing data unless the user requests a change.
+
+## Usage Examples
+
+### 1. Avoid duplicate knowledge before saving
+
+```text
+Search PaPut for existing memos about MCP tool descriptions before creating a new knowledge candidate.
+```
+
+Recommended tool flow:
+
+1. `paput_search_memo`
+2. `paput_add_knowledge_candidates` if no duplicate exists
+3. `paput_list_pending_candidates` when the user wants to review pending items
+
+### 2. Capture knowledge from a Codex session
+
+```text
+Scan recent Codex sessions and extract reusable knowledge from the relevant session.
+```
+
+Recommended tool flow:
+
+1. `paput_scan_sessions`
+2. `paput_get_session_transcript`
+3. `paput_add_knowledge_candidates`
+
+### 3. Update a skill sheet project
+
+```text
+Update my skill sheet project with the latest technologies and responsibilities.
+```
+
+Recommended tool flow:
+
+1. `paput_get_skill_sheet`
+2. `paput_upsert_skill_sheet_project`
+3. `paput_get_skill_sheet` to verify the updated project
+
+## Local Data
+
+PaPut MCP stores local data under `~/.paput` by default.
 
 ```text
 ~/.paput/
-  skills/  # Claude/Codex にリンクする Skill の正本
-  cache/   # メモ同期、pending 候補、処理済みセッション情報
+  skills/  # Canonical skills linked into Claude/Codex
+  cache/   # Synced memos, pending candidates, and processed sessions
 ```

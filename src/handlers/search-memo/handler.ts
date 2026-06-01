@@ -42,7 +42,7 @@ export async function handleSearchMemo(
         content: [
           {
             type: 'text',
-            text: `メモの検索に失敗しました: ${result.error || '不明なエラー'}`,
+            text: `Failed to search memos: ${result.error || 'Unknown error'}`,
           },
         ],
         isError: true,
@@ -58,7 +58,7 @@ export async function handleSearchMemo(
         content: [
           {
             type: 'text',
-            text: '該当するメモが見つかりませんでした。',
+            text: 'No matching memos found.',
           },
         ],
       };
@@ -68,14 +68,14 @@ export async function handleSearchMemo(
       .map((memo) => {
         const categories =
           memo.categories.length > 0
-            ? `カテゴリ: ${memo.categories.map((c) => c.name).join(', ')}`
+            ? `Categories: ${memo.categories.map((c) => c.name).join(', ')}`
             : '';
-        const visibility = memo.is_public ? '公開' : '非公開';
+        const visibility = memo.is_public ? 'Public' : 'Private';
 
         return `【${memo.title}】(ID: ${memo.id}, ${visibility})
 ${categories}
 ${memo.body}
-(作成日: ${memo.created_at})`;
+(Created at: ${memo.created_at})`;
       })
       .join('\n\n---\n\n');
 
@@ -87,19 +87,19 @@ ${memo.body}
       content: [
         {
           type: 'text',
-          text: `${result.total}件中${result.memos.length}件のメモが見つかりました:\n\n${memoList}`,
+          text: `${result.total} of ${result.memos.length} memos found:\n\n${memoList}`,
         },
       ],
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
     return {
       content: [
         {
           type: 'text',
-          text: `メモの検索中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while searching memos: ${errorMessage}`,
         },
       ],
       isError: true,

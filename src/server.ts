@@ -11,7 +11,7 @@ export class MCPServer {
   private server: Server;
 
   constructor() {
-    // 環境変数の取得
+    // Read environment variables
     const apiKey = process.env.PAPUT_API_KEY;
     const apiUrl = process.env.PAPUT_API_URL ?? 'https://api.paput.io';
 
@@ -19,7 +19,7 @@ export class MCPServer {
       throw new Error('PAPUT_API_KEY environment variable is not set');
     }
 
-    // サーバーの初期化
+    // Initialize server
     this.server = new Server(
       {
         name: 'paput-mcp',
@@ -33,7 +33,7 @@ export class MCPServer {
       },
     );
 
-    // ツールとエラーハンドリングのセットアップ
+    // Set up tools and error handling
     setupTool(this.server, apiUrl, apiKey);
     setupErrorHandling(this.server);
   }
@@ -42,7 +42,7 @@ export class MCPServer {
     const transport = new StdioServerTransport();
 
     transport.onerror = (error: unknown) => {
-      console.error(`MCPエラー発生: ${error}`);
+      console.error(`MCP error: ${error}`);
     };
 
     await this.server.connect(transport);

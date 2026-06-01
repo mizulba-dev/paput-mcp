@@ -4,13 +4,14 @@ import { handleGetMemo } from './handler.js';
 export const getMemoTool: ToolHandler = {
   definition: {
     name: 'paput_get_memo',
-    description: 'PaPut のメモ詳細を取得します',
+    description:
+      'Get the full details of a PaPut memo by ID, including body, categories, projects, visibility, author, and engagement metadata.',
     inputSchema: {
       type: 'object',
       properties: {
         id: {
           type: 'number',
-          description: 'メモID',
+          description: 'Memo ID',
         },
       },
       required: ['id'],

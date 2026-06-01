@@ -10,7 +10,7 @@ export async function handler(
       content: [
         {
           type: 'text',
-          text: '削除するプロジェクトIDが指定されていません',
+          text: 'Project ID to delete is required',
         },
       ],
       isError: true,
@@ -21,10 +21,15 @@ export async function handler(
   await deleteSkillSheetProject(apiClient, projectId);
 
   return {
+    structuredContent: {
+      success: true,
+      action: 'deleted',
+      project_id: projectId,
+    },
     content: [
       {
         type: 'text',
-        text: 'プロジェクトを削除しました',
+        text: 'Project was deleted',
       },
     ],
   };

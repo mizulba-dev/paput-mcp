@@ -16,10 +16,15 @@ export async function handler(
   await updateSkillSheetBasicInfo(apiClient, basicInfo);
 
   return {
+    structuredContent: {
+      success: true,
+      action: 'updated',
+      basic_info: basicInfo,
+    },
     content: [
       {
         type: 'text',
-        text: '基本情報を更新しました',
+        text: 'Basic information was updated',
       },
     ],
   };

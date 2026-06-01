@@ -5,55 +5,56 @@ export const upsertSkillSheetProjectTool: ToolHandler = {
   definition: {
     name: 'paput_upsert_skill_sheet_project',
     description:
-      'PaPut のスキルシートプロジェクトを追加または更新します。id が指定された場合は更新し、id がない場合は同名プロジェクトを更新、なければ追加します',
+      'Add or update a PaPut skill sheet project. If an ID is provided, update that project; otherwise update an exact title match or create a new project.',
     inputSchema: {
       type: 'object',
       properties: {
         id: {
           type: 'number',
-          description: '更新対象のプロジェクトID。新規追加時は省略します',
+          description:
+            'Project ID to update. Omit when creating a new project.',
         },
         type: {
           type: 'number',
-          description: 'プロジェクトタイプ（1: 業務, 2: 個人）',
+          description: 'Project type: 1 business, 2 personal',
         },
         title: {
           type: 'string',
-          description: 'プロジェクトタイトル',
+          description: 'Project title',
         },
         start_period: {
           type: 'string',
-          description: '開始期間（YYYY-MM形式）',
+          description: 'Start period in YYYY-MM format',
         },
         end_period: {
           type: 'string',
-          description: '終了期間（YYYY-MM形式）',
+          description: 'End period in YYYY-MM format',
         },
         description: {
           type: 'string',
-          description: 'プロジェクトの説明',
+          description: 'Project description',
         },
         role: {
           type: 'string',
-          description: '役割',
+          description: 'Role',
         },
         scale: {
           type: 'string',
-          description: '規模',
+          description: 'Team or project scale',
         },
         technologies: {
           type: 'array',
-          description: '使用技術',
+          description: 'Technologies used',
           items: {
             type: 'object',
             properties: {
               id: {
                 type: 'number',
-                description: '技術ID（既存の場合）',
+                description: 'Technology ID for an existing technology',
               },
               name: {
                 type: 'string',
-                description: '技術名',
+                description: 'Technology name',
               },
             },
             required: ['name'],
@@ -62,24 +63,24 @@ export const upsertSkillSheetProjectTool: ToolHandler = {
         processes: {
           type: 'array',
           description:
-            '開発工程のID配列 (1: 要件定義, 2: 基本設計, 3: 詳細設計, 4: 実装, 5: テスト, 6: 保守)',
+            'Development process IDs: 1 requirements, 2 basic design, 3 detailed design, 4 implementation, 5 testing, 6 maintenance',
           items: {
             type: 'number',
           },
         },
         memos: {
           type: 'array',
-          description: '関連メモ',
+          description: 'Related memos',
           items: {
             type: 'object',
             properties: {
               id: {
                 type: 'number',
-                description: 'メモID',
+                description: 'Memo ID',
               },
               title: {
                 type: 'string',
-                description: 'メモタイトル',
+                description: 'Memo title',
               },
             },
             required: ['id', 'title'],

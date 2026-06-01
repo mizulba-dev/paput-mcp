@@ -11,27 +11,27 @@ export async function handleUpdateNote(
       content: [
         {
           type: 'text',
-          text: 'パラメータが不足しています',
+          text: 'Missing parameters',
         },
       ],
       isError: true,
     };
   }
 
-  // パラメータの検証
+  // Validate parameters
   if (typeof args.id !== 'number') {
     return {
       content: [
         {
           type: 'text',
-          text: 'IDは数値で指定してください',
+          text: 'ID must be a number',
         },
       ],
       isError: true,
     };
   }
 
-  // 少なくとも1つの更新項目が必要
+  // Require at least one update field
   const hasUpdateFields =
     typeof args.title === 'string' ||
     typeof args.is_public === 'boolean' ||
@@ -42,14 +42,14 @@ export async function handleUpdateNote(
       content: [
         {
           type: 'text',
-          text: '更新する項目を少なくとも1つ指定してください',
+          text: 'Specify at least one field to update',
         },
       ],
       isError: true,
     };
   }
 
-  // パラメータの構築
+  // Build parameters
   const params: UpdateNoteParams = {
     id: args.id,
   };
@@ -76,7 +76,7 @@ export async function handleUpdateNote(
         content: [
           {
             type: 'text',
-            text: `ノートの更新に失敗しました: ${result.error || '不明なエラー'}`,
+            text: `Failed to update note: ${result.error || 'Unknown error'}`,
           },
         ],
         isError: true,
@@ -84,28 +84,38 @@ export async function handleUpdateNote(
     }
 
     const updateInfo = [];
-    if (params.title) updateInfo.push(`タイトル: ${params.title}`);
+    if (params.title) updateInfo.push(`Title: ${params.title}`);
     if (params.is_public !== undefined)
-      updateInfo.push(`公開設定: ${params.is_public ? '公開' : '非公開'}`);
-    if (params.memos) updateInfo.push(`メモ数: ${params.memos.length}件`);
+      updateInfo.push(`Visibility: ${params.is_public ? 'Public' : 'Private'}`);
+    if (params.memos) updateInfo.push(`Memo count: ${params.memos.length}`);
 
     return {
+      structuredContent: {
+        success: true,
+        action: 'updated',
+        note: {
+          id: params.id,
+          title: params.title,
+          is_public: params.is_public,
+          memos: params.memos,
+        },
+      },
       content: [
         {
           type: 'text',
-          text: `ノート (ID: ${params.id}) が正常に更新されました。\n更新内容:\n${updateInfo.map((info) => `  - ${info}`).join('\n')}`,
+          text: `Note (ID: ) was updated successfully.\nUpdated fields:\n${updateInfo.map((info) => `  - ${info}`).join('\n')}`,
         },
       ],
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
     return {
       content: [
         {
           type: 'text',
-          text: `ノートの更新中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while updating note: ${errorMessage}`,
         },
       ],
       isError: true,

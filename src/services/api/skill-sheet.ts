@@ -94,7 +94,7 @@ export async function createSkillSheet(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : '不明なエラー',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -120,7 +120,7 @@ export async function updateSkillSheet(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : '不明なエラー',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }

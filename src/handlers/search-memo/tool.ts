@@ -4,40 +4,41 @@ import { handleSearchMemo } from './handler.js';
 export const searchMemoTool: ToolHandler = {
   definition: {
     name: 'paput_search_memo',
-    description: 'PaPut のメモを検索します',
+    description:
+      'Search PaPut memos by keyword, category, IDs, date, visibility, or pagination. Use this to find existing knowledge before creating or saving a memo.',
     inputSchema: {
       type: 'object',
       properties: {
         word: {
           type: 'string',
-          description: '検索キーワード',
+          description: 'Search keyword',
         },
         category_id: {
           type: 'number',
-          description: 'カテゴリーID',
+          description: 'Category ID',
         },
         ids: {
           type: 'array',
           items: {
             type: 'number',
           },
-          description: 'メモIDの配列',
+          description: 'Memo IDs',
         },
         date: {
           type: 'string',
-          description: '日付（YYYY-MM-DD形式）',
+          description: 'Date in YYYY-MM-DD format',
         },
         is_public: {
           type: 'boolean',
-          description: '公開/非公開フィルタ',
+          description: 'Visibility filter',
         },
         page: {
           type: 'number',
-          description: 'ページ番号',
+          description: 'Page number',
         },
         limit: {
           type: 'number',
-          description: '取得件数',
+          description: 'Number of items to return',
         },
       },
     },

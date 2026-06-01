@@ -8,7 +8,7 @@ export async function handleGetSessionTranscript(
 ) {
   if (!args || typeof args.session_id !== 'string') {
     return {
-      content: [{ type: 'text', text: 'session_id は必須です' }],
+      content: [{ type: 'text', text: 'session_id is required' }],
       isError: true,
     };
   }
@@ -18,7 +18,7 @@ export async function handleGetSessionTranscript(
       content: [
         {
           type: 'text',
-          text: 'source は claude または codex を指定してください',
+          text: 'source must be claude or codex',
         },
       ],
       isError: true,
@@ -38,7 +38,7 @@ export async function handleGetSessionTranscript(
       content: [
         {
           type: 'text',
-          text: `セッションが見つかりません: ${args.source}:${args.session_id}`,
+          text: `Session not found: ${args.source}:${args.session_id}`,
         },
       ],
       isError: true,

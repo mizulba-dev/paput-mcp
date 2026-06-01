@@ -5,13 +5,13 @@ export const setSkillSheetSkillsTool: ToolHandler = {
   definition: {
     name: 'paput_set_skill_sheet_skills',
     description:
-      'PaPut のスキルシートのスキル一覧を指定した最終状態に置き換えます',
+      'Replace the full skill list on the PaPut skill sheet with the provided final state. Use this when the complete desired skill list is known.',
     inputSchema: {
       type: 'object',
       properties: {
         skills: {
           type: 'array',
-          description: 'スキルリスト',
+          description: 'Skill list',
           items: {
             type: 'object',
             properties: {
@@ -20,11 +20,11 @@ export const setSkillSheetSkillsTool: ToolHandler = {
                 properties: {
                   id: {
                     type: 'number',
-                    description: 'カテゴリID',
+                    description: 'Category ID',
                   },
                   name: {
                     type: 'string',
-                    description: 'カテゴリ名',
+                    description: 'Category name',
                   },
                 },
                 required: ['id', 'name'],
@@ -32,15 +32,15 @@ export const setSkillSheetSkillsTool: ToolHandler = {
               category_type: {
                 type: 'number',
                 description:
-                  'カテゴリタイプ（1: 言語, 2: フレームワーク, 3: データベース, 4: インフラ）',
+                  'Category type: 1 language, 2 framework, 3 database, 4 infrastructure',
               },
               level: {
                 type: 'string',
-                description: 'スキルレベル（A, B, C, D, E）',
+                description: 'Skill level: A, B, C, D, or E',
               },
               years: {
                 type: 'number',
-                description: '経験年数',
+                description: 'Years of experience',
               },
             },
             required: ['category', 'category_type', 'level', 'years'],

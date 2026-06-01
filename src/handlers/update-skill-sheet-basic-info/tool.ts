@@ -4,25 +4,26 @@ import { handler } from './handler.js';
 export const updateSkillSheetBasicInfoTool: ToolHandler = {
   definition: {
     name: 'paput_update_skill_sheet_basic_info',
-    description: 'PaPut のスキルシート基本情報を更新します',
+    description:
+      'Update basic profile fields on the PaPut skill sheet, such as nearest station, gender, birth date, and years of experience.',
     inputSchema: {
       type: 'object',
       properties: {
         nearest_station: {
           type: 'string',
-          description: '最寄駅',
+          description: 'Nearest station',
         },
         gender: {
           type: 'number',
-          description: '性別（1: 男性, 2: 女性）',
+          description: 'Gender: 1 male, 2 female',
         },
         birth_date: {
           type: 'string',
-          description: '生年月日（YYYY-MM-DD形式）',
+          description: 'Birth date in YYYY-MM-DD format',
         },
         years_of_experience: {
           type: 'number',
-          description: '経験年数',
+          description: 'Years of experience',
         },
       },
     },

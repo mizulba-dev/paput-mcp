@@ -9,6 +9,6 @@ if (runCli(process.argv.slice(2))) {
 
 const server = new MCPServer();
 server.run().catch((error) => {
-  console.error('予期せぬエラー:', error);
+  console.error('Unexpected error:', error);
   process.exit(1);
 });

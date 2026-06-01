@@ -23,13 +23,13 @@ export function runCli(args: string[]): boolean {
 
 function printHelp(): void {
   console.log(`Usage:
-  paput-mcp             MCP サーバーを起動
-  paput-mcp setup-ai    Claude/Codex 向け PaPut 連携を初期設定
+  paput-mcp             Start the MCP server
+  paput-mcp setup-ai    Set up PaPut integration for Claude/Codex
 
 Options:
-  --force               PaPut 管理の既存リンク/ルールを更新
-  --no-rules            グローバルルールを追記しない
-  --claude-only         Claude のみ設定
-  --codex-only          Codex のみ設定
+  --force               Refresh existing PaPut-managed links and rules
+  --no-rules            Do not update global rules
+  --claude-only         Configure Claude only
+  --codex-only          Configure Codex only
 `);
 }

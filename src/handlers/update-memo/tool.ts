@@ -4,25 +4,26 @@ import { handleUpdateMemo } from './handler.js';
 export const updateMemoTool: ToolHandler = {
   definition: {
     name: 'paput_update_memo',
-    description: 'PaPut のメモを更新します',
+    description:
+      'Update an existing PaPut memo, including title, body, visibility, categories, and optional project links.',
     inputSchema: {
       type: 'object',
       properties: {
         id: {
           type: 'number',
-          description: 'メモID',
+          description: 'Memo ID',
         },
         title: {
           type: 'string',
-          description: 'メモのタイトル',
+          description: 'Memo title',
         },
         body: {
           type: 'string',
-          description: 'メモの本文',
+          description: 'Memo body',
         },
         is_public: {
           type: 'boolean',
-          description: 'メモを公開するかどうか',
+          description: 'Whether to publish the memo',
         },
         categories: {
           type: 'array',
@@ -31,16 +32,16 @@ export const updateMemoTool: ToolHandler = {
             properties: {
               id: {
                 type: 'number',
-                description: '既存カテゴリーのID（新規の場合は省略）',
+                description: 'Existing category ID. Omit for a new category.',
               },
               name: {
                 type: 'string',
-                description: 'カテゴリー名',
+                description: 'Category name',
               },
             },
             required: ['name'],
           },
-          description: 'カテゴリーの配列',
+          description: 'Categories',
         },
       },
       required: ['id', 'title', 'body', 'is_public'],

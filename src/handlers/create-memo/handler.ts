@@ -12,27 +12,27 @@ export async function handleCreateMemo(
       content: [
         {
           type: 'text',
-          text: 'パラメータが不足しています',
+          text: 'Missing parameters',
         },
       ],
       isError: true,
     };
   }
 
-  // パラメータの検証
+  // Validate parameters
   if (typeof args.title !== 'string' || typeof args.body !== 'string') {
     return {
       content: [
         {
           type: 'text',
-          text: 'タイトルと本文は文字列で指定してください',
+          text: 'Title and body must be strings',
         },
       ],
       isError: true,
     };
   }
 
-  // パラメータの構築
+  // Build parameters
   const params: CreateMemoParams = {
     title: args.title,
     body: args.body,
@@ -43,14 +43,14 @@ export async function handleCreateMemo(
     params.created_at = args.created_at;
   }
 
-  // カテゴリの処理
+  // Process categories
   if (Array.isArray(args.categories)) {
     params.categories = args.categories
       .filter((item): item is string => typeof item === 'string')
       .map((name) => ({ name }));
   }
 
-  // プロジェクトの処理
+  // Process projects
   if (Array.isArray(args.projects)) {
     params.projects = args.projects.filter(
       (item): item is { id: number; title?: string } =>
@@ -60,18 +60,18 @@ export async function handleCreateMemo(
         typeof item.id === 'number',
     );
   } else if (!args.projects && process.env.PAPUT_PROJECT_MATCH) {
-    // 環境変数が設定されている場合、プロジェクトを検索して自動紐付け
+    // When configured, search for a project and link it automatically
     try {
       const projects = await searchSkillSheetProjects(
         apiClient,
         process.env.PAPUT_PROJECT_MATCH,
       );
       if (projects.length > 0) {
-        // 最初にマッチしたプロジェクトを使用
+        // Use the first matched project
         params.projects = [projects[0]];
       }
     } catch (error) {
-      // プロジェクト検索が失敗しても、メモ作成は続行
+      // Continue creating the memo even if project search fails
       console.error('Failed to search projects:', error);
     }
   }
@@ -84,19 +84,30 @@ export async function handleCreateMemo(
         content: [
           {
             type: 'text',
-            text: `メモの作成に失敗しました: ${result.error || '不明なエラー'}`,
+            text: `Failed to create memo: ${result.error || 'Unknown error'}`,
           },
         ],
         isError: true,
       };
     }
 
-    let message = `メモ「${params.title}」が正常に作成されました。`;
+    let message = `Memo "" was created successfully.`;
     if (params.projects && params.projects.length > 0) {
-      message += `\nプロジェクト: ${params.projects[0].title || `ID: ${params.projects[0].id}`}`;
+      message += `\nProject: ${params.projects[0].title || `ID: ${params.projects[0].id}`}`;
     }
 
     return {
+      structuredContent: {
+        success: true,
+        action: 'created',
+        memo: {
+          title: params.title,
+          is_public: params.is_public,
+          created_at: params.created_at,
+          categories: params.categories || [],
+          projects: params.projects || [],
+        },
+      },
       content: [
         {
           type: 'text',
@@ -106,13 +117,13 @@ export async function handleCreateMemo(
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
     return {
       content: [
         {
           type: 'text',
-          text: `メモの作成中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while creating memo: ${errorMessage}`,
         },
       ],
       isError: true,

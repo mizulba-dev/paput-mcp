@@ -12,7 +12,7 @@ export async function handleUpdateMemo(
       content: [
         {
           type: 'text',
-          text: 'パラメータが指定されていません。',
+          text: 'Missing parameters.',
         },
       ],
       isError: true,
@@ -29,7 +29,7 @@ export async function handleUpdateMemo(
       content: [
         {
           type: 'text',
-          text: '必須パラメータが不足しているか、型が正しくありません。',
+          text: 'Required parameters are missing or have invalid types.',
         },
       ],
       isError: true,
@@ -59,7 +59,7 @@ export async function handleUpdateMemo(
     categories,
   };
 
-  // プロジェクトの処理
+  // Process projects
   if (Array.isArray(args.projects)) {
     params.projects = args.projects.filter(
       (item): item is { id: number; title?: string } =>
@@ -69,18 +69,18 @@ export async function handleUpdateMemo(
         typeof item.id === 'number',
     );
   } else if (!args.projects && process.env.PAPUT_PROJECT_MATCH) {
-    // 環境変数が設定されている場合、プロジェクトを検索して自動紐付け
+    // When configured, search for a project and link it automatically
     try {
       const projects = await searchSkillSheetProjects(
         apiClient,
         process.env.PAPUT_PROJECT_MATCH,
       );
       if (projects.length > 0) {
-        // 最初にマッチしたプロジェクトを使用
+        // Use the first matched project
         params.projects = [projects[0]];
       }
     } catch (error) {
-      // プロジェクト検索が失敗しても、メモ更新は続行
+      // Continue updating the memo even if project search fails
       console.error('Failed to search projects:', error);
     }
   }
@@ -93,19 +93,30 @@ export async function handleUpdateMemo(
         content: [
           {
             type: 'text',
-            text: `メモの更新に失敗しました: ${result.error || '不明なエラー'}`,
+            text: `Failed to update memo: ${result.error || 'Unknown error'}`,
           },
         ],
         isError: true,
       };
     }
 
-    let message = 'メモを更新しました。';
+    let message = 'Memo was updated.';
     if (params.projects && params.projects.length > 0) {
-      message += `\nプロジェクト: ${params.projects[0].title || `ID: ${params.projects[0].id}`}`;
+      message += `\nProject: ${params.projects[0].title || `ID: ${params.projects[0].id}`}`;
     }
 
     return {
+      structuredContent: {
+        success: true,
+        action: 'updated',
+        memo: {
+          id: params.id,
+          title: params.title,
+          is_public: params.is_public,
+          categories: params.categories || [],
+          projects: params.projects || [],
+        },
+      },
       content: [
         {
           type: 'text',
@@ -115,13 +126,13 @@ export async function handleUpdateMemo(
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
     return {
       content: [
         {
           type: 'text',
-          text: `メモの更新中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while updating memo: ${errorMessage}`,
         },
       ],
       isError: true,

@@ -11,20 +11,20 @@ export async function handleGetNote(
       content: [
         {
           type: 'text',
-          text: 'パラメータが不足しています',
+          text: 'Missing parameters',
         },
       ],
       isError: true,
     };
   }
 
-  // パラメータの検証
+  // Validate parameters
   if (typeof args.id !== 'number') {
     return {
       content: [
         {
           type: 'text',
-          text: 'IDは数値で指定してください',
+          text: 'ID must be a number',
         },
       ],
       isError: true,
@@ -38,25 +38,25 @@ export async function handleGetNote(
   try {
     const note = await getNote(apiClient, params);
 
-    const visibility = note.is_public ? '公開' : '非公開';
+    const visibility = note.is_public ? 'Public' : 'Private';
     const memoList = note.memos
       .map((memo) => {
         const categories =
-          memo.categories.map((c) => c.name).join(', ') || 'なし';
-        const memoVisibility = memo.is_public ? '公開' : '非公開';
-        return `  - [${memo.id}] ${memo.title} (${memoVisibility})\n    カテゴリ: ${categories}\n    ${memo.body.substring(0, 100)}${memo.body.length > 100 ? '...' : ''}`;
+          memo.categories.map((c) => c.name).join(', ') || 'None';
+        const memoVisibility = memo.is_public ? 'Public' : 'Private';
+        return `  - [${memo.id}] ${memo.title} (${memoVisibility})\n    Categories: ${categories}\n    ${memo.body.substring(0, 100)}${memo.body.length > 100 ? '...' : ''}`;
       })
       .join('\n\n');
 
-    const content = `ノート詳細:
+    const content = `Note details:
 ID: ${note.id}
-タイトル: ${note.title}
-公開設定: ${visibility}
-作成日時: ${note.created_at}
-更新日時: ${note.updated_at}
+Title: ${note.title}
+Visibility: ${visibility}
+Created at: ${note.created_at}
+Updated at: ${note.updated_at}
 
-含まれるメモ (${note.memos.length}件):
-${memoList || '  なし'}`;
+Attached memos (${note.memos.length}):
+${memoList || '  None'}`;
 
     return {
       structuredContent: {
@@ -71,13 +71,13 @@ ${memoList || '  なし'}`;
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : '不明なエラー';
+      error instanceof Error ? error.message : 'Unknown error';
 
     return {
       content: [
         {
           type: 'text',
-          text: `ノートの取得中にエラーが発生しました: ${errorMessage}`,
+          text: `Error while fetching note: ${errorMessage}`,
         },
       ],
       isError: true,

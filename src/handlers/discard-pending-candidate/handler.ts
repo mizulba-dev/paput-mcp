@@ -7,7 +7,7 @@ export async function handleDiscardPendingCandidate(
 ) {
   if (!args || typeof args.candidate_id !== 'string') {
     return {
-      content: [{ type: 'text', text: 'candidate_id は必須です' }],
+      content: [{ type: 'text', text: 'candidate_id is required' }],
       isError: true,
     };
   }
@@ -22,25 +22,24 @@ export async function handleDiscardPendingCandidate(
   if (!updated) {
     return {
       content: [
-        { type: 'text', text: '破棄対象の pending 候補が見つかりません' },
+        { type: 'text', text: 'Pending candidate to discard was not found' },
       ],
       isError: true,
     };
   }
 
+  const result = {
+    discarded: true,
+    candidate_id: updated.id,
+    title: updated.title,
+  };
+
   return {
+    structuredContent: result,
     content: [
       {
         type: 'text',
-        text: JSON.stringify(
-          {
-            discarded: true,
-            candidate_id: updated.id,
-            title: updated.title,
-          },
-          null,
-          2,
-        ),
+        text: JSON.stringify(result, null, 2),
       },
     ],
   };

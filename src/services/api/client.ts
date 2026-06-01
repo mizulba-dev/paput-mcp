@@ -51,7 +51,7 @@ export async function apiRequest<T = unknown>(
   try {
     return JSON.parse(text);
   } catch (e) {
-    // JSONのパースに失敗したが、リクエストは成功しているので空のオブジェクトを返す
+    // Return an empty object when JSON parsing fails but the request succeeded
     return {} as T;
   }
 }

@@ -37,7 +37,7 @@ export async function createNote(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : '不明なエラー',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -68,7 +68,7 @@ export async function searchNotes(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : '不明なエラー',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -98,7 +98,7 @@ export async function updateNote(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : '不明なエラー',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }

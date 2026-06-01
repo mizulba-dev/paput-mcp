@@ -4,12 +4,16 @@ import { handleDiscardPendingCandidate } from './handler.js';
 export const discardPendingCandidateTool: ToolHandler = {
   definition: {
     name: 'paput_discard_pending_candidate',
-    description: 'pending の知見候補を破棄します',
+    description:
+      'Discard a pending knowledge candidate so it will not be saved as a PaPut memo. Use this for duplicates, low-value candidates, or candidates with sensitive/project-specific content.',
     inputSchema: {
       type: 'object',
       properties: {
-        candidate_id: { type: 'string', description: '破棄する候補ID' },
-        reason: { type: 'string', description: '破棄理由' },
+        candidate_id: {
+          type: 'string',
+          description: 'Candidate ID to discard',
+        },
+        reason: { type: 'string', description: 'Reason for discarding' },
       },
       required: ['candidate_id'],
     },

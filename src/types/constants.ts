@@ -1,24 +1,24 @@
-// 性別の定数
+// Gender constants
 export const GENDER = {
-  1: '男性',
-  2: '女性',
+  1: 'Male',
+  2: 'Female',
 } as const;
 
-// プロジェクトタイプの定数
+// Project type constants
 export const PROJECT_TYPE = {
-  1: '業務',
-  2: '個人',
+  1: 'Business',
+  2: 'Personal',
 } as const;
 
-// カテゴリータイプの定数
+// Category type constants
 export const CATEGORY_TYPE = {
-  1: '言語',
-  2: 'フレームワーク',
-  3: 'データベース',
-  4: 'インフラ',
+  1: 'Language',
+  2: 'Framework',
+  3: 'Database',
+  4: 'Infrastructure',
 } as const;
 
-// スキルレベルの定数
+// Skill level constants
 export const SKILL_LEVEL = {
   A: 'A',
   B: 'B',
@@ -27,7 +27,7 @@ export const SKILL_LEVEL = {
   E: 'E',
 } as const;
 
-// 型定義
+// Type definitions
 export type GenderType = keyof typeof GENDER;
 export type ProjectTypeType = keyof typeof PROJECT_TYPE;
 export type CategoryTypeType = keyof typeof CATEGORY_TYPE;

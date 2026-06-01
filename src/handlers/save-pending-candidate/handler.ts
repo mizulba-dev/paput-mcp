@@ -15,7 +15,7 @@ export async function handleSavePendingCandidate(
 ) {
   if (!args || typeof args.candidate_id !== 'string') {
     return {
-      content: [{ type: 'text', text: 'candidate_id は必須です' }],
+      content: [{ type: 'text', text: 'candidate_id is required' }],
       isError: true,
     };
   }
@@ -26,7 +26,7 @@ export async function handleSavePendingCandidate(
   if (!candidate) {
     return {
       content: [
-        { type: 'text', text: '保存対象の pending 候補が見つかりません' },
+        { type: 'text', text: 'Pending candidate to save was not found' },
       ],
       isError: true,
     };
@@ -71,7 +71,7 @@ export async function handleSavePendingCandidate(
       content: [
         {
           type: 'text',
-          text: `知見候補の保存に失敗しました: ${result.error || '不明なエラー'}`,
+          text: `Failed to save knowledge candidate: ${result.error || 'Unknown error'}`,
         },
       ],
       isError: true,
@@ -96,20 +96,20 @@ export async function handleSavePendingCandidate(
     updated_at: new Date().toISOString(),
   }));
 
+  const response = {
+    success: true,
+    action: 'saved',
+    candidate_id: updated?.id,
+    memo_id: savedMemo?.id || null,
+    title,
+  };
+
   return {
+    structuredContent: response,
     content: [
       {
         type: 'text',
-        text: JSON.stringify(
-          {
-            saved: true,
-            candidate_id: updated?.id,
-            memo_id: savedMemo?.id || null,
-            title,
-          },
-          null,
-          2,
-        ),
+        text: JSON.stringify(response, null, 2),
       },
     ],
   };

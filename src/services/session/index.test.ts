@@ -11,21 +11,21 @@ describe('readSessionMessages', () => {
         type: 'user',
         message: {
           role: 'user',
-          content: [{ type: 'text', text: '相談です' }],
+          content: [{ type: 'text', text: 'Question' }],
         },
       },
       {
         type: 'assistant',
         message: {
           role: 'assistant',
-          content: [{ type: 'text', text: '回答です' }],
+          content: [{ type: 'text', text: 'Answer' }],
         },
       },
     ]);
 
     expect(readSessionMessages('claude', path)).toEqual([
-      { role: 'user', text: '相談です' },
-      { role: 'assistant', text: '回答です' },
+      { role: 'user', text: 'Question' },
+      { role: 'assistant', text: 'Answer' },
     ]);
   });
 
@@ -36,7 +36,7 @@ describe('readSessionMessages', () => {
         payload: {
           type: 'message',
           role: 'user',
-          content: [{ type: 'input_text', text: '依頼です' }],
+          content: [{ type: 'input_text', text: 'Request' }],
         },
       },
       {
@@ -44,14 +44,14 @@ describe('readSessionMessages', () => {
         payload: {
           type: 'message',
           role: 'assistant',
-          content: [{ type: 'output_text', text: '対応しました' }],
+          content: [{ type: 'output_text', text: 'Done' }],
         },
       },
     ]);
 
     expect(readSessionMessages('codex', path)).toEqual([
-      { role: 'user', text: '依頼です' },
-      { role: 'assistant', text: '対応しました' },
+      { role: 'user', text: 'Request' },
+      { role: 'assistant', text: 'Done' },
     ]);
   });
 
@@ -68,14 +68,14 @@ describe('readSessionMessages', () => {
           payload: {
             type: 'message',
             role: 'assistant',
-            content: [{ summary: '要約です' }],
+            content: [{ summary: 'Summary' }],
           },
         }),
       ].join('\n'),
     );
 
     expect(readSessionMessages('codex', path)).toEqual([
-      { role: 'assistant', text: '要約です' },
+      { role: 'assistant', text: 'Summary' },
     ]);
   });
 });
