@@ -46,6 +46,12 @@ export async function handleGetSessionTranscript(
   }
 
   return {
+    structuredContent: {
+      session_id: args.session_id,
+      source: args.source,
+      max_chars: maxChars,
+      transcript,
+    },
     content: [
       {
         type: 'text',

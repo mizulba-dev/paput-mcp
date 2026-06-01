@@ -22,6 +22,9 @@ export async function handleListIdeas(
 
     if (!result.ideas || result.ideas.length === 0) {
       return {
+        structuredContent: {
+          ideas: [],
+        },
         content: [
           {
             type: 'text',
@@ -31,16 +34,19 @@ export async function handleListIdeas(
       };
     }
 
-    const ideasList = result.ideas
-      .sort((a, b) => a.sort - b.sort)
+    const ideas = result.ideas.sort((a, b) => a.sort - b.sort);
+    const ideasList = ideas
       .map((idea) => `- [${idea.id}] ${idea.title} (順序: ${idea.sort})`)
       .join('\n');
 
     return {
+      structuredContent: {
+        ideas,
+      },
       content: [
         {
           type: 'text',
-          text: `アイデア一覧 (${result.ideas.length}件):\n${ideasList}`,
+          text: `アイデア一覧 (${ideas.length}件):\n${ideasList}`,
         },
       ],
     };

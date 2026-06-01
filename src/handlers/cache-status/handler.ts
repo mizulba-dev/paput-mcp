@@ -9,28 +9,26 @@ export async function handleCacheStatus(
   const pendingCount = cache.pending.filter(
     (candidate) => candidate.status === 'pending',
   ).length;
+  const status = {
+    cache_dir: getCacheDir(),
+    memos: cache.memos.length,
+    pending: pendingCount,
+    saved_candidates: cache.pending.filter(
+      (candidate) => candidate.status === 'saved',
+    ).length,
+    discarded_candidates: cache.pending.filter(
+      (candidate) => candidate.status === 'discarded',
+    ).length,
+    processed_sessions: cache.sessions.length,
+    last_remote_sync_at: cache.config.last_remote_sync_at || null,
+  };
 
   return {
+    structuredContent: status,
     content: [
       {
         type: 'text',
-        text: JSON.stringify(
-          {
-            cache_dir: getCacheDir(),
-            memos: cache.memos.length,
-            pending: pendingCount,
-            saved_candidates: cache.pending.filter(
-              (candidate) => candidate.status === 'saved',
-            ).length,
-            discarded_candidates: cache.pending.filter(
-              (candidate) => candidate.status === 'discarded',
-            ).length,
-            processed_sessions: cache.sessions.length,
-            last_remote_sync_at: cache.config.last_remote_sync_at || null,
-          },
-          null,
-          2,
-        ),
+        text: JSON.stringify(status, null, 2),
       },
     ],
   };

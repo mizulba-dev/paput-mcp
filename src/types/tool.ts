@@ -1,11 +1,20 @@
 import { ApiClient } from '../services/api/client.js';
 
+export type ToolResult = Record<string, unknown>;
+
 export interface ToolDefinition {
   name: string;
   description: string;
+  annotations?: {
+    title?: string;
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+    openWorldHint?: boolean;
+  };
   inputSchema: {
     type: 'object';
-    properties: Record<string, any>;
+    properties: Record<string, unknown>;
     required?: string[];
   };
 }
@@ -15,5 +24,5 @@ export interface ToolHandler {
   handler: (
     args: Record<string, unknown> | undefined,
     apiClient: ApiClient,
-  ) => Promise<any>;
+  ) => Promise<ToolResult>;
 }

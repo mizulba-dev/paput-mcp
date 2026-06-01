@@ -12,12 +12,21 @@ import {
   DeleteNoteResponse,
 } from '../../types/index.js';
 
+interface CreateNoteApiResponse {
+  id: number;
+}
+
+interface SearchNotesApiResponse {
+  notes: NonNullable<SearchNotesResponse['notes']>;
+  total: number;
+}
+
 export async function createNote(
   client: ApiClient,
   params: CreateNoteParams,
 ): Promise<CreateNoteResponse> {
   try {
-    const data = await client.post<any>('/api/v1/mcp/note', {
+    const data = await client.post<CreateNoteApiResponse>('/api/v1/mcp/note', {
       title: params.title,
       is_public: params.is_public || false,
       memos: params.memos || [],
@@ -51,7 +60,7 @@ export async function searchNotes(
       queryParams.append('limit', params.limit.toString());
 
     const endpoint = `/api/v1/mcp/notes${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-    const data = await client.get<any>(endpoint);
+    const data = await client.get<SearchNotesApiResponse>(endpoint);
 
     return {
       success: true,

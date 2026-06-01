@@ -10,7 +10,13 @@ import {
   UpdateMemoResponse,
   DeleteMemoParams,
   DeleteMemoResponse,
+  Memo,
 } from '../../types/index.js';
+
+interface SearchMemosApiResponse {
+  memos: Memo[];
+  total: number;
+}
 
 export async function createMemo(
   client: ApiClient,
@@ -58,7 +64,7 @@ export async function searchMemos(
       queryParams.append('limit', params.limit.toString());
 
     const endpoint = `/api/v1/mcp/memos${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-    const data = await client.get<any>(endpoint);
+    const data = await client.get<SearchMemosApiResponse>(endpoint);
 
     return {
       success: true,

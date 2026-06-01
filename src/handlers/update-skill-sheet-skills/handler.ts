@@ -9,8 +9,8 @@ export interface UpdateSkillsParams {
 export async function handler(
   params: Record<string, unknown> | undefined,
   apiClient: ApiClient,
-): Promise<any> {
-  const { skills } = params as unknown as UpdateSkillsParams;
+): Promise<Record<string, unknown>> {
+  const skills = parseSkills(params);
 
   if (!skills) {
     return {
@@ -34,4 +34,41 @@ export async function handler(
       },
     ],
   };
+}
+
+function parseSkills(
+  params: Record<string, unknown> | undefined,
+): SkillSheetSkill[] | undefined {
+  if (!params || !Array.isArray(params.skills)) return undefined;
+
+  const skills = params.skills.filter(isSkillSheetSkill);
+  return skills.length === params.skills.length ? skills : undefined;
+}
+
+function isSkillSheetSkill(value: unknown): value is SkillSheetSkill {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'category' in value &&
+    isSkillCategory(value.category) &&
+    'category_type' in value &&
+    typeof value.category_type === 'number' &&
+    'level' in value &&
+    typeof value.level === 'string' &&
+    'years' in value &&
+    typeof value.years === 'number'
+  );
+}
+
+function isSkillCategory(
+  value: unknown,
+): value is { id: number; name: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    typeof value.id === 'number' &&
+    'name' in value &&
+    typeof value.name === 'string'
+  );
 }

@@ -38,8 +38,16 @@ export interface GetSkillSheetProject {
   memos: SkillSheetMemo[];
 }
 
+export type UpsertSkillSheetProjectParams = Omit<
+  GetSkillSheetProject,
+  'id' | 'end_period'
+> & {
+  id?: number;
+  end_period?: string | null;
+};
+
 export interface Technology {
-  id: number;
+  id?: number;
   name: string;
 }
 

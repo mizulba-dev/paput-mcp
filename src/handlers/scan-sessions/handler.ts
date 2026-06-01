@@ -12,19 +12,17 @@ export async function handleScanSessions(
       ? args.include_processed
       : false;
   const sessions = scanSessions(sources, includeProcessed);
+  const result = {
+    count: sessions.length,
+    sessions,
+  };
 
   return {
+    structuredContent: result,
     content: [
       {
         type: 'text',
-        text: JSON.stringify(
-          {
-            count: sessions.length,
-            sessions,
-          },
-          null,
-          2,
-        ),
+        text: JSON.stringify(result, null, 2),
       },
     ],
   };

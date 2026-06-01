@@ -9,19 +9,17 @@ export async function handleListPendingCandidates(
   const candidates = readCache()
     .pending.filter((candidate) => candidate.status === 'pending')
     .slice(0, limit);
+  const result = {
+    count: candidates.length,
+    candidates,
+  };
 
   return {
+    structuredContent: result,
     content: [
       {
         type: 'text',
-        text: JSON.stringify(
-          {
-            count: candidates.length,
-            candidates,
-          },
-          null,
-          2,
-        ),
+        text: JSON.stringify(result, null, 2),
       },
     ],
   };

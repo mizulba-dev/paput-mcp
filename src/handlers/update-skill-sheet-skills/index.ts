@@ -1,1 +1,1 @@
-export { updateSkillSheetSkillsTool } from './tool.js';
+export { setSkillSheetSkillsTool } from './tool.js';

@@ -7,9 +7,11 @@ import {
   DeleteIdeaResponse,
 } from '../../types/index.js';
 
+type IdeaListApiResponse = ListIdeasResponse['ideas'];
+
 export async function listIdeas(client: ApiClient): Promise<ListIdeasResponse> {
   try {
-    const data = await client.get<any>('/api/v1/mcp/ideas');
+    const data = await client.get<IdeaListApiResponse>('/api/v1/mcp/ideas');
 
     return {
       success: true,

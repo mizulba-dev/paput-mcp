@@ -158,14 +158,8 @@ Claude では `/paput-save` のように Skill を呼び出せます。Codex で
 - `paput_get_skill_sheet` - スキルシートを取得
 - `paput_update_skill_sheet_basic_info` - スキルシート基本情報を更新
 - `paput_update_skill_sheet_self_pr` - スキルシート自己PRを更新
-- `paput_get_skill_sheet_skills` - スキルシートスキル一覧を取得
-- `paput_update_skill_sheet_skills` - スキルシートのスキル一覧を一括更新
-- `paput_add_skill_sheet_skill` - スキルシートにスキルを追加
-- `paput_update_skill_sheet_skill` - スキルシートのスキルを更新
-- `paput_delete_skill_sheet_skill` - スキルシートからスキルを削除
-- `paput_get_skill_sheet_projects` - スキルシートプロジェクト一覧を取得
-- `paput_add_skill_sheet_project` - スキルシートにプロジェクトを追加
-- `paput_update_skill_sheet_project` - スキルシートのプロジェクトを更新
+- `paput_set_skill_sheet_skills` - スキルシートのスキル一覧を指定した最終状態に置き換え
+- `paput_upsert_skill_sheet_project` - スキルシートプロジェクトを追加または更新
 - `paput_delete_skill_sheet_project` - スキルシートからプロジェクトを削除
 
 ### 知見保存・ローカルキャッシュ

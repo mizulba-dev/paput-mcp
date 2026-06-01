@@ -51,6 +51,10 @@ export async function handleSearchMemo(
 
     if (!result.memos || result.memos.length === 0) {
       return {
+        structuredContent: {
+          total: result.total || 0,
+          memos: [],
+        },
         content: [
           {
             type: 'text',
@@ -76,6 +80,10 @@ ${memo.body}
       .join('\n\n---\n\n');
 
     return {
+      structuredContent: {
+        total: result.total,
+        memos: result.memos,
+      },
       content: [
         {
           type: 'text',

@@ -5,11 +5,11 @@ interface ApiConfig {
   apiKey: string;
 }
 
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   config: ApiConfig,
   endpoint: string,
   method: HttpMethod,
-  body?: any,
+  body?: unknown,
 ): Promise<T> {
   const url = endpoint.startsWith('http')
     ? endpoint
@@ -60,19 +60,23 @@ export function createApiClient(apiUrl: string, apiKey: string) {
   const config: ApiConfig = { apiUrl, apiKey };
 
   return {
-    get: <T = any>(endpoint: string) => apiRequest<T>(config, endpoint, 'GET'),
+    get: <T = unknown>(endpoint: string) =>
+      apiRequest<T>(config, endpoint, 'GET'),
 
-    post: <T = any>(endpoint: string, body?: any) =>
+    post: <T = unknown>(endpoint: string, body?: unknown) =>
       apiRequest<T>(config, endpoint, 'POST', body),
 
-    put: <T = any>(endpoint: string, body?: any) =>
+    put: <T = unknown>(endpoint: string, body?: unknown) =>
       apiRequest<T>(config, endpoint, 'PUT', body),
 
-    delete: <T = any>(endpoint: string) =>
+    delete: <T = unknown>(endpoint: string) =>
       apiRequest<T>(config, endpoint, 'DELETE'),
 
-    request: <T = any>(endpoint: string, method: HttpMethod, body?: any) =>
-      apiRequest<T>(config, endpoint, method, body),
+    request: <T = unknown>(
+      endpoint: string,
+      method: HttpMethod,
+      body?: unknown,
+    ) => apiRequest<T>(config, endpoint, method, body),
   };
 }
 

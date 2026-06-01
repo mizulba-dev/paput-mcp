@@ -71,6 +71,9 @@ ${skillsText}
 ${projectsText}`;
 
     return {
+      structuredContent: {
+        skill_sheet: skillSheet,
+      },
       content: [
         {
           type: 'text',

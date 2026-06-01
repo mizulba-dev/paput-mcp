@@ -51,6 +51,9 @@ ${bookmarkInfo}
 作成者: ${result.user.name} (@${result.user.user_id})`;
 
     return {
+      structuredContent: {
+        memo: result,
+      },
       content: [
         {
           type: 'text',

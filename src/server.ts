@@ -1,7 +1,11 @@
+import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { setupTool } from './tool.js';
 import { setupErrorHandling } from './utils/error-handler.js';
+
+const require = createRequire(import.meta.url);
+const packageJson = require('../package.json') as { version: string };
 
 export class MCPServer {
   private server: Server;
@@ -19,7 +23,7 @@ export class MCPServer {
     this.server = new Server(
       {
         name: 'paput-mcp',
-        version: '1.0.0',
+        version: packageJson.version,
       },
       {
         capabilities: {
@@ -37,7 +41,7 @@ export class MCPServer {
   async run(): Promise<void> {
     const transport = new StdioServerTransport();
 
-    transport.onerror = (error: any) => {
+    transport.onerror = (error: unknown) => {
       console.error(`MCPエラー発生: ${error}`);
     };
 

@@ -9,6 +9,7 @@ import {
   SkillSheetSkill,
   Technology,
   SkillSheetMemo,
+  UpsertSkillSheetProjectParams,
 } from '../../types/index.js';
 
 // Response types for API endpoints
@@ -166,7 +167,7 @@ export async function updateSkillSheetSkill(
   id: number,
   skill: SkillSheetSkill,
 ): Promise<void> {
-  await client.put(`/api/v1/mcp/skill-sheet/skill/${id}`, skill);
+  await client.put('/api/v1/mcp/skill-sheet/skill', { ...skill, id });
 }
 
 export async function deleteSkillSheetSkill(
@@ -187,14 +188,14 @@ export async function getSkillSheetProjects(
 
 export async function addSkillSheetProject(
   client: ApiClient,
-  project: GetSkillSheetProject,
+  project: UpsertSkillSheetProjectParams,
 ): Promise<AddSkillSheetProjectResponse> {
   return client.post('/api/v1/mcp/skill-sheet/project', project);
 }
 
 export async function updateSkillSheetProject(
   client: ApiClient,
-  project: GetSkillSheetProject,
+  project: UpsertSkillSheetProjectParams & { id: number },
 ): Promise<void> {
   await client.put('/api/v1/mcp/skill-sheet/project', project);
 }

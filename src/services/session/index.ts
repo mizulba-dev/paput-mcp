@@ -9,6 +9,8 @@ interface SessionMessage {
   text: string;
 }
 
+type JsonObject = Record<string, unknown>;
+
 export function scanSessions(
   sources: SessionSource[] = ['claude', 'codex'],
   includeProcessed = false,
@@ -47,11 +49,14 @@ function readSessionCwd(
   const lines = readFileSync(path, 'utf8').split('\n').filter(Boolean);
   for (const line of lines) {
     try {
-      const item = JSON.parse(line) as any;
+      const item = parseJsonObject(line);
+      if (!item) continue;
       const cwd =
         source === 'codex'
-          ? item.payload?.cwd
-          : item.cwd || item.message?.cwd || item.payload?.cwd;
+          ? getPath(item, ['payload', 'cwd'])
+          : getPath(item, ['cwd']) ||
+            getPath(item, ['message', 'cwd']) ||
+            getPath(item, ['payload', 'cwd']);
       if (typeof cwd === 'string' && cwd) return cwd;
     } catch {
       continue;
@@ -120,7 +125,8 @@ function readSessionMessages(
   const lines = readFileSync(path, 'utf8').split('\n').filter(Boolean);
   return lines.flatMap((line) => {
     try {
-      const item = JSON.parse(line) as any;
+      const item = parseJsonObject(line);
+      if (!item) return [];
       return source === 'claude'
         ? parseClaudeMessage(item)
         : parseCodexMessage(item);
@@ -130,24 +136,24 @@ function readSessionMessages(
   });
 }
 
-function parseClaudeMessage(item: any): SessionMessage[] {
+function parseClaudeMessage(item: JsonObject): SessionMessage[] {
   if (item.type !== 'user' && item.type !== 'assistant') return [];
-  const role = item.message?.role;
+  const role = getPath(item, ['message', 'role']);
   if (role !== 'user' && role !== 'assistant') return [];
 
-  const text = extractContentText(item.message.content, role);
+  const text = extractContentText(getPath(item, ['message', 'content']), role);
   if (!text) return [];
 
   return [{ role, text }];
 }
 
-function parseCodexMessage(item: any): SessionMessage[] {
+function parseCodexMessage(item: JsonObject): SessionMessage[] {
   if (item.type !== 'response_item') return [];
-  if (item.payload?.type !== 'message') return [];
-  const role = item.payload.role;
+  if (getPath(item, ['payload', 'type']) !== 'message') return [];
+  const role = getPath(item, ['payload', 'role']);
   if (role !== 'user' && role !== 'assistant') return [];
 
-  const text = extractContentText(item.payload.content, role);
+  const text = extractContentText(getPath(item, ['payload', 'content']), role);
   if (!text) return [];
 
   return [{ role, text }];
@@ -161,19 +167,38 @@ function extractContentText(
   if (!Array.isArray(content)) return '';
 
   return content
-    .flatMap((item: any) => {
+    .flatMap((item) => {
       if (typeof item === 'string') return [item];
       if (!item || typeof item !== 'object') return [];
-      if (item.type === 'text' && typeof item.text === 'string')
-        return [item.text];
-      if (item.type === 'input_text' && typeof item.text === 'string')
-        return [item.text];
-      if (item.type === 'output_text' && typeof item.text === 'string')
-        return [item.text];
-      if (role === 'assistant' && typeof item.summary === 'string')
-        return [item.summary];
+      const object = item as JsonObject;
+      if (object.type === 'text' && typeof object.text === 'string')
+        return [object.text];
+      if (object.type === 'input_text' && typeof object.text === 'string')
+        return [object.text];
+      if (object.type === 'output_text' && typeof object.text === 'string')
+        return [object.text];
+      if (role === 'assistant' && typeof object.summary === 'string')
+        return [object.summary];
       return [];
     })
     .join('\n')
     .trim();
+}
+
+function parseJsonObject(line: string): JsonObject | undefined {
+  const value = JSON.parse(line);
+  return isJsonObject(value) ? value : undefined;
+}
+
+function getPath(object: JsonObject, path: string[]): unknown {
+  let current: unknown = object;
+  for (const key of path) {
+    if (!isJsonObject(current)) return undefined;
+    current = current[key];
+  }
+  return current;
+}
+
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

@@ -10,6 +10,9 @@ export async function handleGetCategories(
 
     if (categories.length === 0) {
       return {
+        structuredContent: {
+          categories,
+        },
         content: [
           {
             type: 'text',
@@ -24,6 +27,9 @@ export async function handleGetCategories(
       .join('\n');
 
     return {
+      structuredContent: {
+        categories,
+      },
       content: [
         {
           type: 'text',

@@ -59,6 +59,9 @@ ID: ${note.id}
 ${memoList || '  なし'}`;
 
     return {
+      structuredContent: {
+        note,
+      },
       content: [
         {
           type: 'text',

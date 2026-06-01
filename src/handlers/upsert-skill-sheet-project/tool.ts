@@ -1,13 +1,18 @@
 import { ToolHandler } from '../../types/index.js';
 import { handler } from './handler.js';
 
-export const addSkillSheetProjectTool: ToolHandler = {
+export const upsertSkillSheetProjectTool: ToolHandler = {
   definition: {
-    name: 'paput_add_skill_sheet_project',
-    description: 'PaPut のスキルシートにプロジェクトを追加します',
+    name: 'paput_upsert_skill_sheet_project',
+    description:
+      'PaPut のスキルシートプロジェクトを追加または更新します。id が指定された場合は更新し、id がない場合は同名プロジェクトを更新、なければ追加します',
     inputSchema: {
       type: 'object',
       properties: {
+        id: {
+          type: 'number',
+          description: '更新対象のプロジェクトID。新規追加時は省略します',
+        },
         type: {
           type: 'number',
           description: 'プロジェクトタイプ（1: 業務, 2: 個人）',
@@ -44,7 +49,7 @@ export const addSkillSheetProjectTool: ToolHandler = {
             properties: {
               id: {
                 type: 'number',
-                description: 'カテゴリーID（不明な場合は省略）',
+                description: '技術ID（既存の場合）',
               },
               name: {
                 type: 'string',

@@ -1,10 +1,11 @@
 import { ToolHandler } from '../../types/index.js';
 import { handler } from './handler.js';
 
-export const updateSkillSheetSkillsTool: ToolHandler = {
+export const setSkillSheetSkillsTool: ToolHandler = {
   definition: {
-    name: 'paput_update_skill_sheet_skills',
-    description: 'PaPut のスキルシートのスキル一覧を一括更新します',
+    name: 'paput_set_skill_sheet_skills',
+    description:
+      'PaPut のスキルシートのスキル一覧を指定した最終状態に置き換えます',
     inputSchema: {
       type: 'object',
       properties: {

@@ -41,6 +41,10 @@ export async function handleSearchNotes(
 
     if (!result.notes || result.notes.length === 0) {
       return {
+        structuredContent: {
+          total: result.total || 0,
+          notes: [],
+        },
         content: [
           {
             type: 'text',
@@ -64,6 +68,10 @@ export async function handleSearchNotes(
       : '';
 
     return {
+      structuredContent: {
+        total: result.total,
+        notes: result.notes,
+      },
       content: [
         {
           type: 'text',
