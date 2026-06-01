@@ -17,10 +17,6 @@ export function createMcpServer(options: MCPServerOptions = {}): Server {
   const apiUrl =
     options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
 
-  if (!apiKey) {
-    throw new Error('PAPUT_API_KEY environment variable is not set');
-  }
-
   const server = new Server(
     {
       name: 'paput-mcp',

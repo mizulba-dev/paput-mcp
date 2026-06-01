@@ -37,7 +37,7 @@ import { ToolHandler } from './types/index.js';
 export function setupTool(
   server: Server,
   apiUrl: string,
-  apiKey: string,
+  apiKey?: string,
 ): void {
   const apiClient = createApiClient(apiUrl, apiKey);
   const tools = getRegisteredTools();

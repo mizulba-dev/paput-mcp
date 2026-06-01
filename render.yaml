@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: paput-mcp
+    runtime: node
+    region: singapore
+    plan: free
+    domains:
+      - mcp.paput.io
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:http
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PAPUT_API_URL
+        value: https://api.paput.io

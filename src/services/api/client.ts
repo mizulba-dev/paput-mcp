@@ -2,7 +2,7 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 interface ApiConfig {
   apiUrl: string;
-  apiKey: string;
+  apiKey?: string;
 }
 
 export async function apiRequest<T = unknown>(
@@ -11,6 +11,12 @@ export async function apiRequest<T = unknown>(
   method: HttpMethod,
   body?: unknown,
 ): Promise<T> {
+  if (!config.apiKey) {
+    throw new Error(
+      'PAPUT_API_KEY is not configured. Set PAPUT_API_KEY or use OAuth authentication when it is available.',
+    );
+  }
+
   const url = endpoint.startsWith('http')
     ? endpoint
     : `${config.apiUrl}${endpoint}`;
@@ -56,7 +62,7 @@ export async function apiRequest<T = unknown>(
   }
 }
 
-export function createApiClient(apiUrl: string, apiKey: string) {
+export function createApiClient(apiUrl: string, apiKey?: string) {
   const config: ApiConfig = { apiUrl, apiKey };
 
   return {

@@ -7,7 +7,6 @@ import { startHttpMcpServer } from './http.js';
 import { createMcpServer } from './server.js';
 
 const testServerOptions = {
-  apiKey: 'test-api-key',
   apiUrl: 'https://api.example.test',
 };
 
@@ -78,6 +77,37 @@ describe('MCP transports', () => {
         });
       });
     }
+  });
+
+  it('returns an explicit error when a tool needs an API key but none is configured', async () => {
+    const mcpServer = createMcpServer(testServerOptions);
+    const client = createTestClient();
+    clients.push(client);
+
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+
+    await Promise.all([
+      mcpServer.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+
+    const result = await client.callTool({
+      name: 'paput_search_memo',
+      arguments: {},
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'text',
+          text: expect.stringContaining('PAPUT_API_KEY is not configured'),
+        }),
+      ]),
+    );
+
+    await mcpServer.close();
   });
 });
 
