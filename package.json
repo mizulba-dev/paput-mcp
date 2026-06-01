@@ -32,6 +32,7 @@
   "homepage": "https://paput.io",
   "files": [
     "dist",
+    "docs",
     "README.md",
     "LICENSE.txt"
   ],

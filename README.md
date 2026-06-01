@@ -130,6 +130,8 @@ Claude can call skills such as `/paput-save`. Codex can call `$paput-save` or us
 
 ## Available Tools
 
+Detailed public tool documentation is available in [docs/tools.md](docs/tools.md).
+
 ### Memo Management
 
 - `paput_create_memo` - Create a PaPut memo directly.
@@ -177,6 +179,8 @@ Write and destructive tools should be used only when the user intent is clear. I
 
 ## Usage Examples
 
+Additional public examples are available in [docs/usage-examples.md](docs/usage-examples.md).
+
 ### 1. Avoid duplicate knowledge before saving
 
 ```text
@@ -222,3 +226,10 @@ PaPut MCP stores local data under `~/.paput` by default.
   skills/  # Canonical skills linked into Claude/Codex
   cache/   # Synced memos, pending candidates, and processed sessions
 ```
+
+## Public Documents
+
+- [Privacy Policy](docs/privacy-policy.md)
+- [Usage Examples](docs/usage-examples.md)
+- [Tools And Use Cases](docs/tools.md)
+- [MCP Directory Submission Notes](docs/directory-submission.md)
