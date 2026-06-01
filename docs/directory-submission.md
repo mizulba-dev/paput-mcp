@@ -64,9 +64,12 @@ Recommended listing details:
 - Transport: Streamable HTTP
 - Tool access: Full MCP tools, data-only, no UI widgets
 - Scopes: `paput.read paput.write`
+- Description: Connect PaPut to ChatGPT so you can search, read, create, and organize your PaPut memos, notes, skill sheet, and reusable knowledge. PaPut MCP uses OAuth and only accesses your PaPut data after you authorize the connection.
 - Callback URL handling: ChatGPT should register its redirect URI through dynamic client registration. PaPut validates registered redirect URIs before issuing authorization codes.
 
 Developer Mode validation checklist:
+
+Status: verified with ChatGPT Developer Mode.
 
 1. Enable Developer Mode in ChatGPT settings.
 2. Create an app for the remote MCP server URL `https://mcp.paput.io`.
@@ -77,8 +80,7 @@ Developer Mode validation checklist:
 7. Prompt: `Use the PaPut app to get my categories. Do not use other tools.`
 8. Confirm `paput_get_categories` succeeds.
 9. Prompt a write action in a test-safe way and confirm the client asks for approval before execution.
-
-Status: pending validation.
+10. Confirm the created or changed data is visible in PaPut.
 
 ## Submission Positioning
 
@@ -91,11 +93,10 @@ PaPut MCP should be submitted as a data-only MCP connector. It should not reques
 
 ## Public References
 
-- Privacy Policy: `docs/privacy-policy.md`
-- Usage Examples: `docs/usage-examples.md`
-- Tools And Use Cases: `docs/tools.md`
+- Privacy Policy: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/privacy-policy.md
+- Usage Examples: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/usage-examples.md
+- Tools And Use Cases: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/tools.md
+- Directory Submission Notes: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/directory-submission.md
 - OpenAI ChatGPT Developer Mode documentation: https://platform.openai.com/docs/guides/developer-mode
 - OpenAI MCP documentation: https://platform.openai.com/docs/mcp/
 - Anthropic remote MCP connector documentation: https://support.anthropic.com/en/articles/11175166-getting-started-with-custom-integrations-using-remote-mcp
-
-Before submission, replace local documentation paths with public URLs from the published package, repository, or documentation site.
