@@ -7,35 +7,44 @@ import { setupErrorHandling } from './utils/error-handler.js';
 const require = createRequire(import.meta.url);
 const packageJson = require('../package.json') as { version: string };
 
+export interface MCPServerOptions {
+  apiKey?: string;
+  apiUrl?: string;
+}
+
+export function createMcpServer(options: MCPServerOptions = {}): Server {
+  const apiKey = options.apiKey ?? process.env.PAPUT_API_KEY;
+  const apiUrl =
+    options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
+
+  if (!apiKey) {
+    throw new Error('PAPUT_API_KEY environment variable is not set');
+  }
+
+  const server = new Server(
+    {
+      name: 'paput-mcp',
+      version: packageJson.version,
+    },
+    {
+      capabilities: {
+        tools: {},
+        resources: {},
+      },
+    },
+  );
+
+  setupTool(server, apiUrl, apiKey);
+  setupErrorHandling(server);
+
+  return server;
+}
+
 export class MCPServer {
   private server: Server;
 
-  constructor() {
-    // Read environment variables
-    const apiKey = process.env.PAPUT_API_KEY;
-    const apiUrl = process.env.PAPUT_API_URL ?? 'https://api.paput.io';
-
-    if (!apiKey) {
-      throw new Error('PAPUT_API_KEY environment variable is not set');
-    }
-
-    // Initialize server
-    this.server = new Server(
-      {
-        name: 'paput-mcp',
-        version: packageJson.version,
-      },
-      {
-        capabilities: {
-          tools: {},
-          resources: {},
-        },
-      },
-    );
-
-    // Set up tools and error handling
-    setupTool(this.server, apiUrl, apiKey);
-    setupErrorHandling(this.server);
+  constructor(options: MCPServerOptions = {}) {
+    this.server = createMcpServer(options);
   }
 
   async run(): Promise<void> {

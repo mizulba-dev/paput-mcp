@@ -51,6 +51,38 @@ Create an API key in your PaPut account settings and pass it through the MCP ser
 }
 ```
 
+## Streamable HTTP
+
+PaPut MCP can also run as a local Streamable HTTP server. The HTTP entrypoint
+uses the same tool and handler definitions as the stdio server.
+
+```bash
+PAPUT_API_KEY="your-api-key" npm run dev:http
+```
+
+By default, the server listens on `PORT=3000` and accepts MCP requests at
+`/mcp`. You can override the host and port with environment variables.
+
+```bash
+HOST=127.0.0.1 PORT=3001 PAPUT_API_KEY="your-api-key" npm run dev:http
+```
+
+After building, run the HTTP entrypoint with:
+
+```bash
+PAPUT_API_KEY="your-api-key" npm run start:http
+```
+
+The HTTP transport is stateless in this release. OAuth and account-linking
+support will be designed separately before enabling remote directory
+submissions.
+
+Transport-specific local checks:
+
+```bash
+npm run test:mcp:transports
+```
+
 ### Environment Variables
 
 - `PAPUT_API_KEY` - Required PaPut API key.
