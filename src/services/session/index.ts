@@ -118,7 +118,7 @@ function findJsonlFiles(root: string): string[] {
   return results;
 }
 
-function readSessionMessages(
+export function readSessionMessages(
   source: SessionSource,
   path: string,
 ): SessionMessage[] {

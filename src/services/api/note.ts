@@ -8,8 +8,6 @@ import {
   GetNoteResponse,
   UpdateNoteParams,
   UpdateNoteResponse,
-  DeleteNoteParams,
-  DeleteNoteResponse,
 } from '../../types/index.js';
 
 interface CreateNoteApiResponse {
@@ -93,24 +91,6 @@ export async function updateNote(
       is_public: params.is_public,
       memos: params.memos,
     });
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : '不明なエラー',
-    };
-  }
-}
-
-export async function deleteNote(
-  client: ApiClient,
-  params: DeleteNoteParams,
-): Promise<DeleteNoteResponse> {
-  try {
-    await client.delete(`/api/v1/mcp/note/${params.id}`);
 
     return {
       success: true,

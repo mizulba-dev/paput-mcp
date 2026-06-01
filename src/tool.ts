@@ -17,10 +17,6 @@ import {
   searchNotesTool,
   getNoteTool,
   updateNoteTool,
-  listIdeasTool,
-  createIdeaTool,
-  updateIdeaTool,
-  deleteIdeaTool,
   getSkillSheetTool,
   updateSkillSheetBasicInfoTool,
   updateSkillSheetSelfPrTool,
@@ -44,36 +40,7 @@ export function setupTool(
   apiKey: string,
 ): void {
   const apiClient = createApiClient(apiUrl, apiKey);
-
-  const tools: ToolHandler[] = [
-    createMemoTool,
-    searchMemoTool,
-    getMemoTool,
-    updateMemoTool,
-    getCategoriesTool,
-    createNoteTool,
-    searchNotesTool,
-    getNoteTool,
-    updateNoteTool,
-    listIdeasTool,
-    createIdeaTool,
-    updateIdeaTool,
-    deleteIdeaTool,
-    getSkillSheetTool,
-    updateSkillSheetBasicInfoTool,
-    updateSkillSheetSelfPrTool,
-    setSkillSheetSkillsTool,
-    upsertSkillSheetProjectTool,
-    deleteSkillSheetProjectTool,
-    cacheStatusTool,
-    syncRemoteMemosTool,
-    scanSessionsTool,
-    getSessionTranscriptTool,
-    addKnowledgeCandidatesTool,
-    listPendingCandidatesTool,
-    savePendingCandidateTool,
-    discardPendingCandidateTool,
-  ].map(withToolAnnotations);
+  const tools = getRegisteredTools();
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((tool) => tool.definition),
@@ -140,6 +107,34 @@ export function setupTool(
       ],
     };
   });
+}
+
+export function getRegisteredTools(): ToolHandler[] {
+  return [
+    createMemoTool,
+    searchMemoTool,
+    getMemoTool,
+    updateMemoTool,
+    getCategoriesTool,
+    createNoteTool,
+    searchNotesTool,
+    getNoteTool,
+    updateNoteTool,
+    getSkillSheetTool,
+    updateSkillSheetBasicInfoTool,
+    updateSkillSheetSelfPrTool,
+    setSkillSheetSkillsTool,
+    upsertSkillSheetProjectTool,
+    deleteSkillSheetProjectTool,
+    cacheStatusTool,
+    syncRemoteMemosTool,
+    scanSessionsTool,
+    getSessionTranscriptTool,
+    addKnowledgeCandidatesTool,
+    listPendingCandidatesTool,
+    savePendingCandidateTool,
+    discardPendingCandidateTool,
+  ].map(withToolAnnotations);
 }
 
 function withToolAnnotations(tool: ToolHandler): ToolHandler {

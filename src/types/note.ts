@@ -70,13 +70,3 @@ export interface UpdateNoteResponse {
   success: boolean;
   error?: string;
 }
-
-// Delete note parameters
-export interface DeleteNoteParams {
-  id: number;
-}
-
-export interface DeleteNoteResponse {
-  success: boolean;
-  error?: string;
-}

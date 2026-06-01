@@ -8,8 +8,6 @@ import {
   GetMemoResponse,
   UpdateMemoParams,
   UpdateMemoResponse,
-  DeleteMemoParams,
-  DeleteMemoResponse,
   Memo,
 } from '../../types/index.js';
 
@@ -99,24 +97,6 @@ export async function updateMemo(
       categories: params.categories,
       projects: params.projects,
     });
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : '不明なエラー',
-    };
-  }
-}
-
-export async function deleteMemo(
-  client: ApiClient,
-  params: DeleteMemoParams,
-): Promise<DeleteMemoResponse> {
-  try {
-    await client.delete(`/api/v1/mcp/memo/${params.id}`);
 
     return {
       success: true,

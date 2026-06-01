@@ -146,13 +146,6 @@ Claude では `/paput-save` のように Skill を呼び出せます。Codex で
 - `paput_get_note` - ノートの詳細を取得
 - `paput_update_note` - ノートを更新
 
-### アイデア管理
-
-- `paput_list_ideas` - アイデア一覧を取得
-- `paput_create_idea` - アイデアを作成
-- `paput_update_idea` - アイデアを更新
-- `paput_delete_idea` - アイデアを削除
-
 ### スキルシート管理
 
 - `paput_get_skill_sheet` - スキルシートを取得

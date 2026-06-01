@@ -104,9 +104,6 @@ const toolInputSchemas = {
       .describe('カテゴリーの配列')
       .optional(),
   }),
-  paput_delete_memo: z.object({
-    id: z.number().describe('メモID'),
-  }),
   paput_get_categories: emptySchema,
   paput_create_note: z.object({
     title: z.string().describe('ノートのタイトル'),
@@ -141,21 +138,6 @@ const toolInputSchemas = {
       .array(z.number())
       .describe('ノートに含めるメモのIDリスト')
       .optional(),
-  }),
-  paput_delete_note: z.object({
-    id: z.number().describe('ノートのID'),
-  }),
-  paput_list_ideas: emptySchema,
-  paput_create_idea: z.object({
-    title: z.string().describe('アイデアのタイトル'),
-    sort: z.number().describe('表示順序').optional(),
-  }),
-  paput_update_idea: z.object({
-    id: z.number().describe('アイデアのID'),
-    title: z.string().describe('アイデアの新しいタイトル'),
-  }),
-  paput_delete_idea: z.object({
-    id: z.number().describe('アイデアのID'),
   }),
   paput_get_skill_sheet: emptySchema,
   paput_update_skill_sheet_basic_info: z.object({
