@@ -353,13 +353,14 @@ function renderCallbackPage(params: {
     }
     .content {
       padding: 28px 32px 32px;
+      text-align: center;
     }
     .mark {
       display: inline-grid;
       place-items: center;
       width: 44px;
       height: 44px;
-      margin-bottom: 18px;
+      margin: 0 auto 18px;
       border-radius: 999px;
       color: var(--primary-orange);
       background: var(--primary-orange-light);
