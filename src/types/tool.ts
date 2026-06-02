@@ -2,6 +2,10 @@ import { ApiClient } from '../services/api/client.js';
 
 export type ToolResult = Record<string, unknown>;
 
+export interface ToolContext {
+  projectMatch?: string;
+}
+
 export interface ToolDefinition {
   name: string;
   description: string;
@@ -24,5 +28,6 @@ export interface ToolHandler {
   handler: (
     args: Record<string, unknown> | undefined,
     apiClient: ApiClient,
+    context?: ToolContext,
   ) => Promise<ToolResult>;
 }

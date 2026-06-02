@@ -2,7 +2,22 @@
 
 These examples show typical ways to use PaPut MCP from an AI assistant.
 
-## 1. Search Existing Memos Before Creating Knowledge
+## 1. Create A Memo From A Remote MCP Client
+
+Prompt:
+
+```text
+Create a private PaPut memo summarizing this conversation.
+```
+
+Expected tool flow:
+
+1. `paput_create_memo`
+2. `paput_search_memo` or `paput_get_memo` when the user wants to verify the result
+
+Use case: quickly save useful content from Claude, ChatGPT, Codex, or another remote MCP client.
+
+## 2. Search Existing Memos Before Creating Knowledge
 
 Prompt:
 
@@ -18,7 +33,10 @@ Expected tool flow:
 
 Use case: avoid duplicate long-term knowledge while preserving useful decisions from engineering work.
 
-## 2. Capture Reusable Knowledge From A Codex Session
+Local mode note: `paput_add_knowledge_candidates` and pending review tools are
+local CLI mode tools.
+
+## 3. Capture Reusable Knowledge From A Codex Session
 
 Prompt:
 
@@ -34,7 +52,10 @@ Expected tool flow:
 
 Use case: turn completed development work into reviewable knowledge without immediately publishing it to PaPut.
 
-## 3. Save An Approved Pending Candidate
+Local mode note: session scanning and transcript reading are local CLI mode
+tools.
+
+## 4. Save An Approved Pending Candidate
 
 Prompt:
 
@@ -50,7 +71,9 @@ Expected tool flow:
 
 Use case: keep the user in control before creating a permanent PaPut memo.
 
-## 4. Update A Skill Sheet Project
+Local mode note: pending candidate tools are local CLI mode tools.
+
+## 5. Update A Skill Sheet Project
 
 Prompt:
 
@@ -66,7 +89,7 @@ Expected tool flow:
 
 Use case: maintain an accurate skill sheet after project milestones.
 
-## 5. Organize Memos Into A Note
+## 6. Organize Memos Into A Note
 
 Prompt:
 

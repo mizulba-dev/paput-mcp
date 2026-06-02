@@ -54,11 +54,33 @@ const destructiveToolNames = [
   'paput_discard_pending_candidate',
 ];
 
+const remoteToolNames = expectedToolNames.filter(
+  (name) =>
+    ![
+      'paput_cache_status',
+      'paput_sync_remote_memos',
+      'paput_scan_sessions',
+      'paput_get_session_transcript',
+      'paput_add_knowledge_candidates',
+      'paput_list_pending_candidates',
+      'paput_save_pending_candidate',
+      'paput_discard_pending_candidate',
+    ].includes(name),
+);
+
 describe('registered tools', () => {
   it('registers the expected tool set in order', () => {
     const toolNames = getRegisteredTools().map((tool) => tool.definition.name);
 
     expect(toolNames).toEqual(expectedToolNames);
+  });
+
+  it('can exclude local-only tools for remote HTTP mode', () => {
+    const toolNames = getRegisteredTools({ includeLocalTools: false }).map(
+      (tool) => tool.definition.name,
+    );
+
+    expect(toolNames).toEqual(remoteToolNames);
   });
 
   it('has generated input schema for every registered tool', () => {

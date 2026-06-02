@@ -46,7 +46,6 @@ describe('MCP transports', () => {
     const httpServer = await startHttpMcpServer({
       ...testServerOptions,
       host: '127.0.0.1',
-      oauthRequired: false,
       port: 0,
     });
 
@@ -56,6 +55,11 @@ describe('MCP transports', () => {
       clients.push(client);
       const transport = new StreamableHTTPClientTransport(
         new URL(`http://127.0.0.1:${address.port}`),
+        {
+          requestInit: {
+            headers: { Authorization: 'Bearer test-access-token' },
+          },
+        },
       );
 
       await client.connect(transport);
@@ -66,6 +70,12 @@ describe('MCP transports', () => {
       );
       expect(result.tools.map((tool) => tool.name)).toContain(
         'paput_create_memo',
+      );
+      expect(result.tools.map((tool) => tool.name)).not.toContain(
+        'paput_cache_status',
+      );
+      expect(result.tools.map((tool) => tool.name)).not.toContain(
+        'paput_scan_sessions',
       );
     } finally {
       await new Promise<void>((resolve, reject) => {
@@ -138,7 +148,7 @@ describe('MCP transports', () => {
     }
   });
 
-  it('challenges unauthenticated HTTP MCP requests when no API key is configured', async () => {
+  it('challenges unauthenticated HTTP MCP requests', async () => {
     const httpServer = await startHttpMcpServer({
       ...testServerOptions,
       host: '127.0.0.1',

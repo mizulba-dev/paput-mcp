@@ -32,16 +32,21 @@ import {
   savePendingCandidateTool,
   discardPendingCandidateTool,
 } from './handlers/index.js';
-import { ToolHandler } from './types/index.js';
+import type { ToolContext, ToolHandler } from './types/index.js';
+
+interface RegisteredToolsOptions {
+  includeLocalTools?: boolean;
+}
 
 export function setupTool(
   server: Server,
   apiUrl: string,
-  apiKey?: string,
   accessToken?: string,
+  context: ToolContext = {},
+  registeredToolsOptions: RegisteredToolsOptions = {},
 ): void {
-  const apiClient = createApiClient(apiUrl, apiKey, accessToken);
-  const tools = getRegisteredTools();
+  const apiClient = createApiClient(apiUrl, accessToken);
+  const tools = getRegisteredTools(registeredToolsOptions);
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((tool) => tool.definition),
@@ -62,7 +67,7 @@ export function setupTool(
       };
     }
 
-    return await tool.handler(request.params.arguments, apiClient);
+    return await tool.handler(request.params.arguments, apiClient, context);
   });
 
   // Handler that lists resources
@@ -110,8 +115,11 @@ export function setupTool(
   });
 }
 
-export function getRegisteredTools(): ToolHandler[] {
-  return [
+export function getRegisteredTools(
+  options: RegisteredToolsOptions = {},
+): ToolHandler[] {
+  const includeLocalTools = options.includeLocalTools ?? true;
+  const tools = [
     createMemoTool,
     searchMemoTool,
     getMemoTool,
@@ -135,7 +143,13 @@ export function getRegisteredTools(): ToolHandler[] {
     listPendingCandidatesTool,
     savePendingCandidateTool,
     discardPendingCandidateTool,
-  ].map(withToolAnnotations);
+  ];
+
+  return tools
+    .filter(
+      (tool) => includeLocalTools || !isLocalOnlyTool(tool.definition.name),
+    )
+    .map(withToolAnnotations);
 }
 
 function withToolAnnotations(tool: ToolHandler): ToolHandler {
@@ -190,5 +204,18 @@ function isIdempotentTool(name: string): boolean {
     isReadOnlyTool(name) ||
     name.startsWith('paput_update_') ||
     name === 'paput_set_skill_sheet_skills'
+  );
+}
+
+function isLocalOnlyTool(name: string): boolean {
+  return (
+    name === 'paput_cache_status' ||
+    name === 'paput_sync_remote_memos' ||
+    name === 'paput_scan_sessions' ||
+    name === 'paput_get_session_transcript' ||
+    name === 'paput_add_knowledge_candidates' ||
+    name === 'paput_list_pending_candidates' ||
+    name === 'paput_save_pending_candidate' ||
+    name === 'paput_discard_pending_candidate'
   );
 }

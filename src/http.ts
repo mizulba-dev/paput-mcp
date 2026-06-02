@@ -13,7 +13,6 @@ import { createMcpServer, type MCPServerOptions } from './server.js';
 export interface HttpMcpServerOptions extends MCPServerOptions {
   endpoint?: string;
   host?: string;
-  oauthRequired?: boolean;
   port?: number;
 }
 
@@ -28,8 +27,6 @@ export async function startHttpMcpServer(
   const apiUrl =
     options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
   const apiOrigin = new URL(apiUrl).origin;
-  const oauthRequired =
-    options.oauthRequired ?? (!options.apiKey && !process.env.PAPUT_API_KEY);
 
   const httpServer = createServer(async (req, res) => {
     const requestUrl = new URL(
@@ -79,12 +76,17 @@ export async function startHttpMcpServer(
     }
 
     const accessToken = extractBearerToken(req.headers.authorization);
-    if (oauthRequired && !accessToken) {
+    if (!accessToken) {
       sendOAuthChallenge(res, protectedResourceMetadataUrl);
       return;
     }
 
-    const mcpServer = createMcpServer({ ...options, accessToken });
+    const mcpServer = createMcpServer({
+      ...options,
+      accessToken,
+      includeLocalTools: false,
+      projectMatch: options.projectMatch,
+    });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });

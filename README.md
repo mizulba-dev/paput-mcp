@@ -1,6 +1,6 @@
 # PaPut MCP Server
 
-PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the Model Context Protocol (MCP). It lets Claude, Codex, Cursor, and other MCP clients work with PaPut memos, notes, skill sheets, reusable knowledge candidates, and the local PaPut cache.
+PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the Model Context Protocol (MCP). Remote HTTP mode lets Claude, ChatGPT, Codex, Claude Code, and other MCP clients create, search, and organize PaPut memos, notes, and skill sheets through OAuth. Local CLI mode is convenient for Claude Code and Codex workflows that need local session scanning, pending knowledge candidates, and the local PaPut cache.
 
 ## Features
 
@@ -38,24 +38,53 @@ npm install -g paput-mcp
 
 ## MCP Configuration
 
-Create an API key in your PaPut account settings and pass it through the MCP
-server environment when you want to run tools that call the PaPut API.
+### Remote HTTP Mode
+
+Use remote HTTP mode when you want a simple OAuth-based MCP setup for memo,
+note, and skill sheet operations.
+
+```json
+"paput": {
+  "type": "http",
+  "url": "https://mcp.paput.io"
+}
+```
+
+Remote HTTP mode intentionally does not expose local cache, pending candidate,
+or session transcript tools because the hosted server cannot access files on
+your device. Remote HTTP mode also does not apply project-specific local
+configuration.
+
+### Local CLI Mode
+
+Use local CLI mode when you want Claude Code, Codex, or another local MCP client
+to scan local Claude/Codex sessions and keep a local pending cache. Log in once
+with OAuth before starting the local MCP server:
+
+```bash
+npx -y paput-mcp login
+```
 
 ```json
 "paput": {
   "command": "npx",
   "args": ["-y", "paput-mcp"],
   "env": {
-    "PAPUT_API_KEY": "your-api-key",
     "PAPUT_PROJECT_MATCH": "optional project name fragment"
   }
 }
 ```
 
+The login command stores OAuth tokens under `~/.paput/oauth.json` by default.
+The `~/.paput` directory is created with `0700` permissions and the token file is
+written with `0600` permissions. To revoke and remove the local token cache, run:
+
+```bash
+npx -y paput-mcp logout
+```
+
 ### Environment Variables
 
-- `PAPUT_API_KEY` - Optional at startup. Required when executing tools that call the PaPut API.
-- `PAPUT_API_URL` - Optional API URL. Defaults to `https://api.paput.io`.
 - `PAPUT_PROJECT_MATCH` - Optional project name fragment for automatic project linking when creating or updating memos.
 - `PAPUT_HOME` - Optional PaPut local data directory. Defaults to `~/.paput`.
 - `PAPUT_CACHE_DIR` - Optional cache directory for knowledge capture data.

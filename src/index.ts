@@ -3,7 +3,7 @@
 import { MCPServer } from './server.js';
 import { runCli } from './cli/index.js';
 
-if (runCli(process.argv.slice(2))) {
+if (await runCli(process.argv.slice(2))) {
   process.exit(process.exitCode || 0);
 }
 

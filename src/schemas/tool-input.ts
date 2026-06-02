@@ -90,6 +90,16 @@ const toolInputSchemas = {
       )
       .optional(),
     categories: z.array(z.string()).describe('Memo categories').optional(),
+    projects: z
+      .array(projectReferenceSchema)
+      .describe('Projects to link when creating the memo')
+      .optional(),
+    project_match: z
+      .string()
+      .describe(
+        'Project title fragment to search and link when projects are not provided',
+      )
+      .optional(),
   }),
   paput_search_memo: z.object({
     word: z.string().describe('Search keyword').optional(),
@@ -109,6 +119,16 @@ const toolInputSchemas = {
     body: z.string().describe('Memo body'),
     is_public: z.boolean().describe('Whether to publish the memo'),
     categories: z.array(memoCategorySchema).describe('Categories').optional(),
+    projects: z
+      .array(projectReferenceSchema)
+      .describe('Projects to link when updating the memo')
+      .optional(),
+    project_match: z
+      .string()
+      .describe(
+        'Project title fragment to search and link when projects are not provided',
+      )
+      .optional(),
   }),
   paput_get_categories: emptySchema,
   paput_create_note: z.object({

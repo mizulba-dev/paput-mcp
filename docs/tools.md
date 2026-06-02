@@ -2,6 +2,10 @@
 
 PaPut MCP is a data-only MCP server. It exposes tools and resources for PaPut data. It does not provide UI widgets.
 
+Remote HTTP mode exposes API-backed PaPut tools only. Local cache, pending
+candidate, and session transcript tools are available in local CLI mode because
+they read or write files on the user's device.
+
 ## Confirmation Policy
 
 Clients and assistants should follow these rules:
@@ -25,6 +29,10 @@ Clients and assistants should follow these rules:
 | `paput_update_memo`    | Destructive/write | Update an existing memo title, body, visibility, categories, or linked projects. |
 | `paput_get_categories` | Read-only         | List categories before assigning categories or checking duplicates.              |
 
+`paput_create_memo` and `paput_update_memo` can link projects through explicit
+`projects`, a `project_match` input, or local `PAPUT_PROJECT_MATCH` in local CLI
+mode.
+
 ## Note Tools
 
 | Tool                 | Safety            | Use case                                               |
@@ -46,6 +54,9 @@ Clients and assistants should follow these rules:
 | `paput_delete_skill_sheet_project`    | Destructive       | Delete a skill sheet project by ID.                                                        |
 
 ## Knowledge Capture And Local Cache Tools
+
+These tools are local CLI mode only. They are not listed by the remote HTTP MCP
+server.
 
 | Tool                              | Safety                       | Use case                                                                      |
 | --------------------------------- | ---------------------------- | ----------------------------------------------------------------------------- |

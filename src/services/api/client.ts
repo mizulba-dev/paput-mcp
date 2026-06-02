@@ -1,8 +1,9 @@
+import { getValidStoredAccessToken } from '../oauth/local-auth.js';
+
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 interface ApiConfig {
   apiUrl: string;
-  apiKey?: string;
   accessToken?: string;
 }
 
@@ -12,9 +13,12 @@ export async function apiRequest<T = unknown>(
   method: HttpMethod,
   body?: unknown,
 ): Promise<T> {
-  if (!config.accessToken && !config.apiKey) {
+  const accessToken =
+    config.accessToken ?? (await getValidStoredAccessToken(config.apiUrl));
+
+  if (!accessToken) {
     throw new Error(
-      'PaPut authentication is not configured. Set PAPUT_API_KEY or connect with OAuth.',
+      'PaPut authentication is not configured. Run `paput-mcp login`.',
     );
   }
 
@@ -25,9 +29,7 @@ export async function apiRequest<T = unknown>(
   const options: RequestInit = {
     method,
     headers: {
-      ...(config.accessToken
-        ? { Authorization: `Bearer ${config.accessToken}` }
-        : { 'X-API-Key': config.apiKey ?? '' }),
+      Authorization: `Bearer ${accessToken}`,
       ...(method !== 'GET' && method !== 'DELETE'
         ? { 'Content-Type': 'application/json' }
         : {}),
@@ -65,12 +67,8 @@ export async function apiRequest<T = unknown>(
   }
 }
 
-export function createApiClient(
-  apiUrl: string,
-  apiKey?: string,
-  accessToken?: string,
-) {
-  const config: ApiConfig = { apiUrl, apiKey, accessToken };
+export function createApiClient(apiUrl: string, accessToken?: string) {
+  const config: ApiConfig = { apiUrl, accessToken };
 
   return {
     get: <T = unknown>(endpoint: string) =>

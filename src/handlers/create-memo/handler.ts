@@ -1,11 +1,12 @@
 import { ApiClient } from '../../services/api/client.js';
 import { createMemo } from '../../services/api/memo.js';
-import { searchSkillSheetProjects } from '../../services/api/skill-sheet.js';
-import { CreateMemoParams } from '../../types/index.js';
+import { CreateMemoParams, type ToolContext } from '../../types/index.js';
+import { resolveMemoProjects } from '../memo-projects.js';
 
 export async function handleCreateMemo(
   args: Record<string, unknown> | undefined,
   apiClient: ApiClient,
+  context?: ToolContext,
 ) {
   if (!args) {
     return {
@@ -50,31 +51,7 @@ export async function handleCreateMemo(
       .map((name) => ({ name }));
   }
 
-  // Process projects
-  if (Array.isArray(args.projects)) {
-    params.projects = args.projects.filter(
-      (item): item is { id: number; title?: string } =>
-        typeof item === 'object' &&
-        item !== null &&
-        'id' in item &&
-        typeof item.id === 'number',
-    );
-  } else if (!args.projects && process.env.PAPUT_PROJECT_MATCH) {
-    // When configured, search for a project and link it automatically
-    try {
-      const projects = await searchSkillSheetProjects(
-        apiClient,
-        process.env.PAPUT_PROJECT_MATCH,
-      );
-      if (projects.length > 0) {
-        // Use the first matched project
-        params.projects = [projects[0]];
-      }
-    } catch (error) {
-      // Continue creating the memo even if project search fails
-      console.error('Failed to search projects:', error);
-    }
-  }
+  params.projects = await resolveMemoProjects(args, apiClient, context);
 
   try {
     const result = await createMemo(apiClient, params);
