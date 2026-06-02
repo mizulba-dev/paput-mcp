@@ -228,8 +228,15 @@ async function startCallbackServer(): Promise<{
     const error = url.searchParams.get('error');
     if (error) {
       rejectCallback?.(new Error(`OAuth authorization failed: ${error}`));
-      res.writeHead(400, { 'Content-Type': 'text/plain' });
-      res.end('Authorization failed. You may close this window.');
+      res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(
+        renderCallbackPage({
+          status: 'error',
+          title: 'Authorization failed',
+          message:
+            'PaPut MCP could not complete the authorization request. Return to the terminal for details.',
+        }),
+      );
       return;
     }
 
@@ -237,14 +244,28 @@ async function startCallbackServer(): Promise<{
     const state = url.searchParams.get('state');
     if (!code || !state) {
       rejectCallback?.(new Error('OAuth callback is missing code or state.'));
-      res.writeHead(400, { 'Content-Type': 'text/plain' });
-      res.end('Invalid callback. You may close this window.');
+      res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(
+        renderCallbackPage({
+          status: 'error',
+          title: 'Invalid callback',
+          message:
+            'The authorization callback was missing required information. Return to the terminal for details.',
+        }),
+      );
       return;
     }
 
     resolveCallback?.({ code, state });
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Authorization successful. You may close this window.');
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(
+      renderCallbackPage({
+        status: 'success',
+        title: 'Authorization complete',
+        message:
+          'PaPut MCP has been connected. You can close this window and return to your terminal.',
+      }),
+    );
   });
 
   await listen(server);
@@ -254,6 +275,152 @@ async function startCallbackServer(): Promise<{
     redirectUri: `http://127.0.0.1:${address.port}/oauth/callback`,
     waitForCallback: () => callbackPromise,
   };
+}
+
+function renderCallbackPage(params: {
+  message: string;
+  status: 'error' | 'success';
+  title: string;
+}): string {
+  const icon = params.status === 'success' ? 'OK' : '!';
+  const eyebrow =
+    params.status === 'success' ? 'OAuth authorization' : 'OAuth error';
+  const logoUrl = 'https://paput.io/img/paput-main-horizontal-logo.png';
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(params.title)} | PaPut MCP</title>
+  <style>
+    :root {
+      --base-black: #1F2937;
+      --neutral-white: #F8FAFC;
+      --primary-orange: #F59E0B;
+      --primary-orange-light: #FCEFDC;
+      --primary-red: #FF6B6A;
+      --primary-blue: #64B2DD;
+      --border: #E5E7EB;
+      --muted: #6B7280;
+    }
+    * { box-sizing: border-box; }
+    html {
+      min-height: 100%;
+      background: var(--neutral-white);
+      color: var(--base-black);
+      font-family: "LINE Seed", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(245, 158, 11, 0.12), transparent 34rem),
+        radial-gradient(circle at bottom right, rgba(100, 178, 221, 0.12), transparent 30rem),
+        var(--neutral-white);
+    }
+    main {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .card {
+      width: min(100%, 440px);
+      border: 1px solid #e2e6de;
+      border-radius: 24px;
+      background: #ffffff;
+      box-shadow: 0 24px 60px rgba(31, 41, 55, 0.10);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 32px 32px 24px;
+      text-align: center;
+      border-bottom: 1px solid #F3F4F6;
+    }
+    .logo {
+      display: block;
+      width: 168px;
+      height: auto;
+      margin: 0 auto 24px;
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--primary-orange);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    .content {
+      padding: 28px 32px 32px;
+    }
+    .mark {
+      display: inline-grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      margin-bottom: 18px;
+      border-radius: 999px;
+      color: var(--primary-orange);
+      background: var(--primary-orange-light);
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.25;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 0;
+      color: #374151;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    .note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    @media (max-width: 560px) {
+      main { padding: 20px 14px; }
+      .card { border-radius: 20px; }
+      .card-header { padding: 28px 20px 20px; }
+      .content { padding: 24px 20px 28px; }
+      .logo { width: 140px; margin-bottom: 20px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main aria-labelledby="callback-title">
+    <section class="card">
+      <div class="card-header">
+        <img class="logo" src="${logoUrl}" alt="PaPut">
+        <p class="eyebrow">${escapeHtml(eyebrow)}</p>
+        <h1 id="callback-title">${escapeHtml(params.title)}</h1>
+      </div>
+      <div class="content">
+        <div class="mark" aria-hidden="true">${icon}</div>
+        <p>${escapeHtml(params.message)}</p>
+        <p class="note">This local callback page was opened by PaPut MCP CLI.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 async function listen(server: HttpServer): Promise<void> {
