@@ -12,7 +12,7 @@ This document collects public submission information for PaPut MCP.
 - Dynamic client registration: Supported through PaPut OAuth metadata
 - Data model: Data-only MCP server
 - UI widgets: None
-- Primary use: Give AI assistants controlled access to PaPut memos, notes, skill sheets, and reusable knowledge workflows
+- Primary use: Give AI assistants controlled access to PaPut memos, notes, and skill sheets
 
 ## OAuth Metadata
 
@@ -31,7 +31,7 @@ This document collects public submission information for PaPut MCP.
 Recommended listing details:
 
 - Connector name: PaPut
-- Description: Connect Claude to PaPut memos, notes, skill sheets, and knowledge capture workflows.
+- Description: Connect Claude to PaPut memos, notes, and skill sheets.
 - Server URL: `https://mcp.paput.io`
 - Authentication: OAuth
 - Transport: Streamable HTTP
@@ -62,7 +62,7 @@ Recommended listing details:
 - Remote MCP server URL: `https://mcp.paput.io`
 - Authentication: OAuth with dynamic client registration
 - Transport: Streamable HTTP
-- Tool access: Full MCP tools, data-only, no UI widgets
+- Tool access: Remote API-backed PaPut tools, data-only, no UI widgets
 - Scopes: `paput.read paput.write`
 - Description: Connect PaPut to ChatGPT so you can search, read, create, and organize your PaPut memos, notes, skill sheet, and reusable knowledge. PaPut MCP uses OAuth and only accesses your PaPut data after you authorize the connection.
 - Callback URL handling: ChatGPT should register its redirect URI through dynamic client registration. PaPut validates registered redirect URIs before issuing authorization codes.
@@ -87,7 +87,7 @@ Status: verified with ChatGPT Developer Mode.
 PaPut MCP should be submitted as a data-only MCP connector. It should not request UI widget support. The connector should emphasize:
 
 - User-owned PaPut data access through OAuth.
-- Knowledge management and session knowledge capture.
+- Knowledge management for PaPut memos, notes, and skill sheet data.
 - Explicit confirmation for write and destructive operations.
 - No broad web browsing, scraping, or unrelated third-party data access.
 
