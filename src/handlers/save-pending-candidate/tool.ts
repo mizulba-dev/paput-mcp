@@ -15,7 +15,7 @@ export const savePendingCandidateTool: ToolHandler = {
         created_at: {
           type: 'string',
           description:
-            'Creation timestamp to use for the PaPut memo. Defaults to the source session updated timestamp.',
+            'Creation timestamp to use for the PaPut memo. Defaults to the source session updated timestamp, then the pending candidate created timestamp.',
         },
         categories: { type: 'array', items: { type: 'string' } },
         projects: {

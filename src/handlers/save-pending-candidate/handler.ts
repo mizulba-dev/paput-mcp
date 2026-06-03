@@ -39,10 +39,19 @@ export async function handleSavePendingCandidate(
         (category): category is string => typeof category === 'string',
       )
     : candidate.categories || [];
+  const explicitCreatedAt =
+    typeof args.created_at === 'string' ? args.created_at : undefined;
+  const sourceSessionUpdatedAt =
+    typeof candidate.source_session_updated_at === 'string'
+      ? candidate.source_session_updated_at
+      : undefined;
   const createdAt =
-    typeof args.created_at === 'string'
-      ? args.created_at
-      : candidate.source_session_updated_at;
+    explicitCreatedAt ?? sourceSessionUpdatedAt ?? candidate.created_at;
+  const createdAtSource = explicitCreatedAt
+    ? 'argument'
+    : sourceSessionUpdatedAt
+      ? 'source_session_updated_at'
+      : 'pending_created_at';
   const projects = Array.isArray(args.projects)
     ? args.projects.filter(
         (project): project is { id: number; title?: string } =>
@@ -102,6 +111,14 @@ export async function handleSavePendingCandidate(
     candidate_id: updated?.id,
     memo_id: savedMemo?.id || null,
     title,
+    created_at: createdAt,
+    created_at_source: createdAtSource,
+    warnings:
+      createdAtSource === 'pending_created_at'
+        ? [
+            'source_session_updated_at was not available; used pending candidate created_at',
+          ]
+        : [],
   };
 
   return {

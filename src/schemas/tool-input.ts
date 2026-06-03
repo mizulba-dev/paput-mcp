@@ -238,7 +238,7 @@ const toolInputSchemas = {
     created_at: z
       .string()
       .describe(
-        'Creation timestamp to use for the PaPut memo. Defaults to the source session updated timestamp.',
+        'Creation timestamp to use for the PaPut memo. Defaults to the source session updated timestamp, then the pending candidate created timestamp.',
       )
       .optional(),
     categories: z.array(z.string()).optional(),
