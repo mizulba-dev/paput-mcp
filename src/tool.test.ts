@@ -20,6 +20,8 @@ const expectedToolNames = [
   'paput_set_skill_sheet_skills',
   'paput_upsert_skill_sheet_project',
   'paput_delete_skill_sheet_project',
+  'paput_get_skill_sheet_project_summary_context',
+  'paput_update_skill_sheet_project_ai_summary',
   'paput_cache_status',
   'paput_sync_remote_memos',
   'paput_scan_sessions',
@@ -37,6 +39,7 @@ const readOnlyToolNames = [
   'paput_search_notes',
   'paput_get_note',
   'paput_get_skill_sheet',
+  'paput_get_skill_sheet_project_summary_context',
   'paput_cache_status',
   'paput_scan_sessions',
   'paput_get_session_transcript',
@@ -51,6 +54,7 @@ const destructiveToolNames = [
   'paput_set_skill_sheet_skills',
   'paput_upsert_skill_sheet_project',
   'paput_delete_skill_sheet_project',
+  'paput_update_skill_sheet_project_ai_summary',
   'paput_discard_pending_candidate',
 ];
 

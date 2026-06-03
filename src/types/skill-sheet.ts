@@ -36,6 +36,8 @@ export interface GetSkillSheetProject {
   technologies: Technology[];
   processes: number[];
   memos: SkillSheetMemo[];
+  ai_summary?: string | null;
+  ai_summary_updated_at?: string | null;
 }
 
 export type UpsertSkillSheetProjectParams = Omit<
@@ -104,4 +106,11 @@ export interface SkillSheetSkill {
 // Project types
 export interface GetProjectsResponse {
   projects: GetSkillSheetProject[];
+}
+
+export interface UpdateSkillSheetProjectAiSummaryResponse {
+  id: number;
+  title: string;
+  ai_summary: string | null;
+  ai_summary_updated_at: string | null;
 }

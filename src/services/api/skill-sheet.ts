@@ -10,6 +10,7 @@ import {
   Technology,
   SkillSheetMemo,
   UpsertSkillSheetProjectParams,
+  UpdateSkillSheetProjectAiSummaryResponse,
 } from '../../types/index.js';
 
 // Response types for API endpoints
@@ -205,4 +206,14 @@ export async function deleteSkillSheetProject(
   projectId: number,
 ): Promise<void> {
   await client.delete(`/api/v1/mcp/skill-sheet/project/${projectId}`);
+}
+
+export async function updateSkillSheetProjectAiSummary(
+  client: ApiClient,
+  projectId: number,
+  aiSummary: string,
+): Promise<UpdateSkillSheetProjectAiSummaryResponse> {
+  return client.put(`/api/v1/mcp/skill-sheet/project/${projectId}/ai-summary`, {
+    ai_summary: aiSummary,
+  });
 }

@@ -184,6 +184,8 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 - `paput_set_skill_sheet_skills` - Replace the full skill list with the provided final state.
 - `paput_upsert_skill_sheet_project` - Add or update a skill sheet project.
 - `paput_delete_skill_sheet_project` - Delete a skill sheet project.
+- `paput_get_skill_sheet_project_summary_context` - Get project information and related memo bodies so the MCP client AI model can generate a project summary.
+- `paput_update_skill_sheet_project_ai_summary` - Save an AI-generated project summary.
 
 ### Knowledge Capture And Local Cache
 

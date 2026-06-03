@@ -13,6 +13,8 @@ export * from './update-skill-sheet-self-pr/index.js';
 export * from './update-skill-sheet-skills/index.js';
 export * from './upsert-skill-sheet-project/index.js';
 export * from './delete-skill-sheet-project/index.js';
+export * from './get-skill-sheet-project-summary-context/index.js';
+export * from './update-skill-sheet-project-ai-summary/index.js';
 export * from './cache-status/index.js';
 export * from './sync-remote-memos/index.js';
 export * from './scan-sessions/index.js';

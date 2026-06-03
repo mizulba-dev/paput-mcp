@@ -188,6 +188,13 @@ const toolInputSchemas = {
   paput_delete_skill_sheet_project: z.object({
     project_id: z.number().describe('Project ID to delete'),
   }),
+  paput_get_skill_sheet_project_summary_context: z.object({
+    project_id: z.number().describe('Project ID'),
+  }),
+  paput_update_skill_sheet_project_ai_summary: z.object({
+    project_id: z.number().describe('Project ID'),
+    ai_summary: z.string().describe('AI-generated project summary to save'),
+  }),
   paput_cache_status: emptySchema,
   paput_sync_remote_memos: z.object({
     limit: z

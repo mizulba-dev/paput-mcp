@@ -15,6 +15,7 @@ Clients and assistants should follow these rules:
 - Destructive tools require explicit confirmation before execution.
 - `paput_save_pending_candidate` requires explicit user approval because it creates a PaPut memo from a local pending candidate.
 - `paput_delete_skill_sheet_project` should be used only when the user clearly intends to remove a project.
+- `paput_update_skill_sheet_project_ai_summary` should be used only after the MCP client AI model has generated a project summary and the user intends to save it.
 - `paput_set_skill_sheet_skills` replaces the full skill list and should be used only when the complete desired final list is known.
 - `paput_discard_pending_candidate` removes a pending item from the save flow and should be confirmed when the candidate may still be useful.
 - Update and upsert tools should preserve existing data unless the user requested the change.
@@ -44,14 +45,16 @@ mode.
 
 ## Skill Sheet Tools
 
-| Tool                                  | Safety            | Use case                                                                                   |
-| ------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------ |
-| `paput_get_skill_sheet`               | Read-only         | Read the user's PaPut skill sheet.                                                         |
-| `paput_update_skill_sheet_basic_info` | Destructive/write | Update profile fields such as nearest station, gender, birth date, or years of experience. |
-| `paput_update_skill_sheet_self_pr`    | Destructive/write | Update the self PR section.                                                                |
-| `paput_set_skill_sheet_skills`        | Destructive/write | Replace the full skill list with a known final state.                                      |
-| `paput_upsert_skill_sheet_project`    | Destructive/write | Add or update a skill sheet project by ID or exact title match.                            |
-| `paput_delete_skill_sheet_project`    | Destructive       | Delete a skill sheet project by ID.                                                        |
+| Tool                                            | Safety            | Use case                                                                                   |
+| ----------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------ |
+| `paput_get_skill_sheet`                         | Read-only         | Read the user's PaPut skill sheet.                                                         |
+| `paput_update_skill_sheet_basic_info`           | Destructive/write | Update profile fields such as nearest station, gender, birth date, or years of experience. |
+| `paput_update_skill_sheet_self_pr`              | Destructive/write | Update the self PR section.                                                                |
+| `paput_set_skill_sheet_skills`                  | Destructive/write | Replace the full skill list with a known final state.                                      |
+| `paput_upsert_skill_sheet_project`              | Destructive/write | Add or update a skill sheet project by ID or exact title match.                            |
+| `paput_delete_skill_sheet_project`              | Destructive       | Delete a skill sheet project by ID.                                                        |
+| `paput_get_skill_sheet_project_summary_context` | Read-only         | Get project information and related memo bodies for MCP client-side summary generation.    |
+| `paput_update_skill_sheet_project_ai_summary`   | Destructive/write | Save an AI-generated project summary.                                                      |
 
 ## Knowledge Capture And Local Cache Tools
 
