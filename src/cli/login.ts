@@ -285,7 +285,7 @@ function renderCallbackPage(params: {
   const icon = params.status === 'success' ? 'OK' : '!';
   const eyebrow =
     params.status === 'success' ? 'OAuth authorization' : 'OAuth error';
-  const logoUrl = 'https://paput.io/img/paput-main-horizontal-logo.png';
+  const logoUrl = 'https://paput.io/img/paput-main-logo-transparent.png';
 
   return `<!doctype html>
 <html lang="en">
