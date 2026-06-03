@@ -138,6 +138,7 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 - Keep each candidate small.
 - Make titles concise and searchable.
 - Include concrete procedures, causes, reasons, and decision criteria in the body.
+- To make candidates reusable, naturally include decision criteria, applicability conditions, reasons, pitfalls, and verification methods where possible.
 - Do not include project-specific specifications, implementation details, operational rules, code, secrets, or customer data.
 - Only capture technical knowledge, decision criteria, or procedures that can be reused in other projects.
 - Treat candidates as private by default.
