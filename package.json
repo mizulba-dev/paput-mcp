@@ -1,6 +1,6 @@
 {
   "name": "paput-mcp",
-  "version": "2.6.3",
+  "version": "2.6.4",
   "description": "PaPut MCP Server",
   "main": "dist/index.js",
   "type": "module",
