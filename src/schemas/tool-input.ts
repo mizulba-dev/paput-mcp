@@ -107,6 +107,7 @@ const toolInputSchemas = {
     ids: z.array(z.number()).describe('Memo IDs').optional(),
     date: z.string().describe('Date in YYYY-MM-DD format').optional(),
     is_public: z.boolean().describe('Visibility filter').optional(),
+    project_id: z.number().describe('Project ID filter').optional(),
     page: z.number().describe('Page number').optional(),
     limit: z.number().describe('Number of items to return').optional(),
   }),

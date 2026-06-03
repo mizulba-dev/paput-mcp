@@ -4,6 +4,7 @@ export interface SearchMemoParams {
   ids?: number[];
   date?: string;
   is_public?: boolean;
+  project_id?: number;
   page?: number;
   limit?: number;
 }

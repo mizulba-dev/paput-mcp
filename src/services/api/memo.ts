@@ -56,6 +56,8 @@ export async function searchMemos(
     }
     if (params.is_public !== undefined)
       queryParams.append('is_public', params.is_public.toString());
+    if (params.project_id !== undefined)
+      queryParams.append('project_id', params.project_id.toString());
     if (params.page !== undefined)
       queryParams.append('page', params.page.toString());
     if (params.limit !== undefined)

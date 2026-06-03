@@ -1,6 +1,9 @@
 import { ApiClient } from '../../services/api/client.js';
-import { getMemo } from '../../services/api/memo.js';
+import { searchMemos } from '../../services/api/memo.js';
 import { getSkillSheet } from '../../services/api/skill-sheet.js';
+import type { Memo } from '../../types/index.js';
+
+const MEMO_PAGE_LIMIT = 100;
 
 export async function handler(
   params: Record<string, unknown> | undefined,
@@ -34,9 +37,7 @@ export async function handler(
     };
   }
 
-  const memos = await Promise.all(
-    project.memos.map((memo) => getMemo(apiClient, { id: memo.id })),
-  );
+  const memos = await fetchProjectMemos(apiClient, projectId);
 
   const memoText =
     memos.length > 0
@@ -80,4 +81,34 @@ ${prompt}`,
       },
     ],
   };
+}
+
+async function fetchProjectMemos(
+  apiClient: ApiClient,
+  projectId: number,
+): Promise<Memo[]> {
+  const memos: Memo[] = [];
+  let page = 1;
+  let total: number | undefined;
+
+  do {
+    const result = await searchMemos(apiClient, {
+      project_id: projectId,
+      page,
+      limit: MEMO_PAGE_LIMIT,
+    });
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to search project memos');
+    }
+
+    const pageMemos = result.memos || [];
+    memos.push(...pageMemos);
+    total = result.total;
+
+    if (pageMemos.length === 0) break;
+    page += 1;
+  } while (total === undefined || memos.length < total);
+
+  return memos;
 }
