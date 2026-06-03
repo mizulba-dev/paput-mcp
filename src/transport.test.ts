@@ -139,6 +139,7 @@ describe('MCP transports', () => {
 
       expect(response.status).toBe(200);
       expect(metadata.resource).toBe(`http://127.0.0.1:${address.port}`);
+      expect(metadata.resource_name).toBe('PaPut');
       expect(metadata.authorization_servers).toEqual([
         'https://api.example.test',
       ]);
@@ -169,6 +170,29 @@ describe('MCP transports', () => {
       );
       expect(response.headers.get('www-authenticate')).toContain(
         'scope="paput.read paput.write"',
+      );
+    } finally {
+      await closeHttpServer(httpServer);
+    }
+  });
+
+  it('redirects common icon requests to PaPut frontend assets', async () => {
+    const httpServer = await startHttpMcpServer({
+      ...testServerOptions,
+      host: '127.0.0.1',
+      port: 0,
+    });
+
+    try {
+      const address = httpServer.address() as AddressInfo;
+      const response = await fetch(
+        `http://127.0.0.1:${address.port}/favicon.ico`,
+        { redirect: 'manual' },
+      );
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get('location')).toBe(
+        'https://paput.io/favicon.ico',
       );
     } finally {
       await closeHttpServer(httpServer);

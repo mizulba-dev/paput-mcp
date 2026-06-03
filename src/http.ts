@@ -17,6 +17,12 @@ export interface HttpMcpServerOptions extends MCPServerOptions {
 }
 
 const OAUTH_SCOPES = ['paput.read', 'paput.write'] as const;
+const FRONT_ORIGIN = 'https://paput.io';
+const ICON_REDIRECTS: Record<string, string> = {
+  '/apple-touch-icon.png': '/icons/apple-touch-icon.png',
+  '/favicon.ico': '/favicon.ico',
+  '/icon.ico': '/icon.ico',
+};
 
 export async function startHttpMcpServer(
   options: HttpMcpServerOptions = {},
@@ -46,9 +52,17 @@ export async function startHttpMcpServer(
       return;
     }
 
+    const iconPath = ICON_REDIRECTS[requestUrl.pathname];
+    if (iconPath) {
+      res.writeHead(307, { location: `${FRONT_ORIGIN}${iconPath}` });
+      res.end();
+      return;
+    }
+
     if (requestUrl.pathname === '/.well-known/oauth-protected-resource') {
       sendJson(res, 200, {
         resource: resourceUrl,
+        resource_name: 'PaPut',
         authorization_servers: [apiOrigin],
         scopes_supported: OAUTH_SCOPES,
         bearer_methods_supported: ['header'],
