@@ -23,7 +23,7 @@ interface SkillSpec {
   body: string;
 }
 
-const SKILLS: SkillSpec[] = [
+export const SKILLS: SkillSpec[] = [
   {
     name: 'paput-init',
     description:
@@ -401,7 +401,11 @@ function upsertRules(path: string, force: boolean, label: string): void {
   console.log(`Append ${label} rules: ${path}`);
 }
 
-function renderSkill(skill: SkillSpec): string {
+export function findSkill(name: string): SkillSpec | undefined {
+  return SKILLS.find((skill) => skill.name === name);
+}
+
+export function renderSkill(skill: SkillSpec): string {
   return `---
 name: ${skill.name}
 description: ${skill.description}

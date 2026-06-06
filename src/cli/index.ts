@@ -1,6 +1,7 @@
 import { login } from './login.js';
 import { logout } from './logout.js';
 import { setupAi } from './setup-ai.js';
+import { exportSkill } from './export-skill.js';
 
 export async function runCli(args: string[]): Promise<boolean> {
   const command = args[0];
@@ -32,6 +33,16 @@ export async function runCli(args: string[]): Promise<boolean> {
     return true;
   }
 
+  if (command === 'export-skill') {
+    try {
+      exportSkill(args.slice(1));
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : error);
+      process.exitCode = 1;
+    }
+    return true;
+  }
+
   if (command === '--help' || command === '-h' || command === 'help') {
     printHelp();
     return true;
@@ -49,6 +60,8 @@ function printHelp(): void {
   paput-mcp login       Log in to PaPut with OAuth for local CLI mode
   paput-mcp logout      Revoke and remove the local OAuth token cache
   paput-mcp setup-ai    Set up PaPut integration for Claude/Codex
+  paput-mcp export-skill [name]
+                         Export PaPut skill ZIP files for Claude Desktop
 
 Options:
   --api-url <URL>       PaPut API URL for login. Defaults to PAPUT_API_URL or https://api.paput.io
@@ -59,5 +72,6 @@ Options:
   --no-rules            Do not update global rules
   --claude-only         Configure Claude only
   --codex-only          Configure Codex only
+  -o, --output <PATH>   Output directory or ZIP path for export-skill. Defaults to ~/Downloads
 `);
 }

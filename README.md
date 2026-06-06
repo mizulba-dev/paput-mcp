@@ -130,6 +130,26 @@ Generated skills:
 - `paput-save` - Review pending candidates first, then save only candidates explicitly approved by the user.
 - `paput-dashboard-analysis` - Analyze PaPut dashboard context and optionally save the generated dashboard analysis.
 
+For Claude Desktop, export skill ZIP files and upload them from
+`Customize > Skills`:
+
+```bash
+npx -y paput-mcp export-skill
+```
+
+The command writes all PaPut skill ZIP files to `~/Downloads`. To export one
+skill only:
+
+```bash
+npx -y paput-mcp export-skill paput-dashboard-analysis
+```
+
+To choose another output directory:
+
+```bash
+npx -y paput-mcp export-skill --output ~/Downloads/paput-skills
+```
+
 ## Knowledge Workflow
 
 Knowledge capture uses a two-step flow to avoid accidental memo creation.
