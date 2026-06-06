@@ -104,3 +104,21 @@ Expected tool flow:
 3. `paput_get_note` to verify attached memo IDs
 
 Use case: create curated collections from existing PaPut memos.
+
+## 7. Generate And Save Dashboard Analysis
+
+Prompt:
+
+```text
+Analyze my PaPut dashboard and goals, then save the dashboard analysis.
+```
+
+Expected tool flow:
+
+1. `paput_get_dashboard_analysis_context`
+2. MCP client AI generates the analysis from `structuredContent`
+3. `paput_update_dashboard_analysis` after the user intends to save the result
+4. `paput_get_dashboard_analysis` to verify the saved result
+
+Use case: keep analysis generation in the MCP client AI while PaPut MCP only
+retrieves source data and saves the finished analysis.

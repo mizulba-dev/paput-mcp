@@ -10,6 +10,8 @@ PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the
 - Create, search, read, and update notes
 - Read and update skill sheet profile fields, self PR, skills, and projects
 - Delete skill sheet projects when explicitly requested
+- Create, list, update, and delete goals
+- Get dashboard context and save AI-generated dashboard analysis results
 
 ### Knowledge Capture From AI Sessions
 
@@ -126,6 +128,7 @@ Generated skills:
 - `paput-sync` - Sync existing PaPut memos into the local cache.
 - `paput-capture` - Extract reusable knowledge candidates from the current conversation or a specified topic and add them to pending.
 - `paput-save` - Review pending candidates first, then save only candidates explicitly approved by the user.
+- `paput-dashboard-analysis` - Analyze PaPut dashboard context and optionally save the generated dashboard analysis.
 
 ## Knowledge Workflow
 
@@ -187,6 +190,19 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 - `paput_get_skill_sheet_project_summary_context` - Get project information and related memo bodies so the MCP client AI model can generate a project summary.
 - `paput_update_skill_sheet_project_ai_summary` - Save an AI-generated project summary.
 
+### Goal Management
+
+- `paput_list_goals` - List active and archived goals.
+- `paput_create_goal` - Create a goal.
+- `paput_update_goal` - Update a goal. The update body includes the goal ID.
+- `paput_delete_goal` - Delete a goal by ID.
+
+### Dashboard Analysis
+
+- `paput_get_dashboard_analysis` - Get the saved dashboard analysis.
+- `paput_get_dashboard_analysis_context` - Get dashboard, goal, skill sheet, memo, note, and category context so the MCP client AI model can generate an analysis.
+- `paput_update_dashboard_analysis` - Save an AI-generated dashboard analysis.
+
 ### Knowledge Capture And Local Cache
 
 - `paput_cache_status` - Inspect the local cache state.
@@ -204,7 +220,9 @@ Write and destructive tools should be used only when the user intent is clear. I
 
 - `paput_save_pending_candidate` requires explicit user approval to save a pending candidate to PaPut.
 - `paput_delete_skill_sheet_project` should be used only when the user intends to delete a project.
+- `paput_delete_goal` should be used only when the user intends to delete a goal.
 - `paput_set_skill_sheet_skills` replaces the full skill list and should be used only when the desired final list is known.
+- `paput_update_dashboard_analysis` should be used only after the MCP client AI model has generated an analysis and the user intends to save it.
 - `paput_discard_pending_candidate` removes a pending candidate from the save flow.
 - Update and upsert tools should preserve existing data unless the user requests a change.
 

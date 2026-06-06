@@ -32,4 +32,30 @@ describe('getGeneratedInputSchema', () => {
   it('returns undefined for unknown tools', () => {
     expect(getGeneratedInputSchema('paput_unknown')).toBeUndefined();
   });
+
+  it('requires id in the goal update schema', () => {
+    const schema = getGeneratedInputSchema('paput_update_goal');
+
+    expect(schema?.required).toEqual([
+      'title',
+      'category',
+      'status',
+      'priority',
+      'id',
+    ]);
+    expect(schema?.properties.id).toMatchObject({
+      type: 'number',
+      description: 'Goal ID. Required in the update request body.',
+    });
+  });
+
+  it('generates dashboard analysis update schema', () => {
+    const schema = getGeneratedInputSchema('paput_update_dashboard_analysis');
+
+    expect(schema?.required).toEqual(['current_summary', 'analyzed_at']);
+    expect(schema?.properties.next_knowledge_suggestions).toMatchObject({
+      type: 'array',
+      description: 'Knowledge suggestions to learn next',
+    });
+  });
 });

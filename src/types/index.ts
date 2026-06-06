@@ -8,3 +8,6 @@ export * from './skill-sheet.js';
 export * from './tool.js';
 export * from './constants.js';
 export * from './knowledge.js';
+export * from './goal.js';
+export * from './dashboard.js';
+export * from './dashboard-analysis.js';

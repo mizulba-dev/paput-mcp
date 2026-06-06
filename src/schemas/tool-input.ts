@@ -75,6 +75,59 @@ const knowledgeCandidateSchema = z.object({
   is_public: z.boolean().default(false).optional(),
 });
 
+const goalCategorySchema = z
+  .enum(['career', 'learning', 'portfolio', 'project', 'other'])
+  .describe('Goal category');
+
+const goalStatusSchema = z
+  .enum(['active', 'archived'])
+  .describe(
+    'Goal status. Active goals are current targets; archived goals are history.',
+  );
+
+const goalInputSchema = z.object({
+  title: z.string().describe('Goal title'),
+  description: z.string().describe('Goal description').nullable().optional(),
+  category: goalCategorySchema,
+  status: goalStatusSchema,
+  priority: z
+    .number()
+    .min(1)
+    .describe('Goal priority. Lower numbers are higher priority.'),
+  target_date: z
+    .string()
+    .describe('Target date in YYYY-MM-DD format')
+    .nullable()
+    .optional(),
+});
+
+const dashboardAnalysisItemSchema = z.object({
+  title: z.string().describe('Item title'),
+  description: z.string().describe('Item description'),
+  category_names: z
+    .array(z.string())
+    .describe('Related category names')
+    .optional(),
+  memo_count: z
+    .number()
+    .min(0)
+    .describe('Related memo count')
+    .nullable()
+    .optional(),
+  goal_ids: z.array(z.number()).describe('Related goal IDs').optional(),
+});
+
+const dashboardAnalysisSuggestionSchema = z.object({
+  title: z.string().describe('Suggestion title'),
+  reason: z.string().describe('Suggestion reason'),
+  priority: z.number().min(1).describe('Suggestion priority'),
+  category_names: z
+    .array(z.string())
+    .describe('Related category names')
+    .optional(),
+  goal_ids: z.array(z.number()).describe('Related goal IDs').optional(),
+});
+
 const toolInputSchemas = {
   paput_create_memo: z.object({
     title: z.string().describe('Memo title'),
@@ -196,6 +249,36 @@ const toolInputSchemas = {
     project_id: z.number().describe('Project ID'),
     ai_summary: z.string().describe('AI-generated project summary to save'),
   }),
+  paput_list_goals: emptySchema,
+  paput_create_goal: goalInputSchema,
+  paput_update_goal: goalInputSchema.extend({
+    id: z.number().describe('Goal ID. Required in the update request body.'),
+  }),
+  paput_delete_goal: z.object({
+    id: z.number().describe('Goal ID'),
+  }),
+  paput_get_dashboard_analysis: emptySchema,
+  paput_update_dashboard_analysis: z.object({
+    current_summary: z.string().describe('Current summary'),
+    strengths: z
+      .array(dashboardAnalysisItemSchema)
+      .describe('Strengths')
+      .optional(),
+    growing_areas: z
+      .array(dashboardAnalysisItemSchema)
+      .describe('Recently growing areas')
+      .optional(),
+    weak_areas: z
+      .array(dashboardAnalysisItemSchema)
+      .describe('Thin or weak areas')
+      .optional(),
+    next_knowledge_suggestions: z
+      .array(dashboardAnalysisSuggestionSchema)
+      .describe('Knowledge suggestions to learn next')
+      .optional(),
+    analyzed_at: z.string().describe('Analysis timestamp in ISO 8601 format'),
+  }),
+  paput_get_dashboard_analysis_context: emptySchema,
   paput_cache_status: emptySchema,
   paput_sync_remote_memos: z.object({
     limit: z
