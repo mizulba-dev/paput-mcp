@@ -19,7 +19,10 @@ export interface HttpMcpServerOptions extends MCPServerOptions {
 
 const OAUTH_SCOPES = ['paput.read', 'paput.write'] as const;
 const FRONT_ORIGIN = 'https://paput.io';
-const ICON_REDIRECTS: Record<string, string> = {
+// アイコン系は paput.io 上の実体を 200 で直接配信する（プロキシ）。
+// 307 リダイレクトだと Google favicon クローラーや一部クライアントがクロスドメイン
+// リダイレクトを追わず、ディレクトリ/ツールコールのアイコンが汎用アイコンになってしまうため。
+const ICON_SOURCES: Record<string, string> = {
   '/apple-touch-icon.png': '/icons/apple-touch-icon.png',
   '/favicon.ico': '/favicon.ico',
   '/icon.ico': '/icon.ico',
@@ -56,10 +59,9 @@ export async function startHttpMcpServer(
       return;
     }
 
-    const iconPath = ICON_REDIRECTS[requestUrl.pathname];
+    const iconPath = ICON_SOURCES[requestUrl.pathname];
     if (iconPath) {
-      res.writeHead(307, { location: `${FRONT_ORIGIN}${iconPath}` });
-      res.end();
+      await serveIcon(res, `${FRONT_ORIGIN}${iconPath}`);
       return;
     }
 
@@ -156,6 +158,27 @@ function parseAllowedOrigins(value?: string): string[] {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+}
+
+// 上流(paput.io)のアイコンを取得し 200 で直接返す。失敗時のみ 307 リダイレクトにフォールバック。
+async function serveIcon(res: ServerResponse, sourceUrl: string): Promise<void> {
+  try {
+    const upstream = await fetch(sourceUrl);
+    if (upstream.ok) {
+      const body = Buffer.from(await upstream.arrayBuffer());
+      res.writeHead(200, {
+        'content-type':
+          upstream.headers.get('content-type') ?? 'image/x-icon',
+        'cache-control': 'public, max-age=86400',
+      });
+      res.end(body);
+      return;
+    }
+  } catch {
+    // フォールスルーしてリダイレクトする
+  }
+  res.writeHead(307, { location: sourceUrl });
+  res.end();
 }
 
 function isAllowedOrigin(

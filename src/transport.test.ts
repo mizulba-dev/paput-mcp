@@ -228,7 +228,7 @@ describe('MCP transports', () => {
     }
   });
 
-  it('redirects common icon requests to PaPut frontend assets', async () => {
+  it('serves common icon requests from PaPut frontend assets', async () => {
     const httpServer = await startHttpMcpServer({
       ...testServerOptions,
       host: '127.0.0.1',
@@ -242,10 +242,16 @@ describe('MCP transports', () => {
         { redirect: 'manual' },
       );
 
-      expect(response.status).toBe(307);
-      expect(response.headers.get('location')).toBe(
-        'https://paput.io/favicon.ico',
-      );
+      // 上流(paput.io)を 200 で直接配信する。ネットワーク不可の環境では
+      // 307 リダイレクトにフォールバックする。
+      expect([200, 307]).toContain(response.status);
+      if (response.status === 307) {
+        expect(response.headers.get('location')).toBe(
+          'https://paput.io/favicon.ico',
+        );
+      } else {
+        expect(response.headers.get('content-type')).toBeTruthy();
+      }
     } finally {
       await closeHttpServer(httpServer);
     }
