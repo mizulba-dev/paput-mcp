@@ -299,6 +299,15 @@ PaPut MCP stores local data under `~/.paput` by default.
   cache/   # Synced memos, pending candidates, and processed sessions
 ```
 
+## Troubleshooting
+
+- **Connection fails or tools do not appear**: Make sure the server URL is `https://mcp.paput.io` and that you completed the PaPut sign-in and consent screen. Check `https://mcp.paput.io/healthz` returns `{"ok":true}`.
+- **401 Unauthorized / asked to sign in again**: Your access token expired or the connector was disconnected. Reconnect the connector and re-authorize through PaPut OAuth.
+- **A write or delete tool did nothing**: Write and destructive tools require user confirmation. Approve the confirmation prompt in the client before the action runs.
+- **Read/search tools return empty results**: The account has no matching data yet. Create content first (e.g. `paput_create_memo`), then search again.
+- **Local CLI mode: `login` required**: For stdio/local usage, run `node dist/index.js login` to complete OAuth before starting the server.
+- **Still stuck**: Contact `paput.dev@gmail.com` or open an issue at https://github.com/mizulba-dev/paput-mcp/issues.
+
 ## Public Documents
 
 - [Privacy Policy](docs/privacy-policy.md)
