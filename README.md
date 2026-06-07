@@ -90,6 +90,9 @@ npx -y paput-mcp logout
 - `PAPUT_PROJECT_MATCH` - Optional project name fragment for automatic project linking when creating or updating memos.
 - `PAPUT_HOME` - Optional PaPut local data directory. Defaults to `~/.paput`.
 - `PAPUT_CACHE_DIR` - Optional cache directory for knowledge capture data.
+- `PAPUT_ALLOWED_ORIGINS` - Optional comma-separated list of extra allowed
+  HTTP `Origin` values for remote MCP requests. The remote server already allows
+  its own origin, PaPut, Claude, and ChatGPT origins.
 
 When `PAPUT_PROJECT_MATCH` is set, memo create and update operations search skill sheet projects whose title contains the configured text and link the first match.
 

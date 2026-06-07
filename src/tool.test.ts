@@ -128,8 +128,15 @@ describe('registered tools', () => {
   it('sets MCP annotations for every registered tool', () => {
     for (const tool of getRegisteredTools()) {
       const name = tool.definition.name;
+      const expectedTitle = name
+        .replace(/^paput_/, '')
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 
+      expect(tool.definition.title).toBe(expectedTitle);
       expect(tool.definition.annotations).toMatchObject({
+        title: expectedTitle,
         readOnlyHint: readOnlyToolNames.includes(name),
         destructiveHint:
           !readOnlyToolNames.includes(name) &&

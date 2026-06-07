@@ -8,6 +8,7 @@ export interface ToolContext {
 
 export interface ToolDefinition {
   name: string;
+  title?: string;
   description: string;
   annotations?: {
     title?: string;

@@ -184,9 +184,11 @@ function withToolAnnotations(tool: ToolHandler): ToolHandler {
     ...tool,
     definition: {
       ...tool.definition,
+      title: getToolTitle(name),
       inputSchema,
       annotations: {
         ...tool.definition.annotations,
+        title: tool.definition.annotations?.title ?? getToolTitle(name),
         readOnlyHint: readOnly,
         destructiveHint: readOnly ? false : destructive,
         idempotentHint: isIdempotentTool(name),
@@ -194,6 +196,14 @@ function withToolAnnotations(tool: ToolHandler): ToolHandler {
       },
     },
   };
+}
+
+function getToolTitle(name: string): string {
+  return name
+    .replace(/^paput_/, '')
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 function isReadOnlyTool(name: string): boolean {

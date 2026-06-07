@@ -11,6 +11,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createMcpServer, type MCPServerOptions } from './server.js';
 
 export interface HttpMcpServerOptions extends MCPServerOptions {
+  allowedOrigins?: string[];
   endpoint?: string;
   host?: string;
   port?: number;
@@ -33,6 +34,9 @@ export async function startHttpMcpServer(
   const apiUrl =
     options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
   const apiOrigin = new URL(apiUrl).origin;
+  const configuredAllowedOrigins =
+    options.allowedOrigins ??
+    parseAllowedOrigins(process.env.PAPUT_ALLOWED_ORIGINS);
 
   const httpServer = createServer(async (req, res) => {
     const requestUrl = new URL(
@@ -80,6 +84,13 @@ export async function startHttpMcpServer(
 
     if (requestUrl.pathname !== endpoint) {
       sendJsonRpcError(res, 404, -32000, 'Not found');
+      return;
+    }
+
+    if (
+      !isAllowedOrigin(req, publicOrigin, apiOrigin, configuredAllowedOrigins)
+    ) {
+      sendJsonRpcError(res, 403, -32000, 'Forbidden origin.');
       return;
     }
 
@@ -138,6 +149,48 @@ export async function startHttpMcpServer(
   });
 
   return httpServer;
+}
+
+function parseAllowedOrigins(value?: string): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+function isAllowedOrigin(
+  req: IncomingMessage,
+  publicOrigin: string,
+  apiOrigin: string,
+  configuredAllowedOrigins: string[],
+): boolean {
+  const originHeader = req.headers.origin;
+  const origin = Array.isArray(originHeader) ? originHeader[0] : originHeader;
+
+  if (!origin) {
+    return true;
+  }
+
+  const allowedOrigins = new Set([
+    publicOrigin,
+    apiOrigin,
+    FRONT_ORIGIN,
+    'https://claude.ai',
+    'https://claude.com',
+    'https://chatgpt.com',
+    'https://chat.openai.com',
+    ...configuredAllowedOrigins,
+  ]);
+
+  return allowedOrigins.has(normalizeOrigin(origin));
+}
+
+function normalizeOrigin(origin: string): string {
+  try {
+    return new URL(origin).origin;
+  } catch {
+    return origin;
+  }
 }
 
 function getPublicOrigin(req: IncomingMessage, requestUrl: URL): string {

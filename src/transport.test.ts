@@ -176,6 +176,58 @@ describe('MCP transports', () => {
     }
   });
 
+  it('rejects HTTP MCP requests from disallowed origins', async () => {
+    const httpServer = await startHttpMcpServer({
+      ...testServerOptions,
+      host: '127.0.0.1',
+      port: 0,
+      allowedOrigins: ['https://allowed.example.test'],
+    });
+
+    try {
+      const address = httpServer.address() as AddressInfo;
+      const response = await fetch(`http://127.0.0.1:${address.port}`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          origin: 'https://evil.example.test',
+        },
+        body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.error.message).toBe('Forbidden origin.');
+    } finally {
+      await closeHttpServer(httpServer);
+    }
+  });
+
+  it('allows HTTP MCP requests from configured origins', async () => {
+    const httpServer = await startHttpMcpServer({
+      ...testServerOptions,
+      host: '127.0.0.1',
+      port: 0,
+      allowedOrigins: ['https://allowed.example.test'],
+    });
+
+    try {
+      const address = httpServer.address() as AddressInfo;
+      const response = await fetch(`http://127.0.0.1:${address.port}`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          origin: 'https://allowed.example.test',
+        },
+        body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
+      });
+
+      expect(response.status).toBe(401);
+    } finally {
+      await closeHttpServer(httpServer);
+    }
+  });
+
   it('redirects common icon requests to PaPut frontend assets', async () => {
     const httpServer = await startHttpMcpServer({
       ...testServerOptions,
