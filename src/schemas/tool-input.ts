@@ -161,8 +161,13 @@ const toolInputSchemas = {
     date: z.string().describe('Date in YYYY-MM-DD format').optional(),
     is_public: z.boolean().describe('Visibility filter').optional(),
     project_id: z.number().describe('Project ID filter').optional(),
-    page: z.number().describe('Page number').optional(),
-    limit: z.number().describe('Number of items to return').optional(),
+    page: z.number().min(1).describe('Page number, starting at 1').optional(),
+    limit: z
+      .number()
+      .min(1)
+      .max(100)
+      .describe('Number of items to return per page (max 100)')
+      .optional(),
   }),
   paput_get_memo: z.object({
     id: z.number().describe('Memo ID'),
