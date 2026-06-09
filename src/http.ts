@@ -96,6 +96,15 @@ export async function startHttpMcpServer(
       return;
     }
 
+    // ブラウザ/クローラーの GET には favicon リンク付きの最小 HTML を 200 で返す。
+    // Google favicon クローラーがルートを GET したとき <link rel="icon"> を発見できるようにし、
+    // ディレクトリ/ツールコールのアイコンが正しく解決されるようにするため。
+    // MCP クライアントは POST を使うので、プロトコルには影響しない。
+    if (req.method === 'GET' && acceptsHtml(req)) {
+      sendLandingPage(res);
+      return;
+    }
+
     if (req.method !== 'POST') {
       res.setHeader('allow', 'POST');
       sendJsonRpcError(res, 405, -32000, 'Method not allowed.');
@@ -160,15 +169,53 @@ function parseAllowedOrigins(value?: string): string[] {
     .filter(Boolean);
 }
 
+function acceptsHtml(req: IncomingMessage): boolean {
+  const accept = req.headers.accept;
+  const value = Array.isArray(accept) ? accept.join(',') : (accept ?? '');
+  return value.toLowerCase().includes('text/html');
+}
+
+// ブラウザ/クローラー向けのランディング HTML。favicon リンクを明示して発見性を高める。
+function sendLandingPage(res: ServerResponse): void {
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PaPut MCP Server</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" href="/icon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="canonical" href="https://paput.io" />
+  </head>
+  <body>
+    <h1>PaPut MCP Server</h1>
+    <p>
+      This is the remote Model Context Protocol endpoint for
+      <a href="https://paput.io">PaPut</a>. MCP clients connect over HTTP POST
+      with OAuth. See <a href="https://github.com/mizulba-dev/paput-mcp">the documentation</a>.
+    </p>
+  </body>
+</html>
+`;
+  res.writeHead(200, {
+    'content-type': 'text/html; charset=utf-8',
+    'cache-control': 'public, max-age=3600',
+  });
+  res.end(html);
+}
+
 // 上流(paput.io)のアイコンを取得し 200 で直接返す。失敗時のみ 307 リダイレクトにフォールバック。
-async function serveIcon(res: ServerResponse, sourceUrl: string): Promise<void> {
+async function serveIcon(
+  res: ServerResponse,
+  sourceUrl: string,
+): Promise<void> {
   try {
     const upstream = await fetch(sourceUrl);
     if (upstream.ok) {
       const body = Buffer.from(await upstream.arrayBuffer());
       res.writeHead(200, {
-        'content-type':
-          upstream.headers.get('content-type') ?? 'image/x-icon',
+        'content-type': upstream.headers.get('content-type') ?? 'image/x-icon',
         'cache-control': 'public, max-age=86400',
       });
       res.end(body);
