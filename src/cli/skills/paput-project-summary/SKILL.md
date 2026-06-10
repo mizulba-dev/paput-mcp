@@ -9,7 +9,11 @@ Generate an AI summary for a skill sheet project from the project information an
 
 ## Workflow
 
-1. Identify the target project ID. If the user gives a project name but not an ID, call `paput_get_skill_sheet` and choose the matching project; ask a concise clarification only when the match is ambiguous.
+1. Identify the target project ID.
+   - If the user gives a project ID, use it.
+   - If the user gives a project name, call `paput_get_skill_sheet` and choose the matching project.
+   - If the user does not specify a project, call `paput_get_skill_sheet`, show concise project candidates, and ask the user to choose one.
+   - Ask a concise clarification only when no project is specified or the match is ambiguous.
 2. Call `paput_get_skill_sheet_project_summary_context` with `project_id`.
 3. Generate a concise project summary from the returned `structuredContent`.
 4. Present the draft in the user's language and tone.
