@@ -99,8 +99,11 @@ export async function startHttpMcpServer(
     // ブラウザ/クローラーの GET には favicon リンク付きの最小 HTML を 200 で返す。
     // Google favicon クローラーがルートを GET したとき <link rel="icon"> を発見できるようにし、
     // ディレクトリ/ツールコールのアイコンが正しく解決されるようにするため。
-    // MCP クライアントは POST を使うので、プロトコルには影響しない。
-    if (req.method === 'GET' && acceptsHtml(req)) {
+    // MCP の SSE プローブ(GET + Accept: text/event-stream)だけ 405 を維持する。
+    // Accept に text/html を含むかではなく SSE 要求かどうかで判定するのは、
+    // Google のクローラーが */* など text/html を明示しない Accept を送る場合に
+    // 405(=他の4xx)で弾かれ、favicon を取得できなくなるのを防ぐため。
+    if (req.method === 'GET' && !requestsEventStream(req)) {
       sendLandingPage(res);
       return;
     }
@@ -169,10 +172,12 @@ function parseAllowedOrigins(value?: string): string[] {
     .filter(Boolean);
 }
 
-function acceptsHtml(req: IncomingMessage): boolean {
+// MCP の Streamable HTTP クライアントが SSE ストリームを開こうとする GET かどうか。
+// これらにはランディング HTML ではなく従来どおり 405 を返す。
+function requestsEventStream(req: IncomingMessage): boolean {
   const accept = req.headers.accept;
   const value = Array.isArray(accept) ? accept.join(',') : (accept ?? '');
-  return value.toLowerCase().includes('text/html');
+  return value.toLowerCase().includes('text/event-stream');
 }
 
 // ブラウザ/クローラー向けのランディング HTML。favicon リンクを明示して発見性を高める。
