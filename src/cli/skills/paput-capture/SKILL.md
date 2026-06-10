@@ -16,23 +16,40 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 
 ## Steps
 
-1. Check existing pending candidates with `paput_list_pending_candidates`.
-2. Extract only reusable knowledge from the current conversation or the user-specified topic.
-3. Keep candidates small, and prepare a title, body, categories, and visibility.
-4. Do not add candidates that may duplicate existing pending candidates. Suggest using the existing candidate instead.
-5. If a candidate is reusable, non-duplicate, non-sensitive, and not project-specific, add it to pending with `paput_add_knowledge_candidates` without waiting for user approval.
-6. After adding candidates, briefly report the title, categories, and candidate ID.
+1. Read the local capture policy with `paput_get_capture_policy`.
+2. Check existing pending candidates with `paput_list_pending_candidates`.
+3. Extract only reusable knowledge from the current conversation or the user-specified topic.
+4. Apply the capture policy when deciding whether to add, reject, or ask about candidates. If no policy exists yet, use the Candidate Rules and Rejected Candidates sections below.
+5. Keep each candidate focused on one reusable idea, and prepare a title, Markdown body, categories, and visibility.
+6. Self-review the candidate against the Quality Bar below. If the body is only a short summary or conclusion, enrich it before adding.
+7. Do not add candidates that may duplicate existing pending candidates. Suggest using the existing candidate instead.
+8. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` without waiting for user approval.
+9. After adding candidates, briefly report the title, categories, and candidate ID.
 
 ## Candidate Rules
 
-- Keep each candidate small.
+- Keep each candidate focused on one reusable idea. This does not mean removing rationale, constraints, or operational guidance.
 - Make titles concise and searchable.
+- Write the body in Markdown.
+- Do not use top-level Markdown headings (`# ...`) in the body. If headings help readability, start at `##`.
 - Include concrete procedures, causes, reasons, and decision criteria in the body.
 - To make candidates reusable, naturally include decision criteria, applicability conditions, reasons, pitfalls, and verification methods where possible.
 - Do not include project-specific specifications, implementation details, operational rules, code, secrets, or customer data.
 - Only capture technical knowledge, decision criteria, or procedures that can be reused in other projects.
 - Treat candidates as private by default.
-- Do not include Markdown heading lines that start with `#` in the body.
+
+## Quality Bar
+
+Before adding a candidate, make sure the body preserves enough reasoning for future reuse. A good candidate is not just a conclusion; it should include the relevant problem context, decision criteria, applicability conditions, tradeoffs, pitfalls, operational guidance, or verification method.
+
+Do not force a fixed template. Include the pieces that are useful for the specific knowledge. If the body only states a conclusion or summary, enrich it before adding the candidate.
+
+Prefer generalized but concrete writing:
+
+- Remove project-specific names, code, secrets, and local details.
+- Keep generalized examples when they clarify the rule.
+- Preserve why the decision matters and how to apply it.
+- Make sure the title and body alone are enough for a future reader to understand and reuse the knowledge.
 
 ## Rejected Candidates
 

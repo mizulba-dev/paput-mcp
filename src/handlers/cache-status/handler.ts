@@ -1,5 +1,9 @@
 import { ApiClient } from '../../services/api/client.js';
-import { getCacheDir, readCache } from '../../services/local-cache/index.js';
+import {
+  getCacheDir,
+  readCache,
+  readCapturePolicy,
+} from '../../services/local-cache/index.js';
 
 export async function handleCacheStatus(
   _args: Record<string, unknown> | undefined,
@@ -9,6 +13,7 @@ export async function handleCacheStatus(
   const pendingCount = cache.pending.filter(
     (candidate) => candidate.status === 'pending',
   ).length;
+  const capturePolicy = readCapturePolicy();
   const status = {
     cache_dir: getCacheDir(),
     memos: cache.memos.length,
@@ -19,6 +24,11 @@ export async function handleCacheStatus(
     discarded_candidates: cache.pending.filter(
       (candidate) => candidate.status === 'discarded',
     ).length,
+    capture_policy: {
+      path: capturePolicy.path,
+      exists: capturePolicy.exists,
+      updated_at: capturePolicy.updated_at,
+    },
     processed_sessions: cache.sessions.length,
     last_remote_sync_at: cache.config.last_remote_sync_at || null,
   };

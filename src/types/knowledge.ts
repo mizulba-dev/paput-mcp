@@ -47,6 +47,13 @@ export interface ProcessedSession {
   processed_at: string;
 }
 
+export interface CapturePolicy {
+  path: string;
+  markdown: string;
+  exists: boolean;
+  updated_at: string | null;
+}
+
 export interface SessionSummary {
   session_id: string;
   source: SessionSource;

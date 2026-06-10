@@ -73,7 +73,28 @@ Use case: keep the user in control before creating a permanent PaPut memo.
 
 Local mode note: pending candidate tools are local CLI mode tools.
 
-## 5. Update A Skill Sheet Project
+## 5. Refresh The Capture Policy From Discards
+
+Prompt:
+
+```text
+Analyze my discarded PaPut candidates and refresh the capture policy.
+```
+
+Expected tool flow:
+
+1. `paput_get_discard_policy_context`
+2. MCP client AI analyzes discarded candidates and generates a concise policy
+3. `paput_update_capture_policy`
+4. `paput_get_capture_policy` when the user wants to verify the saved policy
+
+Use case: turn repeated local discard decisions into reusable capture criteria
+that future `paput-capture` runs can apply before adding pending candidates.
+
+Local mode note: capture policy tools are local CLI mode tools. The generated
+policy is stored under the local PaPut cache and is not saved as a PaPut memo.
+
+## 6. Update A Skill Sheet Project
 
 Prompt:
 
@@ -89,7 +110,7 @@ Expected tool flow:
 
 Use case: maintain an accurate skill sheet after project milestones.
 
-## 6. Organize Memos Into A Note
+## 7. Organize Memos Into A Note
 
 Prompt:
 
@@ -105,7 +126,7 @@ Expected tool flow:
 
 Use case: create curated collections from existing PaPut memos.
 
-## 7. Generate And Save Dashboard Analysis
+## 8. Generate And Save Dashboard Analysis
 
 Prompt:
 
@@ -123,7 +144,7 @@ Expected tool flow:
 Use case: keep analysis generation in the MCP client AI while PaPut MCP only
 retrieves source data and saves the finished analysis.
 
-## 8. Generate And Save AI Summary
+## 9. Generate And Save AI Summary
 
 Prompt:
 

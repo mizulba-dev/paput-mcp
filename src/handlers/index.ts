@@ -32,3 +32,6 @@ export * from './add-knowledge-candidates/index.js';
 export * from './list-pending-candidates/index.js';
 export * from './save-pending-candidate/index.js';
 export * from './discard-pending-candidate/index.js';
+export * from './get-capture-policy/index.js';
+export * from './get-discard-policy-context/index.js';
+export * from './update-capture-policy/index.js';

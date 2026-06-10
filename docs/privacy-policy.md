@@ -12,7 +12,8 @@ Depending on the tools you use, the server may process:
 - OAuth access tokens used to authenticate requests to PaPut.
 - MCP request and response metadata needed to execute tool calls.
 - Local Claude or Codex session metadata and transcripts when you explicitly use local knowledge capture tools.
-- Local pending knowledge candidates and cache data stored on your device.
+- Local pending knowledge candidates, discarded candidate metadata, capture
+  policy documents, and cache data stored on your device.
 
 ## How Data Is Used
 
@@ -22,6 +23,8 @@ Data is used only to provide the MCP tools you invoke, including:
 - Reading and updating your PaPut skill sheet.
 - Synchronizing PaPut memo metadata into a local cache for duplicate detection.
 - Scanning local AI session logs and preparing reusable knowledge candidates.
+- Analyzing locally discarded knowledge candidates to generate a local capture
+  policy used by future candidate extraction.
 - Completing OAuth authorization and token-based requests to the PaPut API.
 
 ## Authentication
@@ -32,7 +35,7 @@ Local stdio usage uses OAuth tokens created by `paput-mcp login`. You are respon
 
 ## Local Data
 
-When local knowledge capture features are used, PaPut MCP may store cache files under `~/.paput` or a configured cache directory. This local data can include synced memo summaries, pending knowledge candidates, processed session markers, session metadata, and local OAuth tokens created by `paput-mcp login`. The default OAuth token directory is created with `0700` permissions and the token file is written with `0600` permissions. It remains on your device unless you choose to save a pending candidate to PaPut or remove the local token cache with `paput-mcp logout`.
+When local knowledge capture features are used, PaPut MCP may store cache files under `~/.paput` or a configured cache directory. This local data can include synced memo summaries, pending knowledge candidates, discarded candidate metadata, capture policy documents, processed session markers, session metadata, and local OAuth tokens created by `paput-mcp login`. The default OAuth token directory is created with `0700` permissions and the token file is written with `0600` permissions. It remains on your device unless you choose to save a pending candidate to PaPut, delete local cache data, or remove the local token cache with `paput-mcp logout`.
 
 ## Logging
 

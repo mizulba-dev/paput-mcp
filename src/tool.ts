@@ -42,6 +42,9 @@ import {
   listPendingCandidatesTool,
   savePendingCandidateTool,
   discardPendingCandidateTool,
+  getCapturePolicyTool,
+  getDiscardPolicyContextTool,
+  updateCapturePolicyTool,
 } from './handlers/index.js';
 import type { ToolContext, ToolHandler } from './types/index.js';
 
@@ -165,6 +168,9 @@ export function getRegisteredTools(
     listPendingCandidatesTool,
     savePendingCandidateTool,
     discardPendingCandidateTool,
+    getCapturePolicyTool,
+    getDiscardPolicyContextTool,
+    updateCapturePolicyTool,
   ];
 
   return tools
@@ -217,7 +223,9 @@ function isReadOnlyTool(name: string): boolean {
     name.includes('_list_') ||
     name === 'paput_get_categories' ||
     name === 'paput_cache_status' ||
-    name === 'paput_scan_sessions'
+    name === 'paput_scan_sessions' ||
+    name === 'paput_get_capture_policy' ||
+    name === 'paput_get_discard_policy_context'
   );
 }
 
@@ -225,6 +233,7 @@ function isDestructiveTool(name: string): boolean {
   return (
     name.includes('_delete_') ||
     name === 'paput_discard_pending_candidate' ||
+    name === 'paput_update_capture_policy' ||
     name === 'paput_set_skill_sheet_skills' ||
     name === 'paput_upsert_skill_sheet_project' ||
     name.startsWith('paput_update_')
@@ -248,6 +257,9 @@ function isLocalOnlyTool(name: string): boolean {
     name === 'paput_add_knowledge_candidates' ||
     name === 'paput_list_pending_candidates' ||
     name === 'paput_save_pending_candidate' ||
-    name === 'paput_discard_pending_candidate'
+    name === 'paput_discard_pending_candidate' ||
+    name === 'paput_get_capture_policy' ||
+    name === 'paput_get_discard_policy_context' ||
+    name === 'paput_update_capture_policy'
   );
 }

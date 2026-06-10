@@ -39,6 +39,9 @@ const expectedToolNames = [
   'paput_list_pending_candidates',
   'paput_save_pending_candidate',
   'paput_discard_pending_candidate',
+  'paput_get_capture_policy',
+  'paput_get_discard_policy_context',
+  'paput_update_capture_policy',
 ];
 
 const readOnlyToolNames = [
@@ -57,6 +60,8 @@ const readOnlyToolNames = [
   'paput_scan_sessions',
   'paput_get_session_transcript',
   'paput_list_pending_candidates',
+  'paput_get_capture_policy',
+  'paput_get_discard_policy_context',
 ];
 
 const destructiveToolNames = [
@@ -73,6 +78,7 @@ const destructiveToolNames = [
   'paput_delete_goal',
   'paput_update_dashboard_analysis',
   'paput_discard_pending_candidate',
+  'paput_update_capture_policy',
 ];
 
 const remoteToolNames = expectedToolNames.filter(
@@ -86,6 +92,9 @@ const remoteToolNames = expectedToolNames.filter(
       'paput_list_pending_candidates',
       'paput_save_pending_candidate',
       'paput_discard_pending_candidate',
+      'paput_get_capture_policy',
+      'paput_get_discard_policy_context',
+      'paput_update_capture_policy',
     ].includes(name),
 );
 

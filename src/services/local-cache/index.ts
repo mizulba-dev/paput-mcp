@@ -4,12 +4,14 @@ import {
   mkdirSync,
   readFileSync,
   renameSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import {
   CachedMemo,
+  CapturePolicy,
   KnowledgeCandidateInput,
   PendingKnowledgeCandidate,
   ProcessedSession,
@@ -29,6 +31,7 @@ interface CacheData {
 }
 
 const SIMILARITY_THRESHOLD = 0.78;
+const CAPTURE_POLICY_FILE = 'capture-policy.md';
 
 export function getCacheDir(): string {
   return expandHome(
@@ -81,6 +84,41 @@ export function readCache(): CacheData {
     sessions: readJsonFile<ProcessedSession[]>('sessions.json', []),
     config: readJsonFile<CacheConfig>('config.json', {}),
   };
+}
+
+export function readCapturePolicy(): CapturePolicy {
+  ensureCacheDir();
+  const path = cachePath(CAPTURE_POLICY_FILE);
+
+  if (!existsSync(path)) {
+    return {
+      path,
+      markdown: '',
+      exists: false,
+      updated_at: null,
+    };
+  }
+
+  return {
+    path,
+    markdown: readFileSync(path, 'utf8'),
+    exists: true,
+    updated_at: statSync(path).mtime.toISOString(),
+  };
+}
+
+export function writeCapturePolicy(markdown: string): CapturePolicy {
+  const path = cachePath(CAPTURE_POLICY_FILE);
+  mkdirSync(dirname(path), { recursive: true });
+  atomicWrite(path, markdown.endsWith('\n') ? markdown : `${markdown}\n`);
+  return readCapturePolicy();
+}
+
+export function getDiscardedCandidates(limit = 50): PendingKnowledgeCandidate[] {
+  return readCache()
+    .pending.filter((candidate) => candidate.status === 'discarded')
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+    .slice(0, limit);
 }
 
 export function writeMemos(memos: CachedMemo[]): void {

@@ -376,6 +376,16 @@ const toolInputSchemas = {
     candidate_id: z.string().describe('Candidate ID to discard'),
     reason: z.string().describe('Reason for discarding').optional(),
   }),
+  paput_get_capture_policy: emptySchema,
+  paput_get_discard_policy_context: z.object({
+    limit: z
+      .number()
+      .describe('Maximum number of discarded candidates to include.')
+      .optional(),
+  }),
+  paput_update_capture_policy: z.object({
+    markdown: z.string().describe('Capture policy markdown to save locally.'),
+  }),
 } satisfies Record<string, z.ZodTypeAny>;
 
 export function getGeneratedInputSchema(
