@@ -122,3 +122,21 @@ Expected tool flow:
 
 Use case: keep analysis generation in the MCP client AI while PaPut MCP only
 retrieves source data and saves the finished analysis.
+
+## 8. Generate And Save AI Summary
+
+Prompt:
+
+```text
+Create my PaPut public AI summary, then save it.
+```
+
+Expected tool flow:
+
+1. `paput_get_public_profile_context`
+2. MCP client AI generates headline, profile_summary, and strength_labels from `structuredContent`
+3. `paput_update_skill_sheet_public_profile` after the user intends to save the result
+4. `paput_get_skill_sheet` to verify the saved result
+
+Use case: generate the public profile shown on the AI Summary tab from public
+materials only. The context excludes private dashboard analysis and goals.

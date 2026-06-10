@@ -311,6 +311,7 @@ const toolInputSchemas = {
     analyzed_at: z.string().describe('Analysis timestamp in ISO 8601 format'),
   }),
   paput_get_dashboard_analysis_context: emptySchema,
+  paput_get_public_profile_context: emptySchema,
   paput_cache_status: emptySchema,
   paput_sync_remote_memos: z.object({
     limit: z

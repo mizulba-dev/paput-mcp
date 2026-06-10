@@ -23,6 +23,7 @@ export * from './delete-goal/index.js';
 export * from './get-dashboard-analysis/index.js';
 export * from './update-dashboard-analysis/index.js';
 export * from './get-dashboard-analysis-context/index.js';
+export * from './get-public-profile-context/index.js';
 export * from './cache-status/index.js';
 export * from './sync-remote-memos/index.js';
 export * from './scan-sessions/index.js';

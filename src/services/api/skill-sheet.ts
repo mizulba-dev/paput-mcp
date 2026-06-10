@@ -12,6 +12,7 @@ import {
   UpsertSkillSheetProjectParams,
   UpdateSkillSheetProjectAiSummaryResponse,
   UpdatePublicProfileParams,
+  PublicProfileContextResponse,
 } from '../../types/index.js';
 
 // Response types for API endpoints
@@ -149,6 +150,15 @@ export async function updateSkillSheetPublicProfile(
   params: UpdatePublicProfileParams,
 ): Promise<void> {
   await client.put('/api/v1/mcp/skill-sheet/public-profile', params);
+}
+
+// Public Profile Context (material aggregation for AI summary generation)
+export async function getPublicProfileContext(
+  client: ApiClient,
+): Promise<PublicProfileContextResponse> {
+  return client.get<PublicProfileContextResponse>(
+    '/api/v1/mcp/skill-sheet/public-profile-context',
+  );
 }
 
 // Skills

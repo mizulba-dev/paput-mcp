@@ -131,3 +131,42 @@ export interface UpdateSkillSheetProjectAiSummaryResponse {
   ai_summary: string | null;
   ai_summary_updated_at: string | null;
 }
+
+// Public profile context (material aggregation for AI summary generation)
+export interface PublicProfileContextSkill {
+  name: string;
+  level: string | null;
+  category_name: string | null;
+}
+
+export interface PublicProfileContextProject {
+  id: string;
+  name: string;
+  role: string | null;
+  ai_summary: string | null;
+  description: string | null;
+}
+
+export interface PublicProfileContextMemo {
+  id: string;
+  title: string;
+  category_names: string[];
+  updated_at: string;
+}
+
+export interface PublicProfileContextSkillSheet {
+  headline: string | null;
+  profile_summary: string | null;
+  self_pr: string | null;
+  years_of_experience: number;
+  skills: PublicProfileContextSkill[];
+  projects: PublicProfileContextProject[];
+  strength_labels: StrengthLabel[];
+}
+
+export interface PublicProfileContextResponse {
+  skill_sheet: PublicProfileContextSkillSheet;
+  knowledge_map: unknown;
+  growing_areas: unknown[];
+  recent_public_memos: PublicProfileContextMemo[];
+}
