@@ -41,3 +41,4 @@ Include these points when the source material supports them:
 - Do not invent technologies, responsibilities, impact, dates, or team scale.
 - If the linked memos are thin, say what is missing instead of overstating the project.
 - Keep the summary suitable for a skill sheet or career history.
+- This summary is for the skill sheet project detail. It is different from the shorter `project_highlights` used on the public AI Summary tab.

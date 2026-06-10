@@ -10,6 +10,14 @@ export interface StrengthLabel {
   project_ids?: string[] | null;
 }
 
+export interface ProjectHighlight {
+  project_id: string;
+  title: string;
+  summary: string;
+  strength_labels?: string[] | null;
+  achievement_bullets?: string[] | null;
+}
+
 export interface GetSkillSheetResponse {
   id: number;
   nearest_station: string | null;
@@ -20,6 +28,7 @@ export interface GetSkillSheetResponse {
   headline?: string | null;
   profile_summary?: string | null;
   strength_labels?: StrengthLabel[] | null;
+  project_highlights?: ProjectHighlight[] | null;
   skills: GetSkillSheetSkill[];
   projects: GetSkillSheetProject[];
 }
@@ -29,6 +38,7 @@ export interface UpdatePublicProfileParams {
   headline?: string;
   profile_summary?: string;
   strength_labels?: StrengthLabel[];
+  project_highlights?: ProjectHighlight[];
 }
 
 export interface GetSkillSheetSkill {
@@ -162,6 +172,7 @@ export interface PublicProfileContextSkillSheet {
   skills: PublicProfileContextSkill[];
   projects: PublicProfileContextProject[];
   strength_labels: StrengthLabel[];
+  project_highlights: ProjectHighlight[];
 }
 
 export interface PublicProfileContextResponse {

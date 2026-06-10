@@ -217,7 +217,7 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 - `paput_get_skill_sheet` - Get the full skill sheet.
 - `paput_update_skill_sheet_basic_info` - Update basic profile fields.
 - `paput_update_skill_sheet_self_pr` - Update the self PR section.
-- `paput_update_skill_sheet_public_profile` - Save the AI-generated public profile (headline, summary, strength labels) shown on the AI Summary tab.
+- `paput_update_skill_sheet_public_profile` - Save the AI-generated public profile (headline, summary, strength labels, and project highlights) shown on the AI Summary tab.
 - `paput_set_skill_sheet_skills` - Replace the full skill list with the provided final state.
 - `paput_upsert_skill_sheet_project` - Add or update a skill sheet project.
 - `paput_delete_skill_sheet_project` - Delete a skill sheet project.

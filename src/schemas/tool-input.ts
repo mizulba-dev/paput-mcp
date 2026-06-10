@@ -266,6 +266,26 @@ const toolInputSchemas = {
       )
       .describe('Array of strength labels')
       .optional(),
+    project_highlights: z
+      .array(
+        z.object({
+          project_id: z.string().describe('Related project ID'),
+          title: z.string().describe('Project title'),
+          summary: z
+            .string()
+            .describe('Short public-profile summary for the project'),
+          strength_labels: z
+            .array(z.string())
+            .describe('Strength labels supported by the project')
+            .optional(),
+          achievement_bullets: z
+            .array(z.string())
+            .describe('Top achievement bullets for the project')
+            .optional(),
+        }),
+      )
+      .describe('Short project highlights shown on the AI Summary tab')
+      .optional(),
   }),
   paput_set_skill_sheet_skills: z.object({
     skills: z.array(skillSchema).describe('Skill list'),

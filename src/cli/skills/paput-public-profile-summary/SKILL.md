@@ -5,7 +5,7 @@ description: Use this to generate and save the user's PaPut public profile summa
 
 # PaPut Public Profile Summary
 
-Generate the public profile shown on the AI Summary tab: headline, profile_summary, and strength_labels. Use this skill when the user wants to create or refresh their public profile summary for recruiters or hiring managers.
+Generate the public profile shown on the AI Summary tab: headline, profile_summary, strength_labels, and project_highlights. Use this skill when the user wants to create or refresh their public profile summary for recruiters or hiring managers.
 
 ## Workflow
 
@@ -21,6 +21,7 @@ Generate the public profile shown on the AI Summary tab: headline, profile_summa
 - headline: one-line catchphrase of what the person can do (~100 chars).
 - profile_summary: 3-4 sentence overall summary written for a recruiter. Convey strengths and continuity in prose.
 - strength_labels: top 3-5 strengths. Each has a label, an optional short description, and evidence via `category_names` and `project_ids`.
+- project_highlights: up to 2-3 public-profile project highlights. Each has `project_id`, `title`, `summary` (120-200 Japanese chars or similarly concise in the user's language), optional `strength_labels`, and up to 3 `achievement_bullets`.
 
 ## Materials
 
@@ -37,5 +38,7 @@ Use only public materials returned by the context tool:
 - Use public materials only. Never use dashboard analysis or goals; they are private and for the user only.
 - Do not present memo counts as skill proficiency. Activity volume is not mastery.
 - Tie strengths to concrete memos or projects, and do not exaggerate.
+- Rewrite project highlights for the public AI Summary tab. Do not copy detailed project AI summaries verbatim.
+- Treat project_highlights as evidence for the headline/profile strengths, not as a full skill sheet project history.
 - Keep the tone factual and suitable for a recruiter reading it in a short time.
-- When saving, map the generated result to `headline`, `profile_summary`, and `strength_labels`.
+- When saving, map the generated result to `headline`, `profile_summary`, `strength_labels`, and `project_highlights`.
