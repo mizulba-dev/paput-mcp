@@ -3,6 +3,13 @@ export interface GetSkillSheetParams {
   // No parameters for get skill sheet
 }
 
+export interface StrengthLabel {
+  label: string;
+  description?: string | null;
+  category_names?: string[] | null;
+  project_ids?: string[] | null;
+}
+
 export interface GetSkillSheetResponse {
   id: number;
   nearest_station: string | null;
@@ -10,8 +17,18 @@ export interface GetSkillSheetResponse {
   birth_date: string;
   years_of_experience: number;
   self_pr: string | null;
+  headline?: string | null;
+  profile_summary?: string | null;
+  strength_labels?: StrengthLabel[] | null;
   skills: GetSkillSheetSkill[];
   projects: GetSkillSheetProject[];
+}
+
+// Public profile update parameters
+export interface UpdatePublicProfileParams {
+  headline?: string;
+  profile_summary?: string;
+  strength_labels?: StrengthLabel[];
 }
 
 export interface GetSkillSheetSkill {

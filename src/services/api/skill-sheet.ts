@@ -11,6 +11,7 @@ import {
   SkillSheetMemo,
   UpsertSkillSheetProjectParams,
   UpdateSkillSheetProjectAiSummaryResponse,
+  UpdatePublicProfileParams,
 } from '../../types/index.js';
 
 // Response types for API endpoints
@@ -140,6 +141,14 @@ export async function updateSkillSheetSelfPr(
   params: UpdateSelfPrParams,
 ): Promise<void> {
   await client.put('/api/v1/mcp/skill-sheet/self-pr', params);
+}
+
+// Public Profile
+export async function updateSkillSheetPublicProfile(
+  client: ApiClient,
+  params: UpdatePublicProfileParams,
+): Promise<void> {
+  await client.put('/api/v1/mcp/skill-sheet/public-profile', params);
 }
 
 // Skills

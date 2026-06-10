@@ -240,6 +240,33 @@ const toolInputSchemas = {
   paput_update_skill_sheet_self_pr: z.object({
     self_pr: z.string().describe('Self PR text').optional(),
   }),
+  paput_update_skill_sheet_public_profile: z.object({
+    headline: z
+      .string()
+      .describe('One-line catchphrase summarizing the user')
+      .optional(),
+    profile_summary: z
+      .string()
+      .describe('Multi-line overall summary of the user')
+      .optional(),
+    strength_labels: z
+      .array(
+        z.object({
+          label: z.string().describe('Strength label name'),
+          description: z.string().describe('Strength description').optional(),
+          category_names: z
+            .array(z.string())
+            .describe('Related category names')
+            .optional(),
+          project_ids: z
+            .array(z.string())
+            .describe('Related project IDs')
+            .optional(),
+        }),
+      )
+      .describe('Array of strength labels')
+      .optional(),
+  }),
   paput_set_skill_sheet_skills: z.object({
     skills: z.array(skillSchema).describe('Skill list'),
   }),

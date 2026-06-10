@@ -10,6 +10,7 @@ export * from './update-note/index.js';
 export * from './get-skill-sheet/index.js';
 export * from './update-skill-sheet-basic-info/index.js';
 export * from './update-skill-sheet-self-pr/index.js';
+export * from './update-skill-sheet-public-profile/index.js';
 export * from './update-skill-sheet-skills/index.js';
 export * from './upsert-skill-sheet-project/index.js';
 export * from './delete-skill-sheet-project/index.js';

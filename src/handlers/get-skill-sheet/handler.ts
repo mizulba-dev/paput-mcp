@@ -54,6 +54,23 @@ export async function handleGetSkillSheet(
     const genderText =
       GENDER[skillSheet.gender as keyof typeof GENDER] || `Other`;
 
+    // Format strength labels
+    const strengthLabelsText =
+      skillSheet.strength_labels && skillSheet.strength_labels.length > 0
+        ? skillSheet.strength_labels
+            .map((sl) => {
+              const parts = [`  - ${sl.label}`];
+              if (sl.description) {
+                parts.push(`    ${sl.description}`);
+              }
+              if (sl.category_names && sl.category_names.length > 0) {
+                parts.push(`    Categories: ${sl.category_names.join(', ')}`);
+              }
+              return parts.join('\n');
+            })
+            .join('\n')
+        : '  None';
+
     const content = `Skill sheet:
 ID: ${skillSheet.id}
 Nearest station: ${skillSheet.nearest_station || 'Not set'}
@@ -63,6 +80,14 @@ Years of experience: ${skillSheet.years_of_experience} year(s)
 
 Self PR:
 ${skillSheet.self_pr || 'Not set'}
+
+Public Profile:
+Headline: ${skillSheet.headline || 'Not set'}
+Profile Summary:
+${skillSheet.profile_summary || 'Not set'}
+
+Strength Labels:
+${strengthLabelsText}
 
 Skills:
 ${skillsText}
