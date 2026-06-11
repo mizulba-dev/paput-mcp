@@ -216,7 +216,7 @@ function sendLandingPage(res: ServerResponse): void {
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="canonical" href="https://paput.io" />
+    <link rel="canonical" href="https://mcp.paput.io/" />
   </head>
   <body>
     <h1>PaPut MCP Server</h1>
