@@ -36,9 +36,10 @@ export async function startHttpMcpServer(
 ): Promise<HttpServer> {
   const endpoint = options.endpoint ?? '/';
   const port = options.port ?? Number(process.env.PORT ?? 3000);
-  // 既定はローカル安全のため 127.0.0.1。外部公開する本番（Render 等）では
-  // HOST=0.0.0.0 を明示的に設定する。
-  const host = options.host ?? process.env.HOST ?? '127.0.0.1';
+  // host を指定しない場合、Node は全インターフェース（0.0.0.0/::）にバインドする。
+  // 本番（Render 等）は外部公開のためこの挙動が必要。ローカル開発では
+  // dev:http スクリプトで HOST=127.0.0.1 を渡してループバックに限定する。
+  const host = options.host ?? process.env.HOST;
   const apiUrl =
     options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
   const apiOrigin = new URL(apiUrl).origin;
