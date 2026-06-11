@@ -25,7 +25,10 @@ const FRONT_ORIGIN = 'https://paput.io';
 const ICON_SOURCES: Record<string, string> = {
   '/apple-touch-icon.png': '/icons/apple-touch-icon.png',
   '/favicon.ico': '/favicon.ico',
-  '/icon.ico': '/icon.ico',
+  '/icon-192x192.png': '/icons/icon-192x192.png',
+  '/icon-512x512.png': '/icons/icon-512x512.png',
+  '/icon.png': '/icons/icon-192x192.png',
+  '/icon.svg': '/icon.svg',
 };
 
 export async function startHttpMcpServer(
@@ -189,7 +192,8 @@ function sendLandingPage(res: ServerResponse): void {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>PaPut MCP Server</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/png" href="/icon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="canonical" href="https://paput.io" />
   </head>
