@@ -36,7 +36,9 @@ export async function startHttpMcpServer(
 ): Promise<HttpServer> {
   const endpoint = options.endpoint ?? '/';
   const port = options.port ?? Number(process.env.PORT ?? 3000);
-  const host = options.host ?? process.env.HOST;
+  // 既定はローカル安全のため 127.0.0.1。外部公開する本番（Render 等）では
+  // HOST=0.0.0.0 を明示的に設定する。
+  const host = options.host ?? process.env.HOST ?? '127.0.0.1';
   const apiUrl =
     options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
   const apiOrigin = new URL(apiUrl).origin;
@@ -45,9 +47,27 @@ export async function startHttpMcpServer(
     parseAllowedOrigins(process.env.PAPUT_ALLOWED_ORIGINS);
 
   const httpServer = createServer(async (req, res) => {
+    try {
+      await handleHttpRequest(req, res);
+    } catch (error) {
+      // 不正な Host ヘッダーによる new URL の例外などをここで捕捉し、
+      // 未捕捉の Promise リジェクションでプロセスが落ちるのを防ぐ。
+      console.error('Unhandled error in MCP HTTP request handler:', error);
+      if (!res.headersSent) {
+        sendJsonRpcError(res, 400, -32000, 'Bad request');
+      } else if (!res.writableEnded) {
+        res.end();
+      }
+    }
+  });
+
+  async function handleHttpRequest(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<void> {
     const requestUrl = new URL(
       req.url ?? '/',
-      `http://${req.headers.host ?? 'localhost'}`,
+      `http://${normalizeHostHeader(req.headers.host)}`,
     );
     const publicOrigin = getPublicOrigin(req, requestUrl);
     const resourceUrl = getResourceUrl(publicOrigin, endpoint);
@@ -155,7 +175,7 @@ export async function startHttpMcpServer(
         sendJsonRpcError(res, 500, -32603, 'Internal server error');
       }
     }
-  });
+  }
 
   await new Promise<void>((resolve, reject) => {
     httpServer.once('error', reject);
@@ -272,13 +292,34 @@ function normalizeOrigin(origin: string): string {
   }
 }
 
+// Host ヘッダーを妥当な host[:port] に正規化する。不正な値（空白や制御文字を
+// 含むもの）はそのまま new URL に渡すと例外を投げ、未捕捉リジェクションで
+// プロセスがクラッシュする恐れがあるため、安全なデフォルトにフォールバックする。
+function normalizeHostHeader(host?: string | string[]): string {
+  const value = Array.isArray(host) ? host[0] : host;
+  if (!value) {
+    return 'localhost';
+  }
+  if (/^[a-zA-Z0-9.\-_]+(:\d+)?$/.test(value)) {
+    return value;
+  }
+  return 'localhost';
+}
+
 function getPublicOrigin(req: IncomingMessage, requestUrl: URL): string {
+  // 信頼できるプロキシ背後では、公開オリジンを環境変数で固定して
+  // Host / X-Forwarded-Proto 詐称の影響を排除できる。
+  const configuredOrigin = process.env.PAPUT_PUBLIC_ORIGIN?.trim();
+  if (configuredOrigin) {
+    return normalizeOrigin(configuredOrigin);
+  }
+
   const protoHeader = req.headers['x-forwarded-proto'];
   const forwardedProto = Array.isArray(protoHeader)
     ? protoHeader[0]
     : protoHeader;
   const scheme = forwardedProto ?? requestUrl.protocol.replace(':', '');
-  return `${scheme}://${req.headers.host ?? 'localhost'}`;
+  return `${scheme}://${normalizeHostHeader(req.headers.host)}`;
 }
 
 function getResourceUrl(publicOrigin: string, endpoint: string): string {
@@ -344,6 +385,14 @@ function sendJsonRpcError(
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  // 未捕捉の Promise リジェクション / 例外でプロセスを落とさない（DoS 耐性）。
+  process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled promise rejection:', reason);
+  });
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught exception:', error);
+  });
+
   startHttpMcpServer()
     .then((server) => {
       const address = server.address();

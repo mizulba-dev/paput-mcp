@@ -2,6 +2,22 @@ import { getValidStoredAccessToken } from '../oauth/local-auth.js';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
+// エンドポイントを解決する。絶対 URL は apiUrl と同一オリジンの場合のみ許可し、
+// アクセストークンを別ホストへ送ってしまう（SSRF / トークン漏洩）のを防ぐ。
+function resolveEndpointUrl(apiUrl: string, endpoint: string): string {
+  if (!/^https?:\/\//i.test(endpoint)) {
+    return `${apiUrl}${endpoint}`;
+  }
+
+  const apiOrigin = new URL(apiUrl).origin;
+  const endpointOrigin = new URL(endpoint).origin;
+  if (endpointOrigin !== apiOrigin) {
+    throw new Error(`Refusing to send request to untrusted host: ${endpoint}`);
+  }
+
+  return endpoint;
+}
+
 interface ApiConfig {
   apiUrl: string;
   accessToken?: string;
@@ -22,9 +38,7 @@ export async function apiRequest<T = unknown>(
     );
   }
 
-  const url = endpoint.startsWith('http')
-    ? endpoint
-    : `${config.apiUrl}${endpoint}`;
+  const url = resolveEndpointUrl(config.apiUrl, endpoint);
 
   const options: RequestInit = {
     method,

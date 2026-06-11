@@ -6,7 +6,10 @@ import {
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { createApiClient } from './services/api/index.js';
-import { getGeneratedInputSchema } from './schemas/tool-input.js';
+import {
+  getGeneratedInputSchema,
+  getToolInputZodSchema,
+} from './schemas/tool-input.js';
 import {
   createMemoTool,
   searchMemoTool,
@@ -79,6 +82,26 @@ export function setupTool(
         ],
         isError: true,
       };
+    }
+
+    // 受信した引数を zod スキーマで実行時バリデーションし、不正な型の
+    // 入力が handler（パス埋め込み等）に渡るのを防ぐ。
+    const inputSchema = getToolInputZodSchema(request.params.name);
+    if (inputSchema) {
+      const parsed = inputSchema.safeParse(request.params.arguments ?? {});
+      if (!parsed.success) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Invalid arguments for ${request.params.name}: ${parsed.error.issues
+                .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+                .join('; ')}`,
+            },
+          ],
+          isError: true,
+        };
+      }
     }
 
     return await tool.handler(request.params.arguments, apiClient, context);

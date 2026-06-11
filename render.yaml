@@ -12,5 +12,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
+      # 外部公開のため全インターフェースにバインドする（ローカル既定は 127.0.0.1）。
+      - key: HOST
+        value: 0.0.0.0
       - key: PAPUT_API_URL
         value: https://api.paput.io

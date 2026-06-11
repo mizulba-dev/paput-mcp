@@ -408,6 +408,13 @@ const toolInputSchemas = {
   }),
 } satisfies Record<string, z.ZodTypeAny>;
 
+// ディスパッチ層での実行時バリデーション用に、ツールの zod スキーマを返す。
+export function getToolInputZodSchema(
+  toolName: string,
+): z.ZodTypeAny | undefined {
+  return toolInputSchemas[toolName as keyof typeof toolInputSchemas];
+}
+
 export function getGeneratedInputSchema(
   toolName: string,
 ): ToolDefinition['inputSchema'] | undefined {
