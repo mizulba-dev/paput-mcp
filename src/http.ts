@@ -307,6 +307,9 @@ function normalizeHostHeader(host?: string | string[]): string {
   return 'localhost';
 }
 
+// X-Forwarded-Proto を信頼してしまう設定ミスは一度だけ警告する。
+let warnedUntrustedForwardedProto = false;
+
 function getPublicOrigin(req: IncomingMessage, requestUrl: URL): string {
   // 信頼できるプロキシ背後では、公開オリジンを環境変数で固定して
   // Host / X-Forwarded-Proto 詐称の影響を排除できる。
@@ -319,6 +322,19 @@ function getPublicOrigin(req: IncomingMessage, requestUrl: URL): string {
   const forwardedProto = Array.isArray(protoHeader)
     ? protoHeader[0]
     : protoHeader;
+
+  // PAPUT_PUBLIC_ORIGIN 未設定時にクライアント由来の X-Forwarded-Proto を
+  // 信頼すると、攻撃者が公開オリジンの scheme を詐称できる。公開デプロイでは
+  // PAPUT_PUBLIC_ORIGIN を明示設定すべき旨を一度だけ警告する。
+  if (forwardedProto && !warnedUntrustedForwardedProto) {
+    warnedUntrustedForwardedProto = true;
+    console.error(
+      'WARNING: PAPUT_PUBLIC_ORIGIN is not set but X-Forwarded-Proto is present. ' +
+        'Set PAPUT_PUBLIC_ORIGIN explicitly when running behind a proxy or on a public host ' +
+        'to avoid origin spoofing.',
+    );
+  }
+
   const scheme = forwardedProto ?? requestUrl.protocol.replace(':', '');
   return `${scheme}://${normalizeHostHeader(req.headers.host)}`;
 }

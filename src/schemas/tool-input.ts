@@ -336,6 +336,8 @@ const toolInputSchemas = {
   paput_sync_remote_memos: z.object({
     limit: z
       .number()
+      .min(1)
+      .max(100)
       .describe('Number of items per page. Maximum 100.')
       .optional(),
     max_pages: z
