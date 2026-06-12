@@ -39,6 +39,12 @@ import {
   updateDashboardAnalysisTool,
   getDashboardAnalysisContextTool,
   getPublicProfileContextTool,
+  getProjectContextTool,
+  getProjectDocumentTool,
+  addProjectDocumentTool,
+  updateProjectInstructionsTool,
+  discardProjectProposalTool,
+  promoteProjectDocumentsTool,
   cacheStatusTool,
   scanSessionsTool,
   getSessionTranscriptTool,
@@ -186,6 +192,12 @@ export function getRegisteredTools(
     updateDashboardAnalysisTool,
     getDashboardAnalysisContextTool,
     getPublicProfileContextTool,
+    getProjectContextTool,
+    getProjectDocumentTool,
+    addProjectDocumentTool,
+    updateProjectInstructionsTool,
+    discardProjectProposalTool,
+    promoteProjectDocumentsTool,
     cacheStatusTool,
     scanSessionsTool,
     getSessionTranscriptTool,
@@ -258,6 +270,8 @@ function isDestructiveTool(name: string): boolean {
   return (
     name.includes('_delete_') ||
     name === 'paput_discard_pending_candidate' ||
+    name === 'paput_discard_project_proposal' ||
+    name === 'paput_promote_project_documents' ||
     name === 'paput_update_capture_policy' ||
     name === 'paput_set_skill_sheet_skills' ||
     name === 'paput_upsert_skill_sheet_project' ||

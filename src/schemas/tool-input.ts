@@ -347,6 +347,82 @@ const toolInputSchemas = {
   }),
   paput_get_dashboard_analysis_context: emptySchema,
   paput_get_public_profile_context: emptySchema,
+  paput_get_project_context: z.object({
+    project: z
+      .string()
+      .min(1)
+      .describe('Project name to resolve (partial match allowed)'),
+  }),
+  paput_get_project_document: z.object({
+    id: z.number().min(1).describe('Project document ID'),
+  }),
+  paput_add_project_document: z.object({
+    skill_sheet_project_id: z
+      .number()
+      .min(1)
+      .describe(
+        'Skill sheet project ID (resolve via paput_get_project_context)',
+      ),
+    kind: z
+      .enum(['design_doc', 'procedure', 'skill_candidate'])
+      .describe(
+        'design_doc: design decision with rationale and rejected alternatives; procedure: repeatable work steps; skill_candidate: a proposal to turn repeated procedures into a skill',
+      ),
+    title: z.string().min(1).max(255).describe('Concise, searchable title'),
+    summary: z
+      .string()
+      .max(500)
+      .describe('One-line summary shown in the document index (keep it short)')
+      .optional(),
+    body: z
+      .string()
+      .min(1)
+      .describe(
+        'Markdown body. For design decisions include the decision, reasons, and rejected alternatives.',
+      ),
+    decided_at: z
+      .string()
+      .describe('When the decision was settled (ISO 8601, design_doc only)')
+      .optional(),
+  }),
+  paput_update_project_instructions: z.object({
+    skill_sheet_project_id: z
+      .number()
+      .min(1)
+      .describe(
+        'Skill sheet project ID (resolve via paput_get_project_context)',
+      ),
+    body: z
+      .string()
+      .min(1)
+      .max(8000)
+      .describe(
+        'Full instructions body in Markdown (overwrites the previous version, max 8000 characters)',
+      ),
+  }),
+  paput_discard_project_proposal: z.object({
+    id: z.number().min(1).describe('Proposal document ID'),
+    reason: z
+      .string()
+      .min(1)
+      .max(500)
+      .describe('Why the user rejected the proposal'),
+  }),
+  paput_promote_project_documents: z.object({
+    ids: z
+      .array(z.number().min(1))
+      .min(1)
+      .describe(
+        'Document IDs to promote (the skill proposal and its related procedure records)',
+      ),
+    promoted_to: z
+      .string()
+      .min(1)
+      .max(255)
+      .describe(
+        'Promotion target, e.g. the skill name or file path (max 255 chars)',
+      ),
+  }),
   paput_cache_status: emptySchema,
   paput_scan_sessions: z.object({
     sources: z
