@@ -57,10 +57,11 @@ function loadSkills(): SkillSpec[] {
 }
 
 export const SKILLS: SkillSpec[] = loadSkills();
-const RULES = readFileSync(
-  join(rulesDir, 'paput-knowledge-capture.md'),
-  'utf8',
-).trim();
+const RULES = readdirSync(rulesDir)
+  .filter((fileName) => fileName.endsWith('.md'))
+  .sort()
+  .map((fileName) => readFileSync(join(rulesDir, fileName), 'utf8').trim())
+  .join('\n\n');
 
 const RULE_START = '<!-- paput-mcp:start -->';
 const RULE_END = '<!-- paput-mcp:end -->';
