@@ -4,6 +4,7 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  readlinkSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -71,6 +72,7 @@ export function setupAi(args: string[]): void {
 
   printSetupNotice(options);
   createSourceSkills(sourceSkillsDir, options.force);
+  pruneSourceSkills(sourceSkillsDir);
 
   if (options.claude) {
     setupClaude(sourceSkillsDir, options);
@@ -144,6 +146,40 @@ function createSourceSkills(sourceSkillsDir: string, force: boolean): void {
   }
 }
 
+function pruneSourceSkills(sourceSkillsDir: string): void {
+  if (!existsSync(sourceSkillsDir)) return;
+  const expected = new Set(SKILLS.map((skill) => skill.name));
+
+  for (const entry of readdirSync(sourceSkillsDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    if (!entry.name.startsWith('paput-') || expected.has(entry.name)) continue;
+
+    const stalePath = join(sourceSkillsDir, entry.name);
+    rmSync(stalePath, { recursive: true, force: true });
+    console.log(`Remove stale source skill: ${stalePath}`);
+  }
+}
+
+function pruneSkillLinks(
+  sourceSkillsDir: string,
+  targetSkillsDir: string,
+  label: string,
+): void {
+  if (!existsSync(targetSkillsDir)) return;
+  const expected = new Set(SKILLS.map((skill) => skill.name));
+
+  for (const entry of readdirSync(targetSkillsDir, { withFileTypes: true })) {
+    if (!entry.name.startsWith('paput-') || expected.has(entry.name)) continue;
+
+    const targetPath = join(targetSkillsDir, entry.name);
+    if (!lstatSync(targetPath).isSymbolicLink()) continue;
+    if (!readlinkSync(targetPath).startsWith(sourceSkillsDir)) continue;
+
+    rmSync(targetPath, { force: true });
+    console.log(`Remove stale ${label} skill link: ${targetPath}`);
+  }
+}
+
 function setupClaude(sourceSkillsDir: string, options: SetupOptions): void {
   const claudeHome = process.env.CLAUDE_HOME || join(homedir(), '.claude');
   if (!existsSync(claudeHome)) {
@@ -190,6 +226,7 @@ function linkSkills(
   force: boolean,
 ): void {
   mkdirSync(targetSkillsDir, { recursive: true });
+  pruneSkillLinks(sourceSkillsDir, targetSkillsDir, label);
 
   for (const skill of SKILLS) {
     const sourceDir = join(sourceSkillsDir, skill.name);
