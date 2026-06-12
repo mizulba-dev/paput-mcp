@@ -1,6 +1,6 @@
 ---
 name: paput-init
-description: Use this to initialize PaPut usage, sync existing memos, and inspect unprocessed sessions.
+description: Use this to initialize PaPut usage and inspect unprocessed sessions.
 ---
 
 # PaPut Init
@@ -10,12 +10,11 @@ Initialize PaPut knowledge capture.
 ## Steps
 
 1. Check the local cache with `paput_cache_status`.
-2. Sync existing PaPut memos into the local cache with `paput_sync_remote_memos`.
-3. Scan unprocessed Claude/Codex sessions with `paput_scan_sessions`.
-4. If unprocessed sessions exist, report the count and a short summary to the user.
-5. Only when the user wants it, read the transcript with `paput_get_session_transcript` and create candidates that meet the extraction criteria below.
-6. Before adding candidates with `paput_add_knowledge_candidates`, check that they do not contain project-specific specifications, implementation details, operational rules, code, customer data, or secrets.
-7. After adding pending candidates, briefly report added candidates, duplicates, and rejected candidates.
+2. Scan unprocessed Claude/Codex sessions with `paput_scan_sessions`.
+3. If unprocessed sessions exist, report the count and a short summary to the user.
+4. Only when the user wants it, read the transcript with `paput_get_session_transcript` and create candidates that meet the extraction criteria below.
+5. Before adding candidates with `paput_add_knowledge_candidates`, check that they do not contain project-specific specifications, implementation details, operational rules, code, customer data, or secrets. Duplicate checks against existing memos run automatically inside `paput_add_knowledge_candidates` using semantic search.
+6. After adding pending candidates, briefly report added candidates, duplicates, and rejected candidates.
 
 ## Extraction Criteria
 

@@ -348,18 +348,6 @@ const toolInputSchemas = {
   paput_get_dashboard_analysis_context: emptySchema,
   paput_get_public_profile_context: emptySchema,
   paput_cache_status: emptySchema,
-  paput_sync_remote_memos: z.object({
-    limit: z
-      .number()
-      .min(1)
-      .max(100)
-      .describe('Number of items per page. Maximum 100.')
-      .optional(),
-    max_pages: z
-      .number()
-      .describe('Maximum number of pages to fetch. Defaults to 20.')
-      .optional(),
-  }),
   paput_scan_sessions: z.object({
     sources: z
       .array(z.enum(['claude', 'codex']))

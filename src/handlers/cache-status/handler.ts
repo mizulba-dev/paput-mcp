@@ -16,7 +16,6 @@ export async function handleCacheStatus(
   const capturePolicy = readCapturePolicy();
   const status = {
     cache_dir: getCacheDir(),
-    memos: cache.memos.length,
     pending: pendingCount,
     saved_candidates: cache.pending.filter(
       (candidate) => candidate.status === 'saved',
@@ -30,7 +29,6 @@ export async function handleCacheStatus(
       updated_at: capturePolicy.updated_at,
     },
     processed_sessions: cache.sessions.length,
-    last_remote_sync_at: cache.config.last_remote_sync_at || null,
   };
 
   return {

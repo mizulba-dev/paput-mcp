@@ -5,7 +5,7 @@ export const cacheStatusTool: ToolHandler = {
   definition: {
     name: 'paput_cache_status',
     description:
-      'Inspect the local PaPut cache, including cached memos, pending knowledge candidates, processed sessions, and the last remote sync timestamp.',
+      'Inspect the local PaPut cache, including pending knowledge candidates, processed sessions, and the capture policy.',
     inputSchema: {
       type: 'object',
       properties: {},

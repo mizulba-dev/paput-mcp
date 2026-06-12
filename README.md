@@ -17,8 +17,8 @@ PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the
 
 - Scan local Claude and Codex session logs
 - Add reusable knowledge candidates to a local pending queue
-- Sync existing PaPut memos to the local cache for duplicate detection
-- Prevent duplicate candidates with fingerprints
+- Reject near-duplicate candidates automatically using semantic search against existing memos
+- Prevent duplicate pending candidates with fingerprints
 - Derive a local capture policy from discarded candidates
 - Save pending candidates to PaPut only after explicit user approval
 - Preserve the source session updated timestamp as the PaPut memo creation timestamp
@@ -128,8 +128,7 @@ npx -y paput-mcp setup-ai --codex-only
 
 Generated skills:
 
-- `paput-init` - Initialize PaPut usage, sync existing memos, and inspect unprocessed sessions.
-- `paput-sync` - Sync existing PaPut memos into the local cache.
+- `paput-init` - Initialize PaPut usage and inspect unprocessed sessions.
 - `paput-capture` - Extract reusable knowledge candidates from the current conversation or a specified topic and add them to pending.
 - `paput-save` - Review pending candidates first, then save only candidates explicitly approved by the user.
 - `paput-analyze-discard-policy` - Analyze discarded candidates and save a local capture policy used by future captures.
@@ -245,7 +244,6 @@ These tools are local CLI mode only. They are not exposed by the remote HTTP MCP
 server.
 
 - `paput_cache_status` - Inspect the local cache state.
-- `paput_sync_remote_memos` - Sync existing PaPut memos into the local cache.
 - `paput_scan_sessions` - Scan local Claude/Codex session logs.
 - `paput_get_session_transcript` - Read a session transcript.
 - `paput_add_knowledge_candidates` - Add extracted knowledge candidates to pending.

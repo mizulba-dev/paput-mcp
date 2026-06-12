@@ -40,7 +40,6 @@ import {
   getDashboardAnalysisContextTool,
   getPublicProfileContextTool,
   cacheStatusTool,
-  syncRemoteMemosTool,
   scanSessionsTool,
   getSessionTranscriptTool,
   addKnowledgeCandidatesTool,
@@ -188,7 +187,6 @@ export function getRegisteredTools(
     getDashboardAnalysisContextTool,
     getPublicProfileContextTool,
     cacheStatusTool,
-    syncRemoteMemosTool,
     scanSessionsTool,
     getSessionTranscriptTool,
     addKnowledgeCandidatesTool,
@@ -278,7 +276,6 @@ function isIdempotentTool(name: string): boolean {
 function isLocalOnlyTool(name: string): boolean {
   return (
     name === 'paput_cache_status' ||
-    name === 'paput_sync_remote_memos' ||
     name === 'paput_scan_sessions' ||
     name === 'paput_get_session_transcript' ||
     name === 'paput_add_knowledge_candidates' ||

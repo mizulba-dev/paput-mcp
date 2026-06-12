@@ -19,12 +19,13 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 1. Read the local capture policy with `paput_get_capture_policy`.
 2. Check existing pending candidates with `paput_list_pending_candidates`.
 3. Extract only reusable knowledge from the current conversation or the user-specified topic.
-4. Apply the capture policy when deciding whether to add, reject, or ask about candidates. If no policy exists yet, use the Candidate Rules and Rejected Candidates sections below.
-5. Keep each candidate focused on one reusable idea, and prepare a title, Markdown body, categories, and visibility.
-6. Self-review the candidate against the Quality Bar below. If the body is only a short summary or conclusion, enrich it before adding.
-7. Do not add candidates that may duplicate existing pending candidates. Suggest using the existing candidate instead.
-8. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` without waiting for user approval.
-9. After adding candidates, briefly report the title, categories, and candidate ID.
+4. For each candidate, check semantically similar existing memos with `paput_find_similar_memos`, using the candidate title or a one-line gist as the query. Treat results with a score around 0.85 or higher as near-duplicates, and results around 0.7 to 0.85 as overlap that needs comparison against the candidate body. Use `paput_search_memo` in addition when the candidate centers on an exact name or identifier.
+5. Apply the capture policy when deciding whether to add, reject, or ask about candidates. If no policy exists yet, use the Candidate Rules and Rejected Candidates sections below.
+6. Keep each candidate focused on one reusable idea, and prepare a title, Markdown body, categories, and visibility.
+7. Self-review the candidate against the Quality Bar below. If the body is only a short summary or conclusion, enrich it before adding.
+8. Do not add candidates that may duplicate existing memos or pending candidates. Suggest reusing or updating the existing memo or candidate instead.
+9. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` without waiting for user approval.
+10. After adding candidates, briefly report the title, categories, and candidate ID.
 
 ## Candidate Rules
 
@@ -70,3 +71,5 @@ Do not add these to pending:
 - Add safe candidates to pending without waiting for user approval. If a candidate may be duplicate, sensitive, project-specific, too narrow, or ambiguous, present the concern and ask before adding it.
 - Candidates created from past sessions use the source session updated timestamp as the PaPut memo creation timestamp when saved.
 - If there are no candidates, say that no reusable knowledge was found.
+- If `paput_find_similar_memos` is unavailable or fails, fall back to `paput_search_memo` instead of skipping the duplicate check.
+- `paput_add_knowledge_candidates` also runs a semantic near-duplicate check internally and rejects candidates whose top match score is 0.9 or higher, so review its `duplicate_details` in the result.

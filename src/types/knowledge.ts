@@ -1,16 +1,5 @@
 export type SessionSource = 'claude' | 'codex';
 
-export interface CachedMemo {
-  id: number;
-  title: string;
-  body: string;
-  categories: string[];
-  is_public: boolean;
-  created_at?: string;
-  updated_at?: string;
-  fingerprint: string;
-}
-
 export interface KnowledgeCandidateInput {
   title: string;
   body: string;

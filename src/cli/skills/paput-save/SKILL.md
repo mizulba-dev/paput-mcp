@@ -21,3 +21,4 @@ Review pending knowledge candidates first, then save only candidates explicitly 
 - Save multiple candidates only when the user explicitly asks to save all of them.
 - If the user asks to modify a title or body, apply the override when saving.
 - For ambiguous or likely duplicate candidates, present not saving as an option.
+- When a candidate has no similar memo information, check `paput_find_similar_memos` with the candidate title before saving and surface high-score matches to the user.

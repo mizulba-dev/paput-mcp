@@ -10,7 +10,6 @@ import {
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import {
-  CachedMemo,
   CapturePolicy,
   KnowledgeCandidateInput,
   PendingKnowledgeCandidate,
@@ -19,18 +18,11 @@ import {
   SimilarMemo,
 } from '../../types/knowledge.js';
 
-interface CacheConfig {
-  last_remote_sync_at?: string;
-}
-
 interface CacheData {
-  memos: CachedMemo[];
   pending: PendingKnowledgeCandidate[];
   sessions: ProcessedSession[];
-  config: CacheConfig;
 }
 
-const SIMILARITY_THRESHOLD = 0.78;
 const CAPTURE_POLICY_FILE = 'capture-policy.md';
 
 export function getCacheDir(): string {
@@ -54,35 +46,12 @@ export function createFingerprint(title: string, body: string): string {
     .digest('hex');
 }
 
-export function toCachedMemo(memo: {
-  id: number;
-  title: string;
-  body: string;
-  categories?: Array<{ name: string }>;
-  is_public?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}): CachedMemo {
-  return {
-    id: memo.id,
-    title: memo.title,
-    body: memo.body,
-    categories: memo.categories?.map((category) => category.name) || [],
-    is_public: memo.is_public ?? false,
-    created_at: memo.created_at,
-    updated_at: memo.updated_at,
-    fingerprint: createFingerprint(memo.title, memo.body),
-  };
-}
-
 export function readCache(): CacheData {
   ensureCacheDir();
 
   return {
-    memos: readJsonFile<CachedMemo[]>('memos.json', []),
     pending: readJsonlFile<PendingKnowledgeCandidate>('pending.jsonl'),
     sessions: readJsonFile<ProcessedSession[]>('sessions.json', []),
-    config: readJsonFile<CacheConfig>('config.json', {}),
   };
 }
 
@@ -114,15 +83,13 @@ export function writeCapturePolicy(markdown: string): CapturePolicy {
   return readCapturePolicy();
 }
 
-export function getDiscardedCandidates(limit = 50): PendingKnowledgeCandidate[] {
+export function getDiscardedCandidates(
+  limit = 50,
+): PendingKnowledgeCandidate[] {
   return readCache()
     .pending.filter((candidate) => candidate.status === 'discarded')
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, limit);
-}
-
-export function writeMemos(memos: CachedMemo[]): void {
-  writeJsonFile('memos.json', dedupeMemos(memos));
 }
 
 export function writePending(pending: PendingKnowledgeCandidate[]): void {
@@ -137,25 +104,12 @@ export function writeSessions(sessions: ProcessedSession[]): void {
   writeJsonFile('sessions.json', [...unique.values()]);
 }
 
-export function writeConfig(config: CacheConfig): void {
-  writeJsonFile('config.json', config);
-}
-
-export function upsertCachedMemos(newMemos: CachedMemo[]): CachedMemo[] {
-  const cache = readCache();
-  const byId = new Map(cache.memos.map((memo) => [memo.id, memo]));
-  for (const memo of newMemos) {
-    byId.set(memo.id, memo);
-  }
-  const memos = [...byId.values()].sort((a, b) => b.id - a.id);
-  writeMemos(memos);
-  return memos;
-}
-
 export function addKnowledgeCandidates(
   source: SessionSource,
   sessionId: string,
-  candidates: KnowledgeCandidateInput[],
+  candidates: Array<
+    KnowledgeCandidateInput & { similar_memos?: SimilarMemo[] }
+  >,
   sourceSessionUpdatedAt?: string,
 ): {
   added: PendingKnowledgeCandidate[];
@@ -171,7 +125,6 @@ export function addKnowledgeCandidates(
       .filter((candidate) => candidate.status !== 'discarded')
       .map((candidate) => candidate.fingerprint),
   );
-  const memoFingerprints = new Set(cache.memos.map((memo) => memo.fingerprint));
   const added: PendingKnowledgeCandidate[] = [];
   const duplicates: Array<{
     title: string;
@@ -181,20 +134,7 @@ export function addKnowledgeCandidates(
 
   for (const candidate of candidates) {
     const fingerprint = createFingerprint(candidate.title, candidate.body);
-    const similarMemos = findSimilarMemos(
-      candidate.title,
-      candidate.body,
-      cache.memos,
-    );
-
-    if (memoFingerprints.has(fingerprint)) {
-      duplicates.push({
-        title: candidate.title,
-        reason: 'Exact match with an existing memo',
-        similar_memos: similarMemos,
-      });
-      continue;
-    }
+    const similarMemos = candidate.similar_memos || [];
 
     if (pendingFingerprints.has(fingerprint)) {
       duplicates.push({
@@ -272,23 +212,6 @@ export function updatePendingCandidate(
   return updated;
 }
 
-export function findSimilarMemos(
-  title: string,
-  body: string,
-  memos: CachedMemo[],
-): SimilarMemo[] {
-  const target = `${title} ${body}`;
-  return memos
-    .map((memo) => ({
-      id: memo.id,
-      title: memo.title,
-      score: jaccardSimilarity(target, `${memo.title} ${memo.body}`),
-    }))
-    .filter((memo) => memo.score >= SIMILARITY_THRESHOLD)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
-}
-
 function expandHome(path: string): string {
   if (path === '~') return homedir();
   if (path.startsWith('~/')) return join(homedir(), path.slice(2));
@@ -349,32 +272,4 @@ function atomicWrite(path: string, content: string): void {
   const tmpPath = `${path}.tmp`;
   writeFileSync(tmpPath, content, 'utf8');
   renameSync(tmpPath, path);
-}
-
-function dedupeMemos(memos: CachedMemo[]): CachedMemo[] {
-  const byId = new Map<number, CachedMemo>();
-  for (const memo of memos) {
-    byId.set(memo.id, memo);
-  }
-  return [...byId.values()];
-}
-
-function jaccardSimilarity(left: string, right: string): number {
-  const leftTokens = new Set(tokenize(left));
-  const rightTokens = new Set(tokenize(right));
-  if (leftTokens.size === 0 || rightTokens.size === 0) return 0;
-
-  let intersection = 0;
-  for (const token of leftTokens) {
-    if (rightTokens.has(token)) intersection++;
-  }
-
-  const union = new Set([...leftTokens, ...rightTokens]).size;
-  return intersection / union;
-}
-
-function tokenize(text: string): string[] {
-  return normalizeText(text)
-    .split(' ')
-    .filter((token) => token.length >= 2);
 }

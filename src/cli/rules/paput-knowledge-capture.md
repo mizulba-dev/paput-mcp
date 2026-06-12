@@ -6,7 +6,7 @@ Before adding any candidate to pending, always follow the `paput-capture` workfl
 
 Only keep technical knowledge, decision criteria, and procedures that can be reused in other projects. Do not keep project-specific specifications, implementation details, operational rules, code, secrets, or customer data.
 
-When candidates exist, use the `paput-capture` workflow to check duplicates with the local cache, existing pending candidates, or similar memo information before adding them. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending without waiting for user approval. After adding it, briefly report the title, categories, and candidate ID.
+When candidates exist, use the `paput-capture` workflow to check duplicates before adding them: semantically similar existing memos with `paput_find_similar_memos` and existing pending candidates. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending without waiting for user approval. After adding it, briefly report the title, categories, and candidate ID.
 
 Use `paput_save_pending_candidate` only when the user explicitly approves saving a pending candidate to PaPut.
 

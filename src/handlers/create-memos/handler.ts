@@ -45,8 +45,7 @@ export async function handleCreateMemos(
     } catch (error) {
       failed.push({
         index,
-        title:
-          typeof memoArgs.title === 'string' ? memoArgs.title : undefined,
+        title: typeof memoArgs.title === 'string' ? memoArgs.title : undefined,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }

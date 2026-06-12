@@ -3,9 +3,7 @@ import { createMemo, searchMemos } from '../../services/api/memo.js';
 import {
   createFingerprint,
   readCache,
-  toCachedMemo,
   updatePendingCandidate,
-  upsertCachedMemos,
 } from '../../services/local-cache/index.js';
 import { CreateMemoParams } from '../../types/index.js';
 
@@ -88,9 +86,6 @@ export async function handleSavePendingCandidate(
   }
 
   const savedMemo = await findSavedMemo(apiClient, title, body);
-  if (savedMemo) {
-    upsertCachedMemos([toCachedMemo(savedMemo)]);
-  }
 
   const updated = updatePendingCandidate(candidate.id, (item) => ({
     ...item,

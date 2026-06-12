@@ -35,7 +35,8 @@ function parseSkill(markdown: string, fallbackName: string): SkillSpec {
   }
   const frontmatter = match[1];
   const body = match[2];
-  const name = frontmatter.match(/^name:\s*(.*)$/m)?.[1]?.trim() ?? fallbackName;
+  const name =
+    frontmatter.match(/^name:\s*(.*)$/m)?.[1]?.trim() ?? fallbackName;
   const description =
     frontmatter.match(/^description:\s*(.*)$/m)?.[1]?.trim() ?? '';
   return { name, description, body };

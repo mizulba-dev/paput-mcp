@@ -34,7 +34,6 @@ const expectedToolNames = [
   'paput_get_dashboard_analysis_context',
   'paput_get_public_profile_context',
   'paput_cache_status',
-  'paput_sync_remote_memos',
   'paput_scan_sessions',
   'paput_get_session_transcript',
   'paput_add_knowledge_candidates',
@@ -87,7 +86,6 @@ const remoteToolNames = expectedToolNames.filter(
   (name) =>
     ![
       'paput_cache_status',
-      'paput_sync_remote_memos',
       'paput_scan_sessions',
       'paput_get_session_transcript',
       'paput_add_knowledge_candidates',
