@@ -35,9 +35,13 @@ describe('handleSavePendingCandidate', () => {
     );
 
     expect(apiClient.post).toHaveBeenCalledWith(
-      '/api/v1/mcp/memo',
+      '/api/v1/mcp/memos',
       expect.objectContaining({
-        created_at: '2026-06-01T12:00:00.000Z',
+        memos: [
+          expect.objectContaining({
+            created_at: '2026-06-01T12:00:00.000Z',
+          }),
+        ],
       }),
     );
     expect(result.structuredContent).toMatchObject({
@@ -59,9 +63,13 @@ describe('handleSavePendingCandidate', () => {
     );
 
     expect(apiClient.post).toHaveBeenCalledWith(
-      '/api/v1/mcp/memo',
+      '/api/v1/mcp/memos',
       expect.objectContaining({
-        created_at: '2026-06-02T15:22:09.801Z',
+        memos: [
+          expect.objectContaining({
+            created_at: '2026-06-02T15:22:09.801Z',
+          }),
+        ],
       }),
     );
     expect(result.structuredContent).toMatchObject({
@@ -94,7 +102,13 @@ describe('handleSavePendingCandidate', () => {
         ],
         total: 1,
       }),
-      post: vi.fn().mockResolvedValue({}),
+      post: vi.fn().mockResolvedValue({
+        success: true,
+        created_count: 1,
+        failed_count: 0,
+        created: [{ index: 0, id: 123, title: candidate.title }],
+        failed: [],
+      }),
       put: vi.fn(),
       delete: vi.fn(),
       request: vi.fn(),

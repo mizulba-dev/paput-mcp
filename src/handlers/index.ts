@@ -1,4 +1,4 @@
-export * from './create-memo/index.js';
+export * from './create-memos/index.js';
 export * from './search-memo/index.js';
 export * from './get-memo/index.js';
 export * from './update-memo/index.js';

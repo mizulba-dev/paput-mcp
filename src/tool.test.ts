@@ -5,7 +5,7 @@ import { getGeneratedInputSchema } from './schemas/tool-input.js';
 import { getRegisteredTools } from './tool.js';
 
 const expectedToolNames = [
-  'paput_create_memo',
+  'paput_create_memos',
   'paput_search_memo',
   'paput_get_memo',
   'paput_update_memo',

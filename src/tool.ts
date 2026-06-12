@@ -11,7 +11,7 @@ import {
   getToolInputZodSchema,
 } from './schemas/tool-input.js';
 import {
-  createMemoTool,
+  createMemosTool,
   searchMemoTool,
   getMemoTool,
   updateMemoTool,
@@ -157,7 +157,7 @@ export function getRegisteredTools(
 ): ToolHandler[] {
   const includeLocalTools = options.includeLocalTools ?? true;
   const tools = [
-    createMemoTool,
+    createMemosTool,
     searchMemoTool,
     getMemoTool,
     updateMemoTool,

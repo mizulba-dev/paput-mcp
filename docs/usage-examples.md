@@ -2,20 +2,20 @@
 
 These examples show typical ways to use PaPut MCP from an AI assistant.
 
-## 1. Create A Memo From A Remote MCP Client
+## 1. Create Memos From A Remote MCP Client
 
 Prompt:
 
 ```text
-Create a private PaPut memo summarizing this conversation.
+Create private PaPut memos summarizing these learnings and return their IDs.
 ```
 
 Expected tool flow:
 
-1. `paput_create_memo`
+1. `paput_create_memos`
 2. `paput_search_memo` or `paput_get_memo` when the user wants to verify the result
 
-Use case: quickly save useful content from Claude, ChatGPT, Codex, or another remote MCP client.
+Use case: quickly save one or more useful items from Claude, ChatGPT, Codex, or another remote MCP client.
 
 ## 2. Search Existing Memos Before Creating Knowledge
 

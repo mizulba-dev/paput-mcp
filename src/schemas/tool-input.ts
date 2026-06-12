@@ -75,6 +75,32 @@ const knowledgeCandidateSchema = z.object({
   is_public: z.boolean().default(false).optional(),
 });
 
+const createMemoInputSchema = z.object({
+  title: z.string().describe('Memo title'),
+  body: z.string().describe('Memo body'),
+  is_public: z
+    .boolean()
+    .default(false)
+    .describe('Whether to publish the memo'),
+  created_at: z
+    .string()
+    .describe(
+      'Memo creation timestamp in ISO 8601 format, for example 2026-05-30T12:34:56Z',
+    )
+    .optional(),
+  categories: z.array(z.string()).describe('Memo categories').optional(),
+  projects: z
+    .array(projectReferenceSchema)
+    .describe('Projects to link when creating the memo')
+    .optional(),
+  project_match: z
+    .string()
+    .describe(
+      'Project title fragment to search and link when projects are not provided',
+    )
+    .optional(),
+});
+
 const goalCategorySchema = z
   .enum(['career', 'learning', 'portfolio', 'project', 'other'])
   .describe('Goal category');
@@ -129,30 +155,8 @@ const dashboardAnalysisSuggestionSchema = z.object({
 });
 
 const toolInputSchemas = {
-  paput_create_memo: z.object({
-    title: z.string().describe('Memo title'),
-    body: z.string().describe('Memo body'),
-    is_public: z
-      .boolean()
-      .default(false)
-      .describe('Whether to publish the memo'),
-    created_at: z
-      .string()
-      .describe(
-        'Memo creation timestamp in ISO 8601 format, for example 2026-05-30T12:34:56Z',
-      )
-      .optional(),
-    categories: z.array(z.string()).describe('Memo categories').optional(),
-    projects: z
-      .array(projectReferenceSchema)
-      .describe('Projects to link when creating the memo')
-      .optional(),
-    project_match: z
-      .string()
-      .describe(
-        'Project title fragment to search and link when projects are not provided',
-      )
-      .optional(),
+  paput_create_memos: z.object({
+    memos: z.array(createMemoInputSchema).min(1).describe('Memos to create'),
   }),
   paput_search_memo: z.object({
     word: z.string().describe('Search keyword').optional(),

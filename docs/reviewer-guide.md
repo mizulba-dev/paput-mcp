@@ -40,11 +40,11 @@ return data.
    then approve the consent screen. You will be returned to Claude and the
    connection completes.
 4. Confirm the tool list loads (`tools/list` shows PaPut tools such as
-   `paput_search_memo`, `paput_get_categories`, `paput_create_memo`).
+   `paput_search_memo`, `paput_get_categories`, `paput_create_memos`).
 5. **Read:** ask Claude to list categories (`paput_get_categories`) and to
    search memos (`paput_search_memo`). Results should be returned.
 6. **Get:** ask Claude to open one of the returned memos (`paput_get_memo`).
-7. **Write:** ask Claude to create a test memo (`paput_create_memo`). Confirm
+7. **Write:** ask Claude to create a test memo (`paput_create_memos`). Confirm
    that write/destructive tools prompt for user confirmation before executing.
 8. Verify the created data appears when searching again.
 

@@ -88,14 +88,14 @@ npx -y paput-mcp logout
 
 ### Environment Variables
 
-- `PAPUT_PROJECT_MATCH` - Optional project name fragment for automatic project linking when creating or updating memos.
+- `PAPUT_PROJECT_MATCH` - Optional project name fragment for automatic project linking when creating memos in bulk or updating memos.
 - `PAPUT_HOME` - Optional PaPut local data directory. Defaults to `~/.paput`.
 - `PAPUT_CACHE_DIR` - Optional cache directory for knowledge capture data.
 - `PAPUT_ALLOWED_ORIGINS` - Optional comma-separated list of extra allowed
   HTTP `Origin` values for remote MCP requests. The remote server already allows
   its own origin, PaPut, Claude, and ChatGPT origins.
 
-When `PAPUT_PROJECT_MATCH` is set, memo create and update operations search skill sheet projects whose title contains the configured text and link the first match.
+When `PAPUT_PROJECT_MATCH` is set, memo bulk-create and update operations search skill sheet projects whose title contains the configured text and link the first match.
 
 ## AI Setup
 
@@ -199,7 +199,7 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 
 ### Memo Management
 
-- `paput_create_memo` - Create a PaPut memo directly.
+- `paput_create_memos` - Create multiple PaPut memos in one call and return created memo IDs.
 - `paput_search_memo` - Search PaPut memos by keyword, category, IDs, date, visibility, or pagination.
 - `paput_get_memo` - Get full details for a memo.
 - `paput_update_memo` - Update an existing memo.
@@ -322,7 +322,7 @@ PaPut MCP stores local data under `~/.paput` by default.
 - **Connection fails or tools do not appear**: Make sure the server URL is `https://mcp.paput.io` and that you completed the PaPut sign-in and consent screen. Check `https://mcp.paput.io/healthz` returns `{"ok":true}`.
 - **401 Unauthorized / asked to sign in again**: Your access token expired or the connector was disconnected. Reconnect the connector and re-authorize through PaPut OAuth.
 - **A write or delete tool did nothing**: Write and destructive tools require user confirmation. Approve the confirmation prompt in the client before the action runs.
-- **Read/search tools return empty results**: The account has no matching data yet. Create content first (e.g. `paput_create_memo`), then search again.
+- **Read/search tools return empty results**: The account has no matching data yet. Create content first (e.g. `paput_create_memos`), then search again.
 - **Local CLI mode: `login` required**: For stdio/local usage, run `node dist/index.js login` to complete OAuth before starting the server.
 - **Still stuck**: Contact `paput.dev@gmail.com` or open an issue at https://github.com/mizulba-dev/paput-mcp/issues.
 

@@ -9,6 +9,8 @@ import {
   UpdateMemoParams,
   UpdateMemoResponse,
   Memo,
+  CreateMemosParams,
+  CreateMemosResponse,
 } from '../../types/index.js';
 
 interface SearchMemosApiResponse {
@@ -20,22 +22,46 @@ export async function createMemo(
   client: ApiClient,
   params: CreateMemoParams,
 ): Promise<CreateMemoResponse> {
-  try {
-    await client.post('/api/v1/mcp/memo', {
-      title: params.title,
-      body: params.body,
-      is_public: params.is_public || false,
-      created_at: params.created_at,
-      categories: params.categories || [],
-      projects: params.projects || [],
-    });
-
+  const result = await createMemos(client, { memos: [params] });
+  if (!result.success) {
     return {
-      success: true,
+      success: false,
+      error: result.failed[0]?.error || 'Unknown error',
     };
+  }
+
+  return {
+    success: true,
+    id: result.created[0]?.id,
+  };
+}
+
+export async function createMemos(
+  client: ApiClient,
+  params: CreateMemosParams,
+): Promise<CreateMemosResponse> {
+  try {
+    return await client.post<CreateMemosResponse>('/api/v1/mcp/memos', {
+      memos: params.memos.map((memo) => ({
+        title: memo.title,
+        body: memo.body,
+        is_public: memo.is_public || false,
+        created_at: memo.created_at,
+        categories: memo.categories || [],
+        projects: memo.projects || [],
+      })),
+    });
   } catch (error) {
     return {
       success: false,
+      created_count: 0,
+      failed_count: params.memos.length,
+      created: [],
+      failed: params.memos.map((memo, index) => ({
+        index,
+        title: memo.title,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })),
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }

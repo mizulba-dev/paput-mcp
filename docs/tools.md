@@ -27,13 +27,13 @@ Clients and assistants should follow these rules:
 
 | Tool                   | Safety            | Use case                                                                         |
 | ---------------------- | ----------------- | -------------------------------------------------------------------------------- |
-| `paput_create_memo`    | Write             | Create a PaPut memo when the user explicitly asks to save content directly.      |
+| `paput_create_memos`   | Write             | Create multiple PaPut memos in one call and return created memo IDs.             |
 | `paput_search_memo`    | Read-only         | Search memos by keyword, category, IDs, date, visibility, or pagination.         |
 | `paput_get_memo`       | Read-only         | Read the full details of a memo by ID.                                           |
 | `paput_update_memo`    | Destructive/write | Update an existing memo title, body, visibility, categories, or linked projects. |
 | `paput_get_categories` | Read-only         | List categories before assigning categories or checking duplicates.              |
 
-`paput_create_memo` and `paput_update_memo` can link projects through explicit
+`paput_create_memos` and `paput_update_memo` can link projects through explicit
 `projects`, a `project_match` input, or local `PAPUT_PROJECT_MATCH` in local CLI
 mode.
 

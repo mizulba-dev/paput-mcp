@@ -36,7 +36,7 @@ describe('MCP transports', () => {
       'paput_search_memo',
     );
     expect(result.tools.map((tool) => tool.name)).toContain(
-      'paput_create_memo',
+      'paput_create_memos',
     );
 
     await mcpServer.close();
@@ -69,7 +69,7 @@ describe('MCP transports', () => {
         'paput_search_memo',
       );
       expect(result.tools.map((tool) => tool.name)).toContain(
-        'paput_create_memo',
+        'paput_create_memos',
       );
       expect(result.tools.map((tool) => tool.name)).not.toContain(
         'paput_cache_status',
