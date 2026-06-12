@@ -1,5 +1,7 @@
 export * from './create-memos/index.js';
 export * from './search-memo/index.js';
+export * from './find-similar-memos/index.js';
+export * from './backfill-memo-embeddings/index.js';
 export * from './get-memo/index.js';
 export * from './update-memo/index.js';
 export * from './get-categories/index.js';

@@ -13,6 +13,8 @@ import {
 import {
   createMemosTool,
   searchMemoTool,
+  findSimilarMemosTool,
+  backfillMemoEmbeddingsTool,
   getMemoTool,
   updateMemoTool,
   getCategoriesTool,
@@ -159,6 +161,8 @@ export function getRegisteredTools(
   const tools = [
     createMemosTool,
     searchMemoTool,
+    findSimilarMemosTool,
+    backfillMemoEmbeddingsTool,
     getMemoTool,
     updateMemoTool,
     getCategoriesTool,

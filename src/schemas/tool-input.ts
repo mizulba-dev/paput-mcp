@@ -78,10 +78,7 @@ const knowledgeCandidateSchema = z.object({
 const createMemoInputSchema = z.object({
   title: z.string().describe('Memo title'),
   body: z.string().describe('Memo body'),
-  is_public: z
-    .boolean()
-    .default(false)
-    .describe('Whether to publish the memo'),
+  is_public: z.boolean().default(false).describe('Whether to publish the memo'),
   created_at: z
     .string()
     .describe(
@@ -173,6 +170,20 @@ const toolInputSchemas = {
       .describe('Number of items to return per page (max 100)')
       .optional(),
   }),
+  paput_find_similar_memos: z.object({
+    query: z
+      .string()
+      .describe(
+        'Natural-language query describing the topic or content to find',
+      ),
+    limit: z
+      .number()
+      .min(1)
+      .max(50)
+      .describe('Maximum number of memos to return (default 10, max 50)')
+      .optional(),
+  }),
+  paput_backfill_memo_embeddings: emptySchema,
   paput_get_memo: z.object({
     id: z.number().describe('Memo ID'),
   }),

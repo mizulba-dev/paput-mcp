@@ -11,6 +11,10 @@ import {
   Memo,
   CreateMemosParams,
   CreateMemosResponse,
+  FindSimilarMemosParams,
+  FindSimilarMemosResponse,
+  SimilarMemoResult,
+  BackfillMemoEmbeddingsResponse,
 } from '../../types/index.js';
 
 interface SearchMemosApiResponse {
@@ -96,6 +100,56 @@ export async function searchMemos(
       success: true,
       memos: data.memos,
       total: data.total,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+export async function findSimilarMemos(
+  client: ApiClient,
+  params: FindSimilarMemosParams,
+): Promise<FindSimilarMemosResponse> {
+  try {
+    const queryParams = new URLSearchParams();
+    queryParams.append('query', params.query);
+    if (params.limit !== undefined)
+      queryParams.append('limit', params.limit.toString());
+
+    const data = await client.get<{ memos: SimilarMemoResult[] }>(
+      `/api/v1/mcp/memos/similar?${queryParams.toString()}`,
+    );
+
+    return {
+      success: true,
+      memos: data.memos,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+export async function backfillMemoEmbeddings(
+  client: ApiClient,
+): Promise<BackfillMemoEmbeddingsResponse> {
+  try {
+    const data = await client.post<{
+      processed: number;
+      failed: number;
+      has_more: boolean;
+    }>('/api/v1/mcp/memos/embeddings/backfill', {});
+
+    return {
+      success: true,
+      processed: data.processed,
+      failed: data.failed,
+      has_more: data.has_more,
     };
   } catch (error) {
     return {

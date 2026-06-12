@@ -25,17 +25,30 @@ Clients and assistants should follow these rules:
 
 ## Memo Tools
 
-| Tool                   | Safety            | Use case                                                                         |
-| ---------------------- | ----------------- | -------------------------------------------------------------------------------- |
-| `paput_create_memos`   | Write             | Create multiple PaPut memos in one call and return created memo IDs.             |
-| `paput_search_memo`    | Read-only         | Search memos by keyword, category, IDs, date, visibility, or pagination.         |
-| `paput_get_memo`       | Read-only         | Read the full details of a memo by ID.                                           |
-| `paput_update_memo`    | Destructive/write | Update an existing memo title, body, visibility, categories, or linked projects. |
-| `paput_get_categories` | Read-only         | List categories before assigning categories or checking duplicates.              |
+| Tool                             | Safety            | Use case                                                                         |
+| -------------------------------- | ----------------- | -------------------------------------------------------------------------------- |
+| `paput_create_memos`             | Write             | Create multiple PaPut memos in one call and return created memo IDs.             |
+| `paput_search_memo`              | Read-only         | Search memos by keyword, category, IDs, date, visibility, or pagination.         |
+| `paput_find_similar_memos`       | Read-only         | Find memos semantically similar to a natural-language query using vector search. |
+| `paput_backfill_memo_embeddings` | Write             | Generate embeddings for existing memos that do not have one yet.                 |
+| `paput_get_memo`                 | Read-only         | Read the full details of a memo by ID.                                           |
+| `paput_update_memo`              | Destructive/write | Update an existing memo title, body, visibility, categories, or linked projects. |
+| `paput_get_categories`           | Read-only         | List categories before assigning categories or checking duplicates.              |
 
 `paput_create_memos` and `paput_update_memo` can link projects through explicit
 `projects`, a `project_match` input, or local `PAPUT_PROJECT_MATCH` in local CLI
 mode.
+
+`paput_search_memo` matches surface text, while `paput_find_similar_memos`
+matches meaning, so it finds related memos even when the wording differs.
+Prefer `paput_find_similar_memos` for topic discovery and near-duplicate
+checks, and `paput_search_memo` for exact words, IDs, or identifiers. Both
+tools only return memos owned by the authenticated user.
+
+New and updated memos get embeddings automatically. If memos created before
+semantic search was enabled are missing from similarity results, run
+`paput_backfill_memo_embeddings` (up to 100 memos per call) and repeat while
+the response reports `has_more: true`.
 
 ## Note Tools
 

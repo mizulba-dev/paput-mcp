@@ -161,3 +161,26 @@ Expected tool flow:
 
 Use case: generate the public profile shown on the AI Summary tab from public
 materials only. The context excludes private dashboard analysis and goals.
+
+## 10. Find Related Memos By Meaning
+
+Prompt:
+
+```text
+Find my PaPut memos related to database schema migration tooling, even if they use different wording.
+```
+
+Expected tool flow:
+
+1. `paput_find_similar_memos` with a natural-language query
+2. `paput_get_memo` when the user wants the full body of a result
+3. `paput_search_memo` as a fallback for exact words, IDs, or identifiers
+
+Use case: discover related knowledge or near-duplicate memos when the saved
+memos use different wording than the query (for example, "DB 移行" vs
+"マイグレーション"). Results include a similarity score per memo.
+
+If older memos never appear in similarity results, run
+`paput_backfill_memo_embeddings` and repeat while the response reports
+`has_more: true`. This is a one-time setup step; new and updated memos are
+embedded automatically.
