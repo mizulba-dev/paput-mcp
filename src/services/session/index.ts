@@ -42,7 +42,7 @@ export function scanSessions(
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
-function readSessionCwd(
+export function readSessionCwd(
   source: SessionSource,
   path: string,
 ): string | undefined {
