@@ -4,6 +4,8 @@ At the start of a session, when the current project is known or can be inferred 
 
 When a design decision is settled or a repeatable work procedure is completed during the session, save it with `paput_add_project_document` (kind `design_doc` or `procedure`) and briefly report what was saved. For design decisions, include the decision, the reasons, and the rejected alternatives. Do not save repository conventions or anything that belongs in CLAUDE.md / AGENTS.md, and do not save secrets or customer data.
 
+At the end of work, always check project documents separately from reusable knowledge capture. If the completed work produced a project-specific design decision or repeatable project procedure, save it with `paput_add_project_document` even when there are no reusable cross-project knowledge candidates. Do not treat "no reusable knowledge candidates" as a reason to skip the project document check.
+
 Before calling `paput_update_project_instructions`, always get explicit user approval in the conversation, because instructions are applied to every future session.
 
 When a response from `paput_add_project_document` or `paput_get_project_context` contains a skill proposal, ask the user whether to turn the repeated procedure into a skill. On approval, create the skill first, then call `paput_promote_project_documents` with the proposal and related document IDs. On rejection, call `paput_discard_project_proposal` with the user's reason.
