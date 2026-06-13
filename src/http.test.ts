@@ -68,6 +68,17 @@ describe('HTTP MCP server security handling', () => {
     expect(html).toContain('href="/favicon.ico"');
   });
 
+  it('serves landing page headers for browser HEAD requests', async () => {
+    const port = await startTestServer();
+
+    const response = await fetch(`http://127.0.0.1:${port}/`, {
+      method: 'HEAD',
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/html');
+  });
+
   it('keeps returning 405 for SSE stream GET requests', async () => {
     const port = await startTestServer();
 

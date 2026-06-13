@@ -120,15 +120,18 @@ export async function startHttpMcpServer(
       return;
     }
 
-    // ブラウザ/クローラーの GET には favicon リンク付きの最小 HTML を 200 で返す。
-    // Google favicon クローラーがルートを GET したとき <link rel="icon"> を発見できるようにし、
+    // ブラウザ/クローラーの GET/HEAD には favicon リンク付きの最小 HTML を 200 で返す。
+    // Google favicon クローラーがルートを確認したとき <link rel="icon"> を発見できるようにし、
     // ディレクトリ/ツールコールのアイコンが正しく解決されるようにするため。
     // MCP の SSE プローブ(GET + Accept: text/event-stream)だけ 405 を維持する。
     // Accept に text/html を含むかではなく SSE 要求かどうかで判定するのは、
     // Google のクローラーが */* など text/html を明示しない Accept を送る場合に
     // 405(=他の4xx)で弾かれ、favicon を取得できなくなるのを防ぐため。
-    if (req.method === 'GET' && !requestsEventStream(req)) {
-      sendLandingPage(res);
+    if (
+      (req.method === 'GET' || req.method === 'HEAD') &&
+      !requestsEventStream(req)
+    ) {
+      sendLandingPage(res, req.method === 'HEAD');
       return;
     }
 
@@ -205,7 +208,7 @@ function requestsEventStream(req: IncomingMessage): boolean {
 }
 
 // ブラウザ/クローラー向けのランディング HTML。favicon リンクを明示して発見性を高める。
-function sendLandingPage(res: ServerResponse): void {
+function sendLandingPage(res: ServerResponse, headOnly = false): void {
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -232,6 +235,10 @@ function sendLandingPage(res: ServerResponse): void {
     'content-type': 'text/html; charset=utf-8',
     'cache-control': 'public, max-age=3600',
   });
+  if (headOnly) {
+    res.end();
+    return;
+  }
   res.end(html);
 }
 
