@@ -15,7 +15,6 @@ import {
   PublicProfileContextResponse,
 } from '../../types/index.js';
 
-// Response types for API endpoints
 export interface UpdateBasicInfoParams {
   nearest_station?: string;
   gender?: number;
@@ -56,7 +55,6 @@ export async function getSkillSheet(
     '/api/v1/mcp/skill-sheet',
   );
 
-  // Validate the response has the expected structure
   if (!data || typeof data.id !== 'number') {
     throw new Error('Invalid skill sheet response format');
   }
@@ -128,7 +126,6 @@ export async function updateSkillSheet(
   }
 }
 
-// Basic Info
 export async function updateSkillSheetBasicInfo(
   client: ApiClient,
   params: UpdateBasicInfoParams,
@@ -136,7 +133,6 @@ export async function updateSkillSheetBasicInfo(
   await client.put('/api/v1/mcp/skill-sheet/basic-info', params);
 }
 
-// Self PR
 export async function updateSkillSheetSelfPr(
   client: ApiClient,
   params: UpdateSelfPrParams,
@@ -144,7 +140,6 @@ export async function updateSkillSheetSelfPr(
   await client.put('/api/v1/mcp/skill-sheet/self-pr', params);
 }
 
-// Public Profile
 export async function updateSkillSheetPublicProfile(
   client: ApiClient,
   params: UpdatePublicProfileParams,
@@ -152,7 +147,6 @@ export async function updateSkillSheetPublicProfile(
   await client.put('/api/v1/mcp/skill-sheet/public-profile', params);
 }
 
-// Public Profile Context (material aggregation for AI summary generation)
 export async function getPublicProfileContext(
   client: ApiClient,
 ): Promise<PublicProfileContextResponse> {
@@ -161,7 +155,6 @@ export async function getPublicProfileContext(
   );
 }
 
-// Skills
 export async function getSkillSheetSkills(
   client: ApiClient,
 ): Promise<SkillSheetSkillsResponse> {
@@ -197,7 +190,6 @@ export async function deleteSkillSheetSkill(
   await client.delete(`/api/v1/mcp/skill-sheet/skill/${skillId}`);
 }
 
-// Projects
 export async function getSkillSheetProjects(
   client: ApiClient,
   search?: string,

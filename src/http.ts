@@ -18,11 +18,8 @@ export interface HttpMcpServerOptions extends MCPServerOptions {
 }
 
 const OAUTH_SCOPES = ['paput.read', 'paput.write'] as const;
-const MAX_REQUEST_BODY_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_REQUEST_BODY_BYTES = 5 * 1024 * 1024;
 const FRONT_ORIGIN = 'https://paput.io';
-// アイコン系は paput.io 上の実体を 200 で直接配信する（プロキシ）。
-// 307 リダイレクトだと Google favicon クローラーや一部クライアントがクロスドメイン
-// リダイレクトを追わず、ディレクトリ/ツールコールのアイコンが汎用アイコンになってしまうため。
 const ICON_SOURCES: Record<string, string> = {
   '/apple-touch-icon.png': '/icons/apple-touch-icon.png',
   '/favicon.ico': '/favicon.ico',
@@ -37,9 +34,7 @@ export async function startHttpMcpServer(
 ): Promise<HttpServer> {
   const endpoint = options.endpoint ?? '/';
   const port = options.port ?? Number(process.env.PORT ?? 3000);
-  // host を指定しない場合、Node は全インターフェース（0.0.0.0/::）にバインドする。
-  // 本番（Render 等）は外部公開のためこの挙動が必要。ローカル開発では
-  // dev:http スクリプトで HOST=127.0.0.1 を渡してループバックに限定する。
+  // host 未指定は 0.0.0.0 全開放。ローカル開発では HOST=127.0.0.1 を渡すこと。
   const host = options.host ?? process.env.HOST;
   const apiUrl =
     options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
@@ -52,8 +47,7 @@ export async function startHttpMcpServer(
     try {
       await handleHttpRequest(req, res);
     } catch (error) {
-      // 不正な Host ヘッダーによる new URL の例外などをここで捕捉し、
-      // 未捕捉の Promise リジェクションでプロセスが落ちるのを防ぐ。
+      // 未捕捉例外（不正 Host 等）を吸収してプロセス停止を防ぐ。
       console.error('Unhandled error in MCP HTTP request handler:', error);
       if (!res.headersSent) {
         sendJsonRpcError(res, 400, -32000, 'Bad request');
@@ -121,13 +115,7 @@ export async function startHttpMcpServer(
       return;
     }
 
-    // ブラウザ/クローラーの GET/HEAD には favicon リンク付きの最小 HTML を 200 で返す。
-    // Google favicon クローラーがルートを確認したとき <link rel="icon"> を発見できるようにし、
-    // ディレクトリ/ツールコールのアイコンが正しく解決されるようにするため。
-    // MCP の SSE プローブ(GET + Accept: text/event-stream)だけ 405 を維持する。
-    // Accept に text/html を含むかではなく SSE 要求かどうかで判定するのは、
-    // Google のクローラーが */* など text/html を明示しない Accept を送る場合に
-    // 405(=他の4xx)で弾かれ、favicon を取得できなくなるのを防ぐため。
+    // GET/HEAD には favicon リンク付き HTML を 200 で返す。SSE GET のみ 405 を維持。
     if (
       (req.method === 'GET' || req.method === 'HEAD') &&
       !requestsEventStream(req)
@@ -218,15 +206,12 @@ function parseAllowedOrigins(value?: string): string[] {
     .filter(Boolean);
 }
 
-// MCP の Streamable HTTP クライアントが SSE ストリームを開こうとする GET かどうか。
-// これらにはランディング HTML ではなく従来どおり 405 を返す。
 function requestsEventStream(req: IncomingMessage): boolean {
   const accept = req.headers.accept;
   const value = Array.isArray(accept) ? accept.join(',') : (accept ?? '');
   return value.toLowerCase().includes('text/event-stream');
 }
 
-// ブラウザ/クローラー向けのランディング HTML。favicon リンクを明示して発見性を高める。
 function sendLandingPage(res: ServerResponse, headOnly = false): void {
   const html = `<!doctype html>
 <html lang="en">
@@ -261,7 +246,6 @@ function sendLandingPage(res: ServerResponse, headOnly = false): void {
   res.end(html);
 }
 
-// 上流(paput.io)のアイコンを取得し 200 で直接返す。失敗時のみ 307 リダイレクトにフォールバック。
 async function serveIcon(
   res: ServerResponse,
   sourceUrl: string,
@@ -278,7 +262,7 @@ async function serveIcon(
       return;
     }
   } catch {
-    // フォールスルーしてリダイレクトする
+    // 失敗時は 307 リダイレクトにフォールバック
   }
   res.writeHead(307, { location: sourceUrl });
   res.end();
@@ -319,9 +303,7 @@ function normalizeOrigin(origin: string): string {
   }
 }
 
-// Host ヘッダーを妥当な host[:port] に正規化する。不正な値（空白や制御文字を
-// 含むもの）はそのまま new URL に渡すと例外を投げ、未捕捉リジェクションで
-// プロセスがクラッシュする恐れがあるため、安全なデフォルトにフォールバックする。
+// 不正な Host をそのまま new URL に渡すとクラッシュするため安全なデフォルトにフォールバック。
 function normalizeHostHeader(host?: string | string[]): string {
   const value = Array.isArray(host) ? host[0] : host;
   if (!value) {
@@ -337,8 +319,6 @@ function normalizeHostHeader(host?: string | string[]): string {
 let warnedUntrustedForwardedProto = false;
 
 function getPublicOrigin(req: IncomingMessage, requestUrl: URL): string {
-  // 信頼できるプロキシ背後では、公開オリジンを環境変数で固定して
-  // Host / X-Forwarded-Proto 詐称の影響を排除できる。
   const configuredOrigin = process.env.PAPUT_PUBLIC_ORIGIN?.trim();
   if (configuredOrigin) {
     return normalizeOrigin(configuredOrigin);
@@ -349,9 +329,7 @@ function getPublicOrigin(req: IncomingMessage, requestUrl: URL): string {
     ? protoHeader[0]
     : protoHeader;
 
-  // PAPUT_PUBLIC_ORIGIN 未設定時にクライアント由来の X-Forwarded-Proto を
-  // 信頼すると、攻撃者が公開オリジンの scheme を詐称できる。公開デプロイでは
-  // PAPUT_PUBLIC_ORIGIN を明示設定すべき旨を一度だけ警告する。
+  // PAPUT_PUBLIC_ORIGIN 未設定時のみ X-Forwarded-Proto 詐称の警告を一度だけ出す。
   if (forwardedProto && !warnedUntrustedForwardedProto) {
     warnedUntrustedForwardedProto = true;
     console.error(
@@ -460,7 +438,7 @@ async function readRequestBody(
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  // 未捕捉の Promise リジェクション / 例外でプロセスを落とさない（DoS 耐性）。
+  // 未捕捉例外・リジェクションでプロセスを落とさない。
   process.on('unhandledRejection', (reason) => {
     console.error('Unhandled promise rejection:', reason);
   });

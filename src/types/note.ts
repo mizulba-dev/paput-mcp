@@ -1,4 +1,3 @@
-// Note creation parameters
 export interface CreateNoteParams {
   title: string;
   is_public?: boolean;
@@ -11,7 +10,6 @@ export interface CreateNoteResponse {
   error?: string;
 }
 
-// Note search parameters
 export interface SearchNotesParams {
   word?: string;
   is_public?: boolean;
@@ -33,7 +31,6 @@ export interface SearchNotesResponse {
   error?: string;
 }
 
-// Get note detail parameters
 export interface GetNoteParams {
   id: number;
 }
@@ -58,7 +55,6 @@ export interface GetNoteResponse {
   }>;
 }
 
-// Update note parameters
 export interface UpdateNoteParams {
   id: number;
   title?: string;

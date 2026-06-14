@@ -9,7 +9,7 @@ import {
   SimilarMemo,
 } from '../../types/knowledge.js';
 
-// この値以上のスコアの既存メモがある候補は、ほぼ重複として自動的に追加しない
+// 重複とみなす類似スコア閾値（この値以上は自動除外）
 const NEAR_DUPLICATE_SCORE = 0.9;
 const SIMILAR_MEMO_LIMIT = 5;
 
@@ -161,7 +161,6 @@ async function resolveProjects(
   }
 }
 
-// 類似判定に失敗しても候補追加自体は止めない（similar_memos なしで追加する）
 async function findSimilarMemosForCandidate(
   apiClient: ApiClient,
   title: string,

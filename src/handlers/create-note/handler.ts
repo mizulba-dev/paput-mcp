@@ -18,7 +18,6 @@ export async function handleCreateNote(
     };
   }
 
-  // Validate parameters
   if (typeof args.title !== 'string') {
     return {
       content: [
@@ -31,13 +30,11 @@ export async function handleCreateNote(
     };
   }
 
-  // Build parameters
   const params: CreateNoteParams = {
     title: args.title,
     is_public: typeof args.is_public === 'boolean' ? args.is_public : false,
   };
 
-  // Process memos
   if (Array.isArray(args.memo_ids)) {
     params.memos = args.memo_ids
       .filter((id): id is number => typeof id === 'number')

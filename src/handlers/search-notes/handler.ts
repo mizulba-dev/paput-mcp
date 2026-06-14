@@ -6,7 +6,6 @@ export async function handleSearchNotes(
   args: Record<string, unknown> | undefined,
   apiClient: ApiClient,
 ) {
-  // Build parameters
   const params: SearchNotesParams = {};
 
   if (args) {

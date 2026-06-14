@@ -1,7 +1,4 @@
-// Get skill sheet parameters
-export interface GetSkillSheetParams {
-  // No parameters for get skill sheet
-}
+export interface GetSkillSheetParams {}
 
 export interface StrengthLabel {
   label: string;
@@ -33,7 +30,6 @@ export interface GetSkillSheetResponse {
   projects: GetSkillSheetProject[];
 }
 
-// Public profile update parameters
 export interface UpdatePublicProfileParams {
   headline?: string;
   profile_summary?: string;
@@ -85,7 +81,6 @@ export interface SkillSheetMemo {
   title: string;
 }
 
-// Create skill sheet parameters
 export interface CreateSkillSheetParams {
   nearest_station: string | null;
   gender: number;
@@ -102,7 +97,6 @@ export interface CreateSkillSheetResponse {
   error?: string;
 }
 
-// Update skill sheet parameters
 export interface UpdateSkillSheetParams {
   nearest_station?: string | null;
   gender?: number;
@@ -118,7 +112,6 @@ export interface UpdateSkillSheetResponse {
   error?: string;
 }
 
-// Skill types
 export interface SkillSheetSkill {
   id?: number;
   category: {
@@ -130,7 +123,6 @@ export interface SkillSheetSkill {
   years: number;
 }
 
-// Project types
 export interface GetProjectsResponse {
   projects: GetSkillSheetProject[];
 }
@@ -142,7 +134,6 @@ export interface UpdateSkillSheetProjectAiSummaryResponse {
   ai_summary_updated_at: string | null;
 }
 
-// Public profile context (material aggregation for AI summary generation)
 export interface PublicProfileContextSkill {
   name: string;
   level: string | null;

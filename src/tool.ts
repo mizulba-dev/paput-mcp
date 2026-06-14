@@ -91,8 +91,7 @@ export function setupTool(
       };
     }
 
-    // 受信した引数を zod スキーマで実行時バリデーションし、不正な型の
-    // 入力が handler（パス埋め込み等）に渡るのを防ぐ。
+    // 引数を zod スキーマで実行時検証し不正型を handler に渡さない。
     const inputSchema = getToolInputZodSchema(request.params.name);
     if (inputSchema) {
       const parsed = inputSchema.safeParse(request.params.arguments ?? {});
@@ -114,7 +113,6 @@ export function setupTool(
     return await tool.handler(request.params.arguments, apiClient, context);
   });
 
-  // Handler that lists resources
   server.setRequestHandler(ListResourcesRequestSchema, async () => ({
     resources: [
       {
@@ -126,7 +124,6 @@ export function setupTool(
     ],
   }));
 
-  // Handler that reads resource content
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     if (request.params.uri !== 'paput://tools') {
       return {

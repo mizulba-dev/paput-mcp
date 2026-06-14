@@ -242,8 +242,7 @@ describe('MCP transports', () => {
         { redirect: 'manual' },
       );
 
-      // 上流(paput.io)を 200 で直接配信する。ネットワーク不可の環境では
-      // 307 リダイレクトにフォールバックする。
+      // 上流 200 直接配信、失敗時は 307 フォールバック。
       expect([200, 307]).toContain(response.status);
       if (response.status === 307) {
         expect(response.headers.get('location')).toBe(

@@ -18,7 +18,6 @@ export async function handleGetNote(
     };
   }
 
-  // Validate parameters
   if (typeof args.id !== 'number') {
     return {
       content: [

@@ -18,7 +18,6 @@ export async function handleUpdateNote(
     };
   }
 
-  // Validate parameters
   if (typeof args.id !== 'number') {
     return {
       content: [
@@ -31,7 +30,6 @@ export async function handleUpdateNote(
     };
   }
 
-  // Require at least one update field
   const hasUpdateFields =
     typeof args.title === 'string' ||
     typeof args.is_public === 'boolean' ||
@@ -49,7 +47,6 @@ export async function handleUpdateNote(
     };
   }
 
-  // Build parameters
   const params: UpdateNoteParams = {
     id: args.id,
   };

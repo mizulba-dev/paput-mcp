@@ -9,7 +9,6 @@ export async function handleGetSkillSheet(
   try {
     const skillSheet = await getSkillSheet(apiClient);
 
-    // Format skills
     const skillsText =
       skillSheet.skills.length > 0
         ? skillSheet.skills
@@ -23,7 +22,6 @@ export async function handleGetSkillSheet(
             .join('\n')
         : '  None';
 
-    // Format projects
     const projectsText =
       skillSheet.projects.length > 0
         ? skillSheet.projects
@@ -50,11 +48,9 @@ export async function handleGetSkillSheet(
             .join('\n\n')
         : '  None';
 
-    // Format gender
     const genderText =
       GENDER[skillSheet.gender as keyof typeof GENDER] || `Other`;
 
-    // Format strength labels
     const strengthLabelsText =
       skillSheet.strength_labels && skillSheet.strength_labels.length > 0
         ? skillSheet.strength_labels
@@ -110,7 +106,6 @@ ${projectsText}`;
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
 
-    // Message when the skill sheet does not exist
     if (errorMessage.includes('404') || errorMessage.includes('not found')) {
       return {
         content: [

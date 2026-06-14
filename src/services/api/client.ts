@@ -16,8 +16,7 @@ function requireHttps(url: string): void {
   }
 }
 
-// エンドポイントを解決する。絶対 URL は apiUrl と同一オリジンの場合のみ許可し、
-// アクセストークンを別ホストへ送ってしまう（SSRF / トークン漏洩）のを防ぐ。
+// 絶対 URL は apiUrl と同一オリジンのみ許可（SSRF / トークン漏洩防止）。
 function resolveEndpointUrl(apiUrl: string, endpoint: string): string {
   if (!/^https?:\/\//i.test(endpoint)) {
     return `${apiUrl}${endpoint}`;
@@ -91,7 +90,6 @@ export async function apiRequest<T = unknown>(
   try {
     return JSON.parse(text);
   } catch (e) {
-    // Return an empty object when JSON parsing fails but the request succeeded
     return {} as T;
   }
 }
