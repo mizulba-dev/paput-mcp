@@ -17,3 +17,5 @@ services:
         value: 0.0.0.0
       - key: PAPUT_API_URL
         value: https://api.paput.io
+      - key: PAPUT_PUBLIC_ORIGIN
+        value: https://mcp.paput.io
