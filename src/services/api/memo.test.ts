@@ -40,6 +40,16 @@ describe('memo API service', () => {
       );
     });
 
+    it('sends the date filter to the API', async () => {
+      const client = createMockClient();
+
+      await searchMemos(client, { date: '2026-06-14' });
+
+      expect(client.get).toHaveBeenCalledWith(
+        '/api/v1/mcp/memos?date=2026-06-14',
+      );
+    });
+
     it('omits the query string when no options are given', async () => {
       const client = createMockClient();
 

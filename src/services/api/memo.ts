@@ -92,6 +92,7 @@ export async function searchMemos(
       queryParams.append('page', params.page.toString());
     if (params.limit !== undefined)
       queryParams.append('limit', params.limit.toString());
+    if (params.date) queryParams.append('date', params.date);
 
     const endpoint = `/api/v1/mcp/memos${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const data = await client.get<SearchMemosApiResponse>(endpoint);
