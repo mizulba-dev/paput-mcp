@@ -73,7 +73,7 @@ export async function handleCreateNote(
       content: [
         {
           type: 'text',
-          text: `Note "" was created successfully. ${result.id ? `ID: ${result.id}` : ''}`,
+          text: `Note "${params.title}" was created successfully.${result.id ? ` ID: ${result.id}` : ''}`,
         },
       ],
     };

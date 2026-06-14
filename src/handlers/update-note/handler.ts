@@ -103,7 +103,7 @@ export async function handleUpdateNote(
       content: [
         {
           type: 'text',
-          text: `Note (ID: ) was updated successfully.\nUpdated fields:\n${updateInfo.map((info) => `  - ${info}`).join('\n')}`,
+          text: `Note (ID: ${params.id}) was updated successfully.\nUpdated fields:\n${updateInfo.map((info) => `  - ${info}`).join('\n')}`,
         },
       ],
     };
