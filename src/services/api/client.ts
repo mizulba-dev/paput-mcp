@@ -2,6 +2,20 @@ import { getValidStoredAccessToken } from '../oauth/local-auth.js';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
+function requireHttps(url: string): void {
+  const parsed = new URL(url);
+  if (
+    parsed.protocol !== 'https:' &&
+    parsed.hostname !== 'localhost' &&
+    parsed.hostname !== '127.0.0.1' &&
+    parsed.hostname !== '::1'
+  ) {
+    throw new Error(
+      `Refusing to send access token over plain HTTP to non-local host: ${url}`,
+    );
+  }
+}
+
 // エンドポイントを解決する。絶対 URL は apiUrl と同一オリジンの場合のみ許可し、
 // アクセストークンを別ホストへ送ってしまう（SSRF / トークン漏洩）のを防ぐ。
 function resolveEndpointUrl(apiUrl: string, endpoint: string): string {
@@ -39,6 +53,7 @@ export async function apiRequest<T = unknown>(
   }
 
   const url = resolveEndpointUrl(config.apiUrl, endpoint);
+  requireHttps(url);
 
   const options: RequestInit = {
     method,
