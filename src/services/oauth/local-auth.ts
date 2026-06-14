@@ -9,6 +9,7 @@ import {
 } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { z } from 'zod';
 
 const REFRESH_SKEW_MS = 5 * 60 * 1000;
 
@@ -24,13 +25,15 @@ export interface StoredOAuthSession {
   token_type: string;
 }
 
-interface TokenResponse {
-  access_token: string;
-  expires_in: number;
-  refresh_token: string;
-  scope: string;
-  token_type: string;
-}
+export const tokenResponseSchema = z.object({
+  access_token: z.string(),
+  expires_in: z.number(),
+  refresh_token: z.string(),
+  scope: z.string().optional().default(''),
+  token_type: z.string().optional().default('Bearer'),
+});
+
+type TokenResponse = z.infer<typeof tokenResponseSchema>;
 
 export function getOAuthSessionPath(): string {
   const paputHome = process.env.PAPUT_HOME || join(homedir(), '.paput');
@@ -67,6 +70,8 @@ export function deleteStoredOAuthSession(): void {
   rmSync(getOAuthSessionPath(), { force: true });
 }
 
+let refreshInFlight: Promise<StoredOAuthSession | undefined> | undefined;
+
 export async function getValidStoredAccessToken(
   apiUrl: string,
 ): Promise<string | undefined> {
@@ -77,7 +82,12 @@ export async function getValidStoredAccessToken(
     return session.access_token;
   }
 
-  const refreshed = await refreshStoredOAuthSession(session);
+  if (!refreshInFlight) {
+    refreshInFlight = refreshStoredOAuthSession(session).finally(() => {
+      refreshInFlight = undefined;
+    });
+  }
+  const refreshed = await refreshInFlight;
   return refreshed?.access_token;
 }
 
@@ -97,7 +107,9 @@ async function refreshStoredOAuthSession(
 
   if (!response.ok) return undefined;
 
-  const token = (await response.json()) as TokenResponse;
+  const parsed = tokenResponseSchema.safeParse(await response.json());
+  if (!parsed.success) return undefined;
+  const token: TokenResponse = parsed.data;
   const refreshed = buildStoredOAuthSession({
     apiUrl: session.api_url,
     clientId: session.client_id,
@@ -141,6 +153,24 @@ export async function fetchAuthorizationServerMetadata(
     !metadata.token_endpoint
   ) {
     throw new Error('OAuth metadata is missing required endpoints.');
+  }
+
+  if (metadata.issuer !== issuer) {
+    throw new Error(
+      `OAuth metadata issuer mismatch: expected ${issuer}, got ${metadata.issuer}`,
+    );
+  }
+
+  for (const [name, url] of [
+    ['authorization_endpoint', metadata.authorization_endpoint],
+    ['token_endpoint', metadata.token_endpoint],
+    ['registration_endpoint', metadata.registration_endpoint],
+  ] as const) {
+    if (new URL(url).origin !== issuer) {
+      throw new Error(
+        `OAuth metadata ${name} origin does not match issuer: ${url}`,
+      );
+    }
   }
 
   return {

@@ -7,6 +7,7 @@ import {
   buildStoredOAuthSession,
   fetchAuthorizationServerMetadata,
   getOAuthSessionPath,
+  tokenResponseSchema,
   writeStoredOAuthSession,
 } from '../services/oauth/local-auth.js';
 
@@ -23,13 +24,7 @@ interface RegisterClientResponse {
   client_id: string;
 }
 
-interface TokenResponse {
-  access_token: string;
-  expires_in: number;
-  refresh_token: string;
-  scope: string;
-  token_type: string;
-}
+type TokenResponse = import('zod').infer<typeof tokenResponseSchema>;
 
 export async function login(args: string[]): Promise<void> {
   const options = parseLoginOptions(args);
@@ -198,7 +193,13 @@ async function exchangeCode(params: {
     throw new Error(`OAuth token exchange failed: HTTP ${response.status}`);
   }
 
-  return (await response.json()) as TokenResponse;
+  const parsed = tokenResponseSchema.safeParse(await response.json());
+  if (!parsed.success) {
+    throw new Error(
+      'OAuth token exchange response is missing required fields.',
+    );
+  }
+  return parsed.data;
 }
 
 async function startCallbackServer(): Promise<{
