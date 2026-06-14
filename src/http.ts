@@ -18,6 +18,7 @@ export interface HttpMcpServerOptions extends MCPServerOptions {
 }
 
 const OAUTH_SCOPES = ['paput.read', 'paput.write'] as const;
+const MAX_REQUEST_BODY_BYTES = 5 * 1024 * 1024; // 5 MB
 const FRONT_ORIGIN = 'https://paput.io';
 // アイコン系は paput.io 上の実体を 200 で直接配信する（プロキシ）。
 // 307 リダイレクトだと Google favicon クローラーや一部クライアントがクロスドメイン
@@ -147,6 +148,24 @@ export async function startHttpMcpServer(
       return;
     }
 
+    const contentLength = parseInt(req.headers['content-length'] ?? '', 10);
+    if (!isNaN(contentLength) && contentLength > MAX_REQUEST_BODY_BYTES) {
+      sendJsonRpcError(res, 413, -32000, 'Request body too large.');
+      return;
+    }
+
+    let parsedBody: unknown;
+    try {
+      parsedBody = await readRequestBody(req, MAX_REQUEST_BODY_BYTES);
+    } catch (error) {
+      if (error instanceof BodyTooLargeError) {
+        sendJsonRpcError(res, 413, -32000, 'Request body too large.');
+        return;
+      }
+      sendJsonRpcError(res, 400, -32000, 'Bad request');
+      return;
+    }
+
     const mcpServer = createMcpServer({
       ...options,
       accessToken,
@@ -172,7 +191,7 @@ export async function startHttpMcpServer(
 
     try {
       await mcpServer.connect(transport);
-      await transport.handleRequest(req, res);
+      await transport.handleRequest(req, res, parsedBody);
     } catch (error) {
       console.error('Error handling MCP HTTP request:', error);
       if (!res.headersSent) {
@@ -406,6 +425,38 @@ function sendJsonRpcError(
       id: null,
     }),
   );
+}
+
+class BodyTooLargeError extends Error {}
+
+async function readRequestBody(
+  req: IncomingMessage,
+  maxBytes: number,
+): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let bytesRead = 0;
+
+    req.on('data', (chunk: Buffer) => {
+      bytesRead += chunk.length;
+      if (bytesRead > maxBytes) {
+        req.destroy();
+        reject(new BodyTooLargeError('Request body too large'));
+        return;
+      }
+      chunks.push(chunk);
+    });
+
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+      } catch {
+        reject(new Error('Invalid JSON body'));
+      }
+    });
+
+    req.on('error', reject);
+  });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
