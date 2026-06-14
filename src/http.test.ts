@@ -45,6 +45,17 @@ describe('HTTP MCP server security handling', () => {
     await expect(response.json()).resolves.toEqual({ ok: true });
   });
 
+  it('serves robots.txt for crawlers', async () => {
+    const port = await startTestServer();
+
+    const response = await fetch(`http://127.0.0.1:${port}/robots.txt`);
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/plain');
+    expect(body).toBe('User-agent: *\nAllow: /\n');
+  });
+
   it('returns 404 for unknown paths', async () => {
     const port = await startTestServer();
 
@@ -66,6 +77,20 @@ describe('HTTP MCP server security handling', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('text/html');
     expect(html).toContain('href="/favicon.ico"');
+  });
+
+  it('serves the landing page even when crawler-like GET requests include an origin', async () => {
+    const port = await startTestServer();
+
+    const response = await fetch(`http://127.0.0.1:${port}/`, {
+      headers: {
+        accept: 'text/html',
+        origin: 'https://www.google.com',
+      },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/html');
   });
 
   it('serves landing page headers for browser HEAD requests', async () => {

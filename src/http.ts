@@ -78,6 +78,11 @@ export async function startHttpMcpServer(
       return;
     }
 
+    if (requestUrl.pathname === '/robots.txt') {
+      sendRobotsTxt(res);
+      return;
+    }
+
     const iconPath = ICON_SOURCES[requestUrl.pathname];
     if (iconPath) {
       await serveIcon(res, `${FRONT_ORIGIN}${iconPath}`);
@@ -108,19 +113,19 @@ export async function startHttpMcpServer(
       return;
     }
 
-    if (
-      !isAllowedOrigin(req, publicOrigin, apiOrigin, configuredAllowedOrigins)
-    ) {
-      sendJsonRpcError(res, 403, -32000, 'Forbidden origin.');
-      return;
-    }
-
-    // GET/HEAD には favicon リンク付き HTML を 200 で返す。SSE GET のみ 405 を維持。
+    // 公開ランディングはクローラー向けにも 200 を返す。SSE GET と MCP POST は下の origin 検査を通す。
     if (
       (req.method === 'GET' || req.method === 'HEAD') &&
       !requestsEventStream(req)
     ) {
       sendLandingPage(res, req.method === 'HEAD');
+      return;
+    }
+
+    if (
+      !isAllowedOrigin(req, publicOrigin, apiOrigin, configuredAllowedOrigins)
+    ) {
+      sendJsonRpcError(res, 403, -32000, 'Forbidden origin.');
       return;
     }
 
@@ -403,6 +408,14 @@ function sendJsonRpcError(
       id: null,
     }),
   );
+}
+
+function sendRobotsTxt(res: ServerResponse): void {
+  res.writeHead(200, {
+    'content-type': 'text/plain; charset=utf-8',
+    'cache-control': 'public, max-age=3600',
+  });
+  res.end('User-agent: *\nAllow: /\n');
 }
 
 class BodyTooLargeError extends Error {}
