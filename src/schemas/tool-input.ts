@@ -382,7 +382,7 @@ const toolInputSchemas = {
       ),
     decided_at: z
       .string()
-      .describe('When the decision was settled (ISO 8601, design_doc only)')
+      .describe('Decision date in YYYY-MM-DD format (design_doc only)')
       .optional(),
   }),
   paput_update_project_instructions: z.object({

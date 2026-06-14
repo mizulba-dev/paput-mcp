@@ -36,8 +36,7 @@ export const addProjectDocumentTool: ToolHandler = {
         },
         decided_at: {
           type: 'string',
-          description:
-            'When the decision was settled (ISO 8601, design_doc only)',
+          description: 'Decision date in YYYY-MM-DD format (design_doc only)',
         },
       },
       required: ['skill_sheet_project_id', 'kind', 'title', 'body'],
