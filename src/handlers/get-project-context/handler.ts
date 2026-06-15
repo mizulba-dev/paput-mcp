@@ -3,17 +3,20 @@ import {
   getProjectContext,
   ProjectContextResponse,
 } from '../../services/api/project-context.js';
+import type { ToolContext } from '../../types/index.js';
 
 export async function handleGetProjectContext(
   args: Record<string, unknown> | undefined,
   apiClient: ApiClient,
+  context?: ToolContext,
 ) {
-  if (!args || typeof args.project !== 'string' || args.project.trim() === '') {
+  const project = getProjectMatch(args, context);
+  if (!project) {
     return {
       content: [
         {
           type: 'text',
-          text: 'project is required.',
+          text: 'project is required when PAPUT_PROJECT_MATCH is not configured.',
         },
       ],
       isError: true,
@@ -21,7 +24,7 @@ export async function handleGetProjectContext(
   }
 
   try {
-    const result = await getProjectContext(apiClient, args.project);
+    const result = await getProjectContext(apiClient, project);
 
     return {
       structuredContent: result as unknown as Record<string, unknown>,
@@ -46,6 +49,20 @@ export async function handleGetProjectContext(
       isError: true,
     };
   }
+}
+
+function getProjectMatch(
+  args: Record<string, unknown> | undefined,
+  context?: ToolContext,
+): string | undefined {
+  const explicit =
+    args && typeof args.project === 'string' ? args.project.trim() : '';
+  if (explicit) return explicit;
+
+  if (context?.projectMatch) return context.projectMatch;
+
+  const envProjectMatch = process.env.PAPUT_PROJECT_MATCH?.trim();
+  return envProjectMatch || undefined;
 }
 
 function buildContextText(result: ProjectContextResponse): string {

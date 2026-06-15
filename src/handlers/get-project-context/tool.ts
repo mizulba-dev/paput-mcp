@@ -11,10 +11,10 @@ export const getProjectContextTool: ToolHandler = {
       properties: {
         project: {
           type: 'string',
-          description: 'Project name to resolve (partial match allowed)',
+          description:
+            'Project name to resolve (partial match allowed). Defaults to PAPUT_PROJECT_MATCH when omitted.',
         },
       },
-      required: ['project'],
     },
   },
   handler: handleGetProjectContext,

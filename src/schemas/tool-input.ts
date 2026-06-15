@@ -351,7 +351,10 @@ const toolInputSchemas = {
     project: z
       .string()
       .min(1)
-      .describe('Project name to resolve (partial match allowed)'),
+      .describe(
+        'Project name to resolve (partial match allowed). Defaults to PAPUT_PROJECT_MATCH when omitted.',
+      )
+      .optional(),
   }),
   paput_get_project_document: z.object({
     id: z.number().min(1).describe('Project document ID'),
