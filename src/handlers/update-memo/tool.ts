@@ -43,6 +43,15 @@ export const updateMemoTool: ToolHandler = {
           },
           description: 'Categories',
         },
+        memo_type_keys: {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: ['knowledge', 'decision', 'operation', 'principle'],
+          },
+          description:
+            'Memo type classification keys (a memo can have multiple). This replaces the full set on update, so pass the complete list to keep existing types; omitting it clears them. decision/operation/principle are the primary material for the public AI summary.',
+        },
       },
       required: ['id', 'title', 'body', 'is_public'],
     },

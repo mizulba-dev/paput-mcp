@@ -4,6 +4,7 @@ export interface CreateMemoParams {
   is_public?: boolean;
   created_at?: string;
   categories?: Array<{ id?: number; name: string }>;
+  memo_type_keys?: string[];
   projects?: Array<{ id: number; title?: string }>;
 }
 

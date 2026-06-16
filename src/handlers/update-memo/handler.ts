@@ -60,6 +60,12 @@ export async function handleUpdateMemo(
     categories,
   };
 
+  if (Array.isArray(args.memo_type_keys)) {
+    params.memo_type_keys = args.memo_type_keys.filter(
+      (key): key is string => typeof key === 'string',
+    );
+  }
+
   params.projects = await resolveMemoProjects(args, apiClient, context);
 
   try {
@@ -91,6 +97,7 @@ export async function handleUpdateMemo(
           title: params.title,
           is_public: params.is_public,
           categories: params.categories || [],
+          memo_type_keys: params.memo_type_keys || [],
           projects: params.projects || [],
         },
       },

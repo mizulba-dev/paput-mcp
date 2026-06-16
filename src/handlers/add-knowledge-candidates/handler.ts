@@ -62,12 +62,18 @@ export async function handleAddKnowledgeCandidates(
             (category): category is string => typeof category === 'string',
           )
         : [];
+      const memoTypeKeys = Array.isArray(rawCandidate.memo_type_keys)
+        ? rawCandidate.memo_type_keys.filter(
+            (key): key is string => typeof key === 'string',
+          )
+        : [];
 
       return [
         {
           title: candidate.title,
           body: candidate.body,
           categories,
+          memo_type_keys: memoTypeKeys,
           confidence:
             typeof rawCandidate.confidence === 'number'
               ? rawCandidate.confidence

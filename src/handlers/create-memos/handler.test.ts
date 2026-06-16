@@ -77,6 +77,7 @@ describe('handleCreateMemos', () => {
           is_public: true,
           created_at: undefined,
           categories: [{ name: 'Go' }],
+          memo_type_keys: [],
           projects: [],
         },
         {
@@ -85,6 +86,7 @@ describe('handleCreateMemos', () => {
           is_public: false,
           created_at: undefined,
           categories: [],
+          memo_type_keys: [],
           projects: [{ id: 9, title: 'PaPut' }],
         },
       ],

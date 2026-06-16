@@ -7,6 +7,7 @@ export interface UpdateMemoParams {
     id?: number;
     name: string;
   }>;
+  memo_type_keys?: string[];
   projects?: Array<{ id: number; title?: string }>;
 }
 

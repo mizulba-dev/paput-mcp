@@ -9,12 +9,16 @@ Generate the public profile shown on the AI Summary tab: headline, profile_summa
 
 ## Workflow
 
-1. Call `paput_get_public_profile_context`.
-2. Generate the summary from the returned `structuredContent`.
-3. Present the draft in the user's language and tone, including `headline`, `profile_summary`, `strength_labels`, and `project_highlights`. Explain what each field will become.
-4. Do not save unless the user explicitly asks to save it.
-5. If the user asks to save, call `paput_update_skill_sheet_public_profile`.
-6. Verify the saved result with `paput_get_skill_sheet`.
+1. Call `paput_get_public_profile_context`. It returns the skill sheet, `knowledge_map`, `growing_areas`, and `public_summary_memos` — an index (id, title, memo_types, updated_at; no bodies) of ALL the person's PUBLIC `decision` / `operation` / `principle` memos. This index is the primary material for "how the person thinks and works".
+2. Read the `public_summary_memos` index, pick the memos most relevant to the headline and strengths, and fetch their bodies with `paput_get_memo`.
+   - The index is already public-only and already filtered to the summary-material types, so do NOT use `paput_search_memo` here.
+   - There is no fixed limit; the index is the full set. Fetch as many bodies as you need for a grounded summary.
+   - If the index is empty, base the summary on the skill sheet, `knowledge_map`, and `growing_areas` alone, and note that judgment/operation/principle material is thin.
+3. Generate the summary from the context plus the fetched memo bodies.
+4. Present the draft in the user's language and tone, including `headline`, `profile_summary`, `strength_labels`, and `project_highlights`. Explain what each field will become.
+5. Do not save unless the user explicitly asks to save it.
+6. If the user asks to save, call `paput_update_skill_sheet_public_profile`.
+7. Verify the saved result with `paput_get_skill_sheet`.
 
 ## Output
 
@@ -25,12 +29,12 @@ Generate the public profile shown on the AI Summary tab: headline, profile_summa
 
 ## Materials
 
-Use only public materials returned by the context tool:
+Use only public materials:
 
-- Skill sheet (years_of_experience, skills, projects, self_pr)
-- Public memos and notes
-- Category distribution (`knowledge_map`) and recently growing areas (`growing_areas`)
-- Representative projects and their AI summaries
+- Skill sheet (years_of_experience, skills, projects, self_pr) from the context tool
+- The `public_summary_memos` index (all public `decision` / `operation` / `principle` memos) from the context tool, with bodies fetched via `paput_get_memo` (the primary material for judgment, operating practices, and principles)
+- Category distribution (`knowledge_map`) and recently growing areas (`growing_areas`) from the context tool
+- Representative projects and their AI summaries from the context tool
 
 ## Rules
 

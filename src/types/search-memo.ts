@@ -1,6 +1,7 @@
 export interface SearchMemoParams {
   word?: string;
   category_id?: number;
+  memo_type?: string;
   ids?: number[];
   date?: string;
   is_public?: boolean;
@@ -14,6 +15,11 @@ export interface MemoCategory {
   name: string;
 }
 
+export interface MemoType {
+  id: number;
+  key: string;
+}
+
 export interface Memo {
   id: number;
   title: string;
@@ -22,6 +28,7 @@ export interface Memo {
   created_at: string;
   updated_at: string;
   categories: MemoCategory[];
+  memo_types: MemoType[];
 }
 
 export interface SearchMemoResponse {

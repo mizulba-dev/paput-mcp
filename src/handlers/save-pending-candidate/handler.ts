@@ -59,6 +59,11 @@ export async function handleSavePendingCandidate(
           typeof project.id === 'number',
       )
     : candidate.projects || [];
+  const memoTypeKeys = Array.isArray(args.memo_type_keys)
+    ? args.memo_type_keys.filter(
+        (key): key is string => typeof key === 'string',
+      )
+    : candidate.memo_type_keys || [];
 
   const params: CreateMemoParams = {
     title,
@@ -69,6 +74,7 @@ export async function handleSavePendingCandidate(
         : (candidate.is_public ?? false),
     created_at: createdAt,
     categories: categories.map((name) => ({ name })),
+    memo_type_keys: memoTypeKeys,
     projects,
   };
   const result = await createMemo(apiClient, params);
@@ -92,6 +98,7 @@ export async function handleSavePendingCandidate(
     title,
     body,
     categories,
+    memo_type_keys: memoTypeKeys,
     projects,
     is_public: params.is_public,
     status: 'saved',

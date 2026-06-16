@@ -18,6 +18,15 @@ export const savePendingCandidateTool: ToolHandler = {
             'Creation timestamp to use for the PaPut memo. Defaults to the source session updated timestamp, then the pending candidate created timestamp.',
         },
         categories: { type: 'array', items: { type: 'string' } },
+        memo_type_keys: {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: ['knowledge', 'decision', 'operation', 'principle'],
+          },
+          description:
+            'Memo type classification keys override when saving (a memo can have multiple). decision/operation/principle are the primary material for the public AI summary.',
+        },
         projects: {
           type: 'array',
           description: 'Projects to link when saving',

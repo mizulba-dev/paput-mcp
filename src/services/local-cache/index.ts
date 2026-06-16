@@ -154,6 +154,7 @@ export function addKnowledgeCandidates(
       title: candidate.title,
       body: candidate.body,
       categories: candidate.categories || [],
+      memo_type_keys: candidate.memo_type_keys || [],
       projects: candidate.projects || [],
       confidence: candidate.confidence,
       is_public: candidate.is_public ?? false,

@@ -23,6 +23,12 @@ export async function buildCreateMemoParams(
       .map((name) => ({ name }));
   }
 
+  if (Array.isArray(args.memo_type_keys)) {
+    params.memo_type_keys = args.memo_type_keys.filter(
+      (item): item is string => typeof item === 'string',
+    );
+  }
+
   params.projects = await resolveMemoProjects(args, apiClient, context);
 
   return params;

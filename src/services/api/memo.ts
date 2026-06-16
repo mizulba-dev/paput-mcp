@@ -52,6 +52,7 @@ export async function createMemos(
         is_public: memo.is_public || false,
         created_at: memo.created_at,
         categories: memo.categories || [],
+        memo_type_keys: memo.memo_type_keys || [],
         projects: memo.projects || [],
       })),
     });
@@ -81,6 +82,7 @@ export async function searchMemos(
     if (params.word) queryParams.append('word', params.word);
     if (params.category_id !== undefined)
       queryParams.append('category_id', params.category_id.toString());
+    if (params.memo_type) queryParams.append('memo_type', params.memo_type);
     if (params.ids && params.ids.length > 0) {
       params.ids.forEach((id) => queryParams.append('ids[]', id.toString()));
     }
@@ -178,6 +180,7 @@ export async function updateMemo(
       body: params.body,
       is_public: params.is_public,
       categories: params.categories,
+      memo_type_keys: params.memo_type_keys || [],
       projects: params.projects,
     });
 

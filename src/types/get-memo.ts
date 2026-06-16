@@ -19,6 +19,10 @@ export interface GetMemoResponse {
     id: number;
     name: string;
   }>;
+  memo_types: Array<{
+    id: number;
+    key: string;
+  }>;
   like_count: number;
   has_liked: boolean;
   bookmark_count: number;

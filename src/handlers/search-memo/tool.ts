@@ -5,7 +5,7 @@ export const searchMemoTool: ToolHandler = {
   definition: {
     name: 'paput_search_memo',
     description:
-      'Search PaPut memos by keyword, category, IDs, date, visibility, or pagination. Use this to find existing knowledge before creating or saving a memo.',
+      'Search PaPut memos by keyword, category, memo type, IDs, date, visibility, or pagination. Use this to find existing knowledge before creating or saving a memo, or to gather typed public memos (decision/operation/principle) for the public AI summary.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -16,6 +16,12 @@ export const searchMemoTool: ToolHandler = {
         category_id: {
           type: 'number',
           description: 'Category ID',
+        },
+        memo_type: {
+          type: 'string',
+          enum: ['knowledge', 'decision', 'operation', 'principle'],
+          description:
+            'Filter by memo type key. Combine with is_public=true to collect public decision/operation/principle memos as material for the public AI summary.',
         },
         ids: {
           type: 'array',

@@ -21,11 +21,11 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 3. Extract only reusable knowledge from the current conversation or the user-specified topic.
 4. For each candidate, check semantically similar existing memos with `paput_find_similar_memos`, using the candidate title or a one-line gist as the query. Treat results with a score around 0.85 or higher as near-duplicates, and results around 0.7 to 0.85 as overlap that needs comparison against the candidate body. Use `paput_search_memo` in addition when the candidate centers on an exact name or identifier.
 5. Apply the capture policy when deciding whether to add, reject, or ask about candidates. If no policy exists yet, use the Candidate Rules and Rejected Candidates sections below.
-6. Keep each candidate focused on one reusable idea, and prepare a title, Markdown body, categories, and visibility.
+6. Keep each candidate focused on one reusable idea, and prepare a title, Markdown body, categories, memo type classification (see the Memo Type section), and visibility.
 7. Self-review the candidate against the Quality Bar below. If the body is only a short summary or conclusion, enrich it before adding.
 8. Do not add candidates that may duplicate existing memos or pending candidates. Suggest reusing or updating the existing memo or candidate instead.
-9. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` without waiting for user approval.
-10. After adding candidates, briefly report the title, categories, and candidate ID.
+9. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` (including `memo_type_keys`) without waiting for user approval.
+10. After adding candidates, briefly report the title, categories, memo type, and candidate ID.
 
 ## Candidate Rules
 
@@ -38,6 +38,21 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 - Do not include project-specific specifications, implementation details, operational rules, code, secrets, or customer data.
 - Only capture technical knowledge, decision criteria, or procedures that can be reused in other projects.
 - Treat candidates as private by default.
+
+## Memo Type
+
+Classify each candidate with one or more memo types via `memo_type_keys`. A memo can have several. This axis is what lets PaPut surface judgment and practices in the public AI summary, so classify deliberately.
+
+- `decision`: reusable judgment criteria that do not depend on a project — why you choose one option over another, what you optimize for, what you avoid.
+- `operation`: operating practices — observability, eval, testing, review, and improvement procedures.
+- `principle`: a stance you have explicitly stated, generalized one level above individual decisions.
+- `knowledge`: technical know-how, usage, or implementation knowledge (commodity).
+
+Guidance:
+
+- Capture candidates are reusable decision criteria, procedures, or principles, so prefer `decision` / `operation` / `principle` when they fit; use `knowledge` for commodity technical know-how.
+- `decision` / `operation` / `principle` are the primary material for the public AI summary; `knowledge` usually is not.
+- Leaving a candidate unclassified (no type) is allowed, but classifying it improves analysis and the public profile. Do not force a type when none fits.
 
 ## Quality Bar
 

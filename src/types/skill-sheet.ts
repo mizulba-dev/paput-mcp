@@ -148,13 +148,6 @@ export interface PublicProfileContextProject {
   description: string | null;
 }
 
-export interface PublicProfileContextMemo {
-  id: string;
-  title: string;
-  category_names: string[];
-  updated_at: string;
-}
-
 export interface PublicProfileContextSkillSheet {
   headline: string | null;
   profile_summary: string | null;
@@ -166,9 +159,16 @@ export interface PublicProfileContextSkillSheet {
   project_highlights: ProjectHighlight[];
 }
 
+export interface PublicProfileContextSummaryMemo {
+  id: number;
+  title: string;
+  memo_types: string[];
+  updated_at: string;
+}
+
 export interface PublicProfileContextResponse {
   skill_sheet: PublicProfileContextSkillSheet;
   knowledge_map: unknown;
   growing_areas: unknown[];
-  recent_public_memos: PublicProfileContextMemo[];
+  public_summary_memos: PublicProfileContextSummaryMemo[];
 }

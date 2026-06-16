@@ -4,6 +4,7 @@ export interface KnowledgeCandidateInput {
   title: string;
   body: string;
   categories?: string[];
+  memo_type_keys?: string[];
   confidence?: number;
   is_public?: boolean;
   projects?: Array<{ id: number; title?: string }>;

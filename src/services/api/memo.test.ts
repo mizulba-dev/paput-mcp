@@ -119,6 +119,7 @@ describe('memo API service', () => {
             is_public: false,
             created_at: undefined,
             categories: [],
+            memo_type_keys: [],
             projects: [],
           },
         ],
@@ -184,6 +185,7 @@ describe('memo API service', () => {
         body: 'Body',
         is_public: true,
         categories: [{ name: 'Go' }],
+        memo_type_keys: [],
         projects: undefined,
       });
       expect(result).toEqual({ success: true });

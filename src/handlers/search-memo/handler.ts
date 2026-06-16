@@ -15,6 +15,9 @@ export async function handleSearchMemo(
     if (typeof args.category_id === 'number') {
       params.category_id = args.category_id;
     }
+    if (typeof args.memo_type === 'string') {
+      params.memo_type = args.memo_type;
+    }
     if (Array.isArray(args.ids)) {
       params.ids = args.ids.filter(
         (id): id is number => typeof id === 'number',
@@ -70,10 +73,15 @@ export async function handleSearchMemo(
           memo.categories.length > 0
             ? `Categories: ${memo.categories.map((c) => c.name).join(', ')}`
             : '';
+        const memoTypes =
+          memo.memo_types && memo.memo_types.length > 0
+            ? `Types: ${memo.memo_types.map((t) => t.key).join(', ')}`
+            : '';
         const visibility = memo.is_public ? 'Public' : 'Private';
 
         return `【${memo.title}】(ID: ${memo.id}, ${visibility})
 ${categories}
+${memoTypes}
 ${memo.body}
 (Created at: ${memo.created_at})`;
       })
