@@ -124,13 +124,31 @@ describe('registered tools', () => {
     expect(toolNames).toEqual(remoteToolNames);
   });
 
-  it('has generated input schema for every registered tool', () => {
+  it('keeps generated input schema properties for every registered tool', () => {
     for (const tool of getRegisteredTools()) {
-      expect(tool.definition.inputSchema).toEqual(
-        getGeneratedInputSchema(tool.definition.name),
+      const generatedInputSchema = getGeneratedInputSchema(
+        tool.definition.name,
       );
+
+      expect(tool.definition.inputSchema).toMatchObject({
+        ...generatedInputSchema,
+        properties: expect.objectContaining(
+          generatedInputSchema?.properties ?? {},
+        ),
+      });
       expect(tool.definition.inputSchema.type).toBe('object');
     }
+  });
+
+  it('keeps handler-defined input schema properties when annotating tools', () => {
+    const updateMemoSchema = getRegisteredTools().find(
+      (tool) => tool.definition.name === 'paput_update_memo',
+    )?.definition.inputSchema;
+
+    expect(updateMemoSchema?.properties.memo_type_keys).toMatchObject({
+      type: 'array',
+      description: expect.stringContaining('Memo type classification keys'),
+    });
   });
 
   it('uses English descriptions for every registered tool', () => {

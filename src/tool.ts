@@ -218,11 +218,16 @@ function withToolAnnotations(tool: ToolHandler): ToolHandler {
   const name = tool.definition.name;
   const readOnly = isReadOnlyTool(name);
   const destructive = isDestructiveTool(name);
-  const inputSchema = getGeneratedInputSchema(name);
+  const generatedInputSchema = getGeneratedInputSchema(name);
 
-  if (!inputSchema) {
+  if (!generatedInputSchema) {
     throw new Error(`inputSchema is not defined for tool: ${name}`);
   }
+
+  const inputSchema = mergeToolInputSchema(
+    generatedInputSchema,
+    tool.definition.inputSchema,
+  );
 
   return {
     ...tool,
@@ -239,6 +244,27 @@ function withToolAnnotations(tool: ToolHandler): ToolHandler {
         openWorldHint: false,
       },
     },
+  };
+}
+
+function mergeToolInputSchema(
+  generatedInputSchema: ToolHandler['definition']['inputSchema'],
+  handlerInputSchema: ToolHandler['definition']['inputSchema'],
+): ToolHandler['definition']['inputSchema'] {
+  const required = Array.from(
+    new Set([
+      ...(handlerInputSchema.required ?? []),
+      ...(generatedInputSchema.required ?? []),
+    ]),
+  );
+
+  return {
+    ...generatedInputSchema,
+    properties: {
+      ...handlerInputSchema.properties,
+      ...generatedInputSchema.properties,
+    },
+    ...(required.length > 0 ? { required } : {}),
   };
 }
 
