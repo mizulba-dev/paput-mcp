@@ -33,6 +33,7 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 - Make titles concise and searchable.
 - Write the body in Markdown.
 - Do not use top-level Markdown headings (`# ...`) in the body. If headings help readability, start at `##`.
+- The save API sits behind a WAF that inspects the request body, so write command, SQL, and markup examples as prose or pseudo-notation, not raw executable strings (an HTTP-fetch command with a URL, a union-style select, a leading script tag). Code fences do not help; raw strings get the request rejected with a 403.
 - Include concrete procedures, causes, reasons, and decision criteria in the body.
 - To make candidates reusable, naturally include decision criteria, applicability conditions, reasons, pitfalls, and verification methods where possible.
 - Do not include project-specific specifications, implementation details, operational rules, code, secrets, or customer data.
