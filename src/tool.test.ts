@@ -130,25 +130,45 @@ describe('registered tools', () => {
         tool.definition.name,
       );
 
-      expect(tool.definition.inputSchema).toMatchObject({
-        ...generatedInputSchema,
-        properties: expect.objectContaining(
-          generatedInputSchema?.properties ?? {},
+      expect(Object.keys(tool.definition.inputSchema.properties)).toEqual(
+        expect.arrayContaining(
+          Object.keys(generatedInputSchema?.properties ?? {}),
         ),
-      });
+      );
       expect(tool.definition.inputSchema.type).toBe('object');
     }
   });
 
-  it('keeps handler-defined input schema properties when annotating tools', () => {
-    const updateMemoSchema = getRegisteredTools().find(
-      (tool) => tool.definition.name === 'paput_update_memo',
-    )?.definition.inputSchema;
+  it('keeps handler-defined memo type properties when annotating tools', () => {
+    const schemas = Object.fromEntries(
+      getRegisteredTools().map((tool) => [
+        tool.definition.name,
+        tool.definition.inputSchema,
+      ]),
+    );
 
-    expect(updateMemoSchema?.properties.memo_type_keys).toMatchObject({
-      type: 'array',
-      description: expect.stringContaining('Memo type classification keys'),
+    expect(schemas.paput_create_memos.properties.memos).toMatchObject({
+      items: {
+        properties: {
+          memo_type_keys: memoTypeSchemaMatcher(),
+        },
+      },
     });
+    expect(schemas.paput_update_memo.properties.memo_type_keys).toMatchObject(
+      memoTypeSchemaMatcher(),
+    );
+    expect(
+      schemas.paput_add_knowledge_candidates.properties.candidates,
+    ).toMatchObject({
+      items: {
+        properties: {
+          memo_type_keys: memoTypeSchemaMatcher(),
+        },
+      },
+    });
+    expect(
+      schemas.paput_save_pending_candidate.properties.memo_type_keys,
+    ).toMatchObject(memoTypeSchemaMatcher());
   });
 
   it('uses English descriptions for every registered tool', () => {
@@ -212,6 +232,21 @@ function readHandlerToolNames(): string[] {
   return names.sort((a, b) => {
     return expectedToolNames.indexOf(a) - expectedToolNames.indexOf(b);
   });
+}
+
+function memoTypeSchemaMatcher() {
+  return {
+    type: 'array',
+    items: {
+      enum: expect.arrayContaining([
+        'knowledge',
+        'decision',
+        'operation',
+        'principle',
+      ]),
+    },
+    description: expect.stringContaining('Memo type'),
+  };
 }
 
 function readToolFiles(dir: string): string[] {

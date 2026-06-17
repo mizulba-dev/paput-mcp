@@ -251,21 +251,85 @@ function mergeToolInputSchema(
   generatedInputSchema: ToolHandler['definition']['inputSchema'],
   handlerInputSchema: ToolHandler['definition']['inputSchema'],
 ): ToolHandler['definition']['inputSchema'] {
-  const required = Array.from(
-    new Set([
-      ...(handlerInputSchema.required ?? []),
-      ...(generatedInputSchema.required ?? []),
-    ]),
-  );
+  return mergeJsonSchema(
+    handlerInputSchema,
+    generatedInputSchema,
+  ) as ToolHandler['definition']['inputSchema'];
+}
 
-  return {
-    ...generatedInputSchema,
-    properties: {
-      ...handlerInputSchema.properties,
-      ...generatedInputSchema.properties,
-    },
-    ...(required.length > 0 ? { required } : {}),
+function mergeJsonSchema(
+  handlerSchema: unknown,
+  generatedSchema: unknown,
+): unknown {
+  if (!isJsonSchemaObject(handlerSchema)) {
+    return generatedSchema;
+  }
+
+  if (!isJsonSchemaObject(generatedSchema)) {
+    return handlerSchema;
+  }
+
+  const merged: Record<string, unknown> = {
+    ...handlerSchema,
+    ...generatedSchema,
   };
+
+  if (
+    isPropertyMap(handlerSchema.properties) ||
+    isPropertyMap(generatedSchema.properties)
+  ) {
+    merged.properties = mergeSchemaProperties(
+      isPropertyMap(handlerSchema.properties) ? handlerSchema.properties : {},
+      isPropertyMap(generatedSchema.properties)
+        ? generatedSchema.properties
+        : {},
+    );
+  }
+
+  if (handlerSchema.items || generatedSchema.items) {
+    merged.items = mergeJsonSchema(handlerSchema.items, generatedSchema.items);
+  }
+
+  if (
+    Array.isArray(handlerSchema.required) ||
+    Array.isArray(generatedSchema.required)
+  ) {
+    merged.required = Array.from(
+      new Set([
+        ...stringArray(handlerSchema.required),
+        ...stringArray(generatedSchema.required),
+      ]),
+    );
+  }
+
+  return merged;
+}
+
+function mergeSchemaProperties(
+  handlerProperties: Record<string, unknown>,
+  generatedProperties: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...handlerProperties };
+
+  for (const [key, generatedProperty] of Object.entries(generatedProperties)) {
+    merged[key] = mergeJsonSchema(merged[key], generatedProperty);
+  }
+
+  return merged;
+}
+
+function isJsonSchemaObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isPropertyMap(value: unknown): value is Record<string, unknown> {
+  return isJsonSchemaObject(value);
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
 }
 
 function getToolTitle(name: string): string {
