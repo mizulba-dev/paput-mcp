@@ -352,7 +352,7 @@ const toolInputSchemas = {
       .string()
       .min(1)
       .describe(
-        'Project name to resolve (partial match allowed). Defaults to PAPUT_PROJECT_MATCH when omitted.',
+        'Project name to resolve (partial match allowed). Required here; in local CLI mode the project is configured by PAPUT_PROJECT_MATCH and this argument is not exposed.',
       )
       .optional(),
   }),
@@ -387,6 +387,23 @@ const toolInputSchemas = {
       .string()
       .describe('Decision date in YYYY-MM-DD format (design_doc only)')
       .optional(),
+  }),
+  paput_update_project_document: z.object({
+    id: z.number().min(1).describe('Project document ID to update'),
+    title: z.string().min(1).max(255).describe('Concise, searchable title'),
+    summary: z
+      .string()
+      .max(500)
+      .describe(
+        'One-line summary shown in the document index (keep it short). Omitting it clears the summary.',
+      )
+      .optional(),
+    body: z
+      .string()
+      .min(1)
+      .describe(
+        'Markdown body. For design decisions include the decision, reasons, and rejected alternatives.',
+      ),
   }),
   paput_update_project_instructions: z.object({
     skill_sheet_project_id: z
@@ -457,6 +474,30 @@ const toolInputSchemas = {
     limit: z
       .number()
       .describe('Number of items to return. Defaults to 20.')
+      .optional(),
+  }),
+  paput_update_pending_candidate: z.object({
+    candidate_id: z.string().describe('Pending candidate ID to update'),
+    title: z.string().min(1).describe('Replacement title').optional(),
+    body: z.string().min(1).describe('Replacement body').optional(),
+    categories: z
+      .array(z.string())
+      .describe('Replacement category names')
+      .optional(),
+    memo_type_keys: z
+      .array(z.enum(['knowledge', 'decision', 'operation', 'principle']))
+      .describe(
+        'Memo type classification keys (a memo can have multiple). decision/operation/principle are the primary material for the public AI summary.',
+      )
+      .optional(),
+    confidence: z.number().describe('Confidence score').optional(),
+    is_public: z
+      .boolean()
+      .describe('Whether the saved memo will be public')
+      .optional(),
+    projects: z
+      .array(projectReferenceSchema)
+      .describe('Replacement linked projects')
       .optional(),
   }),
   paput_save_pending_candidate: z.object({

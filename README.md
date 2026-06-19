@@ -12,6 +12,7 @@ PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the
 - Delete skill sheet projects when explicitly requested
 - Create, list, update, and delete goals
 - Get dashboard context and save AI-generated dashboard analysis results
+- Get private project context and manage project documents (design decisions and repeatable procedures)
 
 ### Knowledge Capture From AI Sessions
 
@@ -248,6 +249,7 @@ server.
 - `paput_get_session_transcript` - Read a session transcript.
 - `paput_add_knowledge_candidates` - Add extracted knowledge candidates to pending.
 - `paput_list_pending_candidates` - List pending candidates.
+- `paput_update_pending_candidate` - Update a pending candidate's fields before it is saved.
 - `paput_save_pending_candidate` - Save an approved pending candidate as a PaPut memo.
 - `paput_discard_pending_candidate` - Discard a pending candidate.
 - `paput_get_capture_policy` - Read the local capture policy generated from discarded candidates.

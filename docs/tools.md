@@ -21,6 +21,8 @@ Clients and assistants should follow these rules:
 - `paput_set_skill_sheet_skills` replaces the full skill list and should be used only when the complete desired final list is known.
 - `paput_discard_pending_candidate` removes a pending item from the save flow and should be confirmed when the candidate may still be useful.
 - `paput_delete_goal` should be used only when the user clearly intends to remove a goal.
+- `paput_update_project_instructions` requires explicit user approval because the instructions are applied to every future session.
+- `paput_discard_project_proposal` and `paput_promote_project_documents` change project document status and should be used only when the user clearly intends to reject a skill proposal or to promote documents into a created skill.
 - Update and upsert tools should preserve existing data unless the user requested the change.
 
 ## Memo Tools
@@ -117,6 +119,39 @@ write the final output in the user's language. The MCP server does not
 recalculate dashboard continuity from activities; it relies on summary values
 returned by the PaPut API.
 
+## Project Document Tools
+
+These tools manage private, project-scoped context for a PaPut skill sheet
+project: always-applied instructions, accumulated design decisions, and
+repeatable procedures. They are API-backed and available in both remote HTTP and
+local CLI modes. Project context and documents are private and are never exposed
+publicly.
+
+| Tool                                | Safety            | Use case                                                                                            |
+| ----------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------- |
+| `paput_get_project_context`         | Read-only         | Get a project's always-applied instructions and document index by fuzzy name match. Call at session start. |
+| `paput_get_project_document`        | Read-only         | Read the full body of a project document by ID, using the index from `paput_get_project_context`.   |
+| `paput_add_project_document`        | Write             | Save a design decision, procedure, or skill candidate linked to a project, with same-kind dedup.    |
+| `paput_update_project_document`     | Destructive/write | Replace a document's title, summary, and body by ID. Fetch the current document first for partial edits. |
+| `paput_update_project_instructions` | Destructive/write | Overwrite a project's always-applied instructions (max 8000 chars). Requires explicit user approval. |
+| `paput_discard_project_proposal`    | Destructive       | Record that the user rejected a skill proposal so it is not raised again.                            |
+| `paput_promote_project_documents`   | Destructive       | Mark a skill proposal and its procedure documents as promoted after a skill is created.              |
+
+In local CLI mode the project is resolved from `PAPUT_PROJECT_MATCH`, so
+`paput_get_project_context` is called with no arguments and the `project`
+argument is not exposed. In remote HTTP mode there is no configured match, so
+`project` is provided per call.
+
+`paput_get_project_context` returns the document index only (no bodies); fetch
+bodies on demand with `paput_get_project_document`. Save settled design
+decisions and repeatable procedures with `paput_add_project_document`; when
+similar procedure records repeat, the server may suggest turning them into a
+skill. After the user approves a skill proposal and the skill is created, call
+`paput_promote_project_documents` with the proposal and related procedure IDs; if
+the user rejects it, call `paput_discard_project_proposal` with the reason.
+Because instructions are loaded in full at session start, change them only with
+`paput_update_project_instructions` after explicit user approval.
+
 ## Knowledge Capture And Local Cache Tools
 
 These tools are local CLI mode only. They are not listed by the remote HTTP MCP
@@ -129,6 +164,7 @@ server.
 | `paput_get_session_transcript`     | Read-only                    | Read a selected local Claude or Codex session transcript.                   |
 | `paput_add_knowledge_candidates`   | Write to local pending queue | Add extracted reusable knowledge candidates before they are saved to PaPut. |
 | `paput_list_pending_candidates`    | Read-only                    | List pending candidates for review.                                         |
+| `paput_update_pending_candidate`   | Write to local pending queue | Refine a pending candidate's fields before it is saved.                     |
 | `paput_save_pending_candidate`     | Write                        | Save an approved pending candidate as a PaPut memo.                         |
 | `paput_discard_pending_candidate`  | Destructive local action     | Remove a pending candidate from the save flow.                              |
 | `paput_get_capture_policy`         | Read-only                    | Read the local capture policy generated from discarded candidates.          |

@@ -55,14 +55,13 @@ function getProjectMatch(
   args: Record<string, unknown> | undefined,
   context?: ToolContext,
 ): string | undefined {
+  const configured =
+    context?.projectMatch?.trim() || process.env.PAPUT_PROJECT_MATCH?.trim();
+  if (configured) return configured;
+
   const explicit =
     args && typeof args.project === 'string' ? args.project.trim() : '';
-  if (explicit) return explicit;
-
-  if (context?.projectMatch) return context.projectMatch;
-
-  const envProjectMatch = process.env.PAPUT_PROJECT_MATCH?.trim();
-  return envProjectMatch || undefined;
+  return explicit || undefined;
 }
 
 function buildContextText(result: ProjectContextResponse): string {

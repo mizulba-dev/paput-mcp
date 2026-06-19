@@ -29,13 +29,23 @@ describe('handleGetProjectContext', () => {
     } as unknown as ApiClient;
   }
 
-  it('uses the explicit project argument first', async () => {
+  it('prefers the configured project match over the explicit argument', async () => {
     process.env.PAPUT_PROJECT_MATCH = 'env-project';
     const client = createMockClient();
 
     await handleGetProjectContext({ project: ' explicit-project ' }, client, {
       projectMatch: 'ctx-project',
     });
+
+    expect(client.get).toHaveBeenCalledWith(
+      '/api/v1/mcp/project-context?project=ctx-project',
+    );
+  });
+
+  it('uses the explicit project argument when nothing is configured', async () => {
+    const client = createMockClient();
+
+    await handleGetProjectContext({ project: ' explicit-project ' }, client);
 
     expect(client.get).toHaveBeenCalledWith(
       '/api/v1/mcp/project-context?project=explicit-project',

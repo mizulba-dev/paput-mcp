@@ -60,6 +60,13 @@ export interface AddProjectDocumentResponse {
   skill_proposal?: ProjectDocumentDetail | null;
 }
 
+export interface UpdateProjectDocumentParams {
+  id: number;
+  title: string;
+  summary?: string;
+  body: string;
+}
+
 export interface ProjectInstructionsResponse {
   skill_sheet_project_id: number;
   body: string;
@@ -92,6 +99,16 @@ export async function addProjectDocument(
   params: AddProjectDocumentParams,
 ): Promise<AddProjectDocumentResponse> {
   return client.post<AddProjectDocumentResponse>(
+    '/api/v1/mcp/project-document',
+    params,
+  );
+}
+
+export async function updateProjectDocument(
+  client: ApiClient,
+  params: UpdateProjectDocumentParams,
+): Promise<ProjectDocumentDetail> {
+  return client.put<ProjectDocumentDetail>(
     '/api/v1/mcp/project-document',
     params,
   );

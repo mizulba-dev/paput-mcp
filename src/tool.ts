@@ -42,6 +42,7 @@ import {
   getProjectContextTool,
   getProjectDocumentTool,
   addProjectDocumentTool,
+  updateProjectDocumentTool,
   updateProjectInstructionsTool,
   discardProjectProposalTool,
   promoteProjectDocumentsTool,
@@ -50,6 +51,7 @@ import {
   getSessionTranscriptTool,
   addKnowledgeCandidatesTool,
   listPendingCandidatesTool,
+  updatePendingCandidateTool,
   savePendingCandidateTool,
   discardPendingCandidateTool,
   getCapturePolicyTool,
@@ -60,6 +62,7 @@ import type { ToolContext, ToolHandler } from './types/index.js';
 
 interface RegisteredToolsOptions {
   includeLocalTools?: boolean;
+  projectMatchConfigured?: boolean;
 }
 
 export function setupTool(
@@ -70,7 +73,15 @@ export function setupTool(
   registeredToolsOptions: RegisteredToolsOptions = {},
 ): void {
   const apiClient = createApiClient(apiUrl, accessToken);
-  const tools = getRegisteredTools(registeredToolsOptions);
+  const includeLocalTools = registeredToolsOptions.includeLocalTools ?? true;
+  const projectMatchConfigured = Boolean(
+    context.projectMatch?.trim() ||
+      (includeLocalTools && process.env.PAPUT_PROJECT_MATCH?.trim()),
+  );
+  const tools = getRegisteredTools({
+    ...registeredToolsOptions,
+    projectMatchConfigured,
+  });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((tool) => tool.definition),
@@ -160,6 +171,7 @@ export function getRegisteredTools(
   options: RegisteredToolsOptions = {},
 ): ToolHandler[] {
   const includeLocalTools = options.includeLocalTools ?? true;
+  const projectMatchConfigured = options.projectMatchConfigured ?? false;
   const tools = [
     createMemosTool,
     searchMemoTool,
@@ -192,6 +204,7 @@ export function getRegisteredTools(
     getProjectContextTool,
     getProjectDocumentTool,
     addProjectDocumentTool,
+    updateProjectDocumentTool,
     updateProjectInstructionsTool,
     discardProjectProposalTool,
     promoteProjectDocumentsTool,
@@ -200,6 +213,7 @@ export function getRegisteredTools(
     getSessionTranscriptTool,
     addKnowledgeCandidatesTool,
     listPendingCandidatesTool,
+    updatePendingCandidateTool,
     savePendingCandidateTool,
     discardPendingCandidateTool,
     getCapturePolicyTool,
@@ -211,7 +225,36 @@ export function getRegisteredTools(
     .filter(
       (tool) => includeLocalTools || !isLocalOnlyTool(tool.definition.name),
     )
-    .map(withToolAnnotations);
+    .map(withToolAnnotations)
+    .map((tool) =>
+      projectMatchConfigured ? withConfiguredProjectMatch(tool) : tool,
+    );
+}
+
+const PROJECT_CONTEXT_CONFIGURED_DESCRIPTION =
+  'Get the private project context (always-applied instructions and an index of accumulated project documents) for the project configured by PAPUT_PROJECT_MATCH. The project is resolved automatically from configuration, so call this with no arguments at session start. Document bodies are not included; fetch them on demand with paput_get_project_document.';
+
+function withConfiguredProjectMatch(tool: ToolHandler): ToolHandler {
+  if (tool.definition.name !== 'paput_get_project_context') return tool;
+
+  const schema = tool.definition.inputSchema;
+  const properties =
+    isJsonSchemaObject(schema) && isPropertyMap(schema.properties)
+      ? { ...schema.properties }
+      : {};
+  delete properties.project;
+
+  return {
+    ...tool,
+    definition: {
+      ...tool.definition,
+      description: PROJECT_CONTEXT_CONFIGURED_DESCRIPTION,
+      inputSchema: {
+        type: 'object',
+        properties,
+      } as ToolHandler['definition']['inputSchema'],
+    },
+  };
 }
 
 function withToolAnnotations(tool: ToolHandler): ToolHandler {
@@ -381,6 +424,7 @@ function isLocalOnlyTool(name: string): boolean {
     name === 'paput_get_session_transcript' ||
     name === 'paput_add_knowledge_candidates' ||
     name === 'paput_list_pending_candidates' ||
+    name === 'paput_update_pending_candidate' ||
     name === 'paput_save_pending_candidate' ||
     name === 'paput_discard_pending_candidate' ||
     name === 'paput_get_capture_policy' ||

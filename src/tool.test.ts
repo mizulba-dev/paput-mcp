@@ -36,6 +36,7 @@ const expectedToolNames = [
   'paput_get_project_context',
   'paput_get_project_document',
   'paput_add_project_document',
+  'paput_update_project_document',
   'paput_update_project_instructions',
   'paput_discard_project_proposal',
   'paput_promote_project_documents',
@@ -44,6 +45,7 @@ const expectedToolNames = [
   'paput_get_session_transcript',
   'paput_add_knowledge_candidates',
   'paput_list_pending_candidates',
+  'paput_update_pending_candidate',
   'paput_save_pending_candidate',
   'paput_discard_pending_candidate',
   'paput_get_capture_policy',
@@ -86,9 +88,11 @@ const destructiveToolNames = [
   'paput_update_goal',
   'paput_delete_goal',
   'paput_update_dashboard_analysis',
+  'paput_update_project_document',
   'paput_update_project_instructions',
   'paput_discard_project_proposal',
   'paput_promote_project_documents',
+  'paput_update_pending_candidate',
   'paput_discard_pending_candidate',
   'paput_update_capture_policy',
 ];
@@ -101,6 +105,7 @@ const remoteToolNames = expectedToolNames.filter(
       'paput_get_session_transcript',
       'paput_add_knowledge_candidates',
       'paput_list_pending_candidates',
+      'paput_update_pending_candidate',
       'paput_save_pending_candidate',
       'paput_discard_pending_candidate',
       'paput_get_capture_policy',
@@ -122,6 +127,27 @@ describe('registered tools', () => {
     );
 
     expect(toolNames).toEqual(remoteToolNames);
+  });
+
+  it('exposes the project argument for paput_get_project_context by default', () => {
+    const tool = getRegisteredTools().find(
+      (t) => t.definition.name === 'paput_get_project_context',
+    );
+
+    expect(
+      Object.keys(tool?.definition.inputSchema.properties ?? {}),
+    ).toContain('project');
+  });
+
+  it('drops the project argument when a project match is configured', () => {
+    const tool = getRegisteredTools({ projectMatchConfigured: true }).find(
+      (t) => t.definition.name === 'paput_get_project_context',
+    );
+
+    expect(
+      Object.keys(tool?.definition.inputSchema.properties ?? {}),
+    ).not.toContain('project');
+    expect(tool?.definition.description).toContain('with no arguments');
   });
 
   it('keeps generated input schema properties for every registered tool', () => {

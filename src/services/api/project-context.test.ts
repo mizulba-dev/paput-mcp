@@ -6,6 +6,7 @@ import {
   getProjectContext,
   getProjectDocument,
   promoteProjectDocuments,
+  updateProjectDocument,
   updateProjectInstructions,
 } from './project-context.js';
 
@@ -50,6 +51,23 @@ describe('project context API service', () => {
     await addProjectDocument(client, params);
 
     expect(client.post).toHaveBeenCalledWith(
+      '/api/v1/mcp/project-document',
+      params,
+    );
+  });
+
+  it('puts an updated project document with the id in the body', async () => {
+    const client = createMockClient();
+    const params = {
+      id: 7,
+      title: 'Updated decision',
+      summary: 'Updated summary',
+      body: 'Updated body',
+    };
+
+    await updateProjectDocument(client, params);
+
+    expect(client.put).toHaveBeenCalledWith(
       '/api/v1/mcp/project-document',
       params,
     );

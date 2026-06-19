@@ -12,7 +12,7 @@ export const getProjectContextTool: ToolHandler = {
         project: {
           type: 'string',
           description:
-            'Project name to resolve (partial match allowed). Defaults to PAPUT_PROJECT_MATCH when omitted.',
+            'Project name to resolve (partial match allowed). Required here; in local CLI mode the project is configured by PAPUT_PROJECT_MATCH and this argument is not exposed.',
         },
       },
     },
