@@ -33,8 +33,7 @@ Expected tool flow:
 
 Use case: avoid duplicate long-term knowledge while preserving useful decisions from engineering work.
 
-Local mode note: `paput_add_knowledge_candidates` and pending review tools are
-local CLI mode tools.
+Note: pending candidate tools are API-backed through Remote HTTP MCP.
 
 ## 3. Capture Reusable Knowledge From A Codex Session
 
@@ -44,16 +43,18 @@ Prompt:
 Scan recent Codex sessions, find the OAuth implementation session, and extract reusable knowledge candidates.
 ```
 
-Expected tool flow:
+Expected flow:
 
-1. `paput_scan_sessions`
-2. `paput_get_session_transcript`
-3. `paput_add_knowledge_candidates`
+1. `paput_list_processed_sessions` to skip sessions already reviewed
+2. The local-file-capable AI client reads `~/.codex/sessions/**/*.jsonl`
+3. `paput_add_knowledge_candidates` when reusable candidates are found
+4. `paput_mark_processed_session` when a reviewed session has no candidates
 
 Use case: turn completed development work into reviewable knowledge without immediately publishing it to PaPut.
 
-Local mode note: session scanning and transcript reading are local CLI mode
-tools.
+Client capability note: local session import requires an AI client that can read
+files on the user's device, such as Codex or Claude Code. PaPut MCP itself does
+not read local session files.
 
 ## 4. Save An Approved Pending Candidate
 
@@ -71,7 +72,7 @@ Expected tool flow:
 
 Use case: keep the user in control before creating a permanent PaPut memo.
 
-Local mode note: pending candidate tools are local CLI mode tools.
+Note: pending candidate tools are API-backed through Remote HTTP MCP.
 
 ## 5. Refresh The Capture Policy From Discards
 
@@ -88,11 +89,11 @@ Expected tool flow:
 3. `paput_update_capture_policy`
 4. `paput_get_capture_policy` when the user wants to verify the saved policy
 
-Use case: turn repeated local discard decisions into reusable capture criteria
+Use case: turn repeated discard decisions into reusable capture criteria
 that future `paput-capture` runs can apply before adding pending candidates.
 
-Local mode note: capture policy tools are local CLI mode tools. The generated
-policy is stored under the local PaPut cache and is not saved as a PaPut memo.
+Note: capture policy tools are API-backed through Remote HTTP MCP. The generated
+policy is not saved as a PaPut memo.
 
 ## 6. Update A Skill Sheet Project
 

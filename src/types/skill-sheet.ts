@@ -51,6 +51,7 @@ export interface GetSkillSheetProject {
   id: number;
   type: number;
   title: string;
+  mcp_alias?: string | null;
   start_period: string;
   end_period: string | null;
   description: string;

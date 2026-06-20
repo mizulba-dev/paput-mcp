@@ -1,10 +1,9 @@
 import { ApiClient } from '../../services/api/client.js';
-import { createMemo, searchMemos } from '../../services/api/memo.js';
 import {
-  createFingerprint,
-  readCache,
-  updatePendingCandidate,
-} from '../../services/local-cache/index.js';
+  getRemoteKnowledgeCandidate,
+  saveRemoteKnowledgeCandidate,
+} from '../../services/api/knowledge-candidate.js';
+import { createMemo } from '../../services/api/memo.js';
 import { CreateMemoParams } from '../../types/index.js';
 
 export async function handleSavePendingCandidate(
@@ -18,13 +17,54 @@ export async function handleSavePendingCandidate(
     };
   }
 
-  const candidate = readCache().pending.find(
-    (item) => item.id === args.candidate_id && item.status === 'pending',
+  return await saveRemoteCandidate(args, apiClient);
+}
+
+async function saveRemoteCandidate(
+  args: Record<string, unknown>,
+  apiClient: ApiClient,
+) {
+  const candidate = await getRemoteKnowledgeCandidate(
+    apiClient,
+    args.candidate_id as string,
   );
-  if (!candidate) {
+  const suppliedMemoId =
+    typeof args.saved_memo_id === 'number' ? args.saved_memo_id : undefined;
+  if (candidate.status !== 'pending') {
+    if (
+      candidate.status === 'saved' &&
+      suppliedMemoId !== undefined &&
+      candidate.saved_memo_id === suppliedMemoId
+    ) {
+      const response = {
+        success: true,
+        action: 'saved',
+        candidate_id: candidate.id,
+        memo_id: suppliedMemoId,
+        title: candidate.title,
+        created_at: candidate.created_at,
+        created_at_source: 'saved_candidate',
+        used_existing_memo: true,
+        warnings: [],
+      };
+
+      return {
+        structuredContent: response,
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(response, null, 2),
+          },
+        ],
+      };
+    }
+
     return {
       content: [
-        { type: 'text', text: 'Pending candidate to save was not found' },
+        {
+          type: 'text',
+          text: `Only pending candidates can be saved (current status: ${candidate.status})`,
+        },
       ],
       isError: true,
     };
@@ -77,44 +117,74 @@ export async function handleSavePendingCandidate(
     memo_type_keys: memoTypeKeys,
     projects,
   };
-  const result = await createMemo(apiClient, params);
+  let memoId = suppliedMemoId;
 
-  if (!result.success) {
+  if (memoId === undefined) {
+    const result = await createMemo(apiClient, params);
+
+    if (!result.success || result.id === undefined) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Failed to save knowledge candidate: ${result.error || 'Unknown error'}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    memoId = result.id;
+  }
+
+  let updated: Awaited<ReturnType<typeof saveRemoteKnowledgeCandidate>>;
+  try {
+    updated = await saveRemoteKnowledgeCandidate(apiClient, {
+      candidate_id: candidate.id,
+      title,
+      body,
+      categories,
+      memo_type_keys: memoTypeKeys,
+      projects,
+      is_public: params.is_public,
+      saved_memo_id: memoId,
+      created_at: createdAt,
+    });
+  } catch (error) {
+    const response = {
+      success: false,
+      action: 'save_candidate_failed_after_memo_created',
+      candidate_id: candidate.id,
+      memo_id: memoId,
+      title,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      retry_args: {
+        candidate_id: candidate.id,
+        saved_memo_id: memoId,
+      },
+    };
+
     return {
+      structuredContent: response,
       content: [
         {
           type: 'text',
-          text: `Failed to save knowledge candidate: ${result.error || 'Unknown error'}`,
+          text: JSON.stringify(response, null, 2),
         },
       ],
       isError: true,
     };
   }
 
-  const savedMemo = await findSavedMemo(apiClient, title, body);
-
-  const updated = updatePendingCandidate(candidate.id, (item) => ({
-    ...item,
-    title,
-    body,
-    categories,
-    memo_type_keys: memoTypeKeys,
-    projects,
-    is_public: params.is_public,
-    status: 'saved',
-    fingerprint: createFingerprint(title, body),
-    saved_memo_id: savedMemo?.id,
-    updated_at: new Date().toISOString(),
-  }));
-
   const response = {
     success: true,
     action: 'saved',
-    candidate_id: updated?.id,
-    memo_id: savedMemo?.id || null,
+    candidate_id: updated.candidate_id,
+    memo_id: memoId ?? updated.memo_id ?? null,
     title,
     created_at: createdAt,
     created_at_source: createdAtSource,
+    used_existing_memo: suppliedMemoId !== undefined,
     warnings:
       createdAtSource === 'pending_created_at'
         ? [
@@ -132,17 +202,4 @@ export async function handleSavePendingCandidate(
       },
     ],
   };
-}
-
-async function findSavedMemo(
-  apiClient: ApiClient,
-  title: string,
-  body: string,
-) {
-  const result = await searchMemos(apiClient, { word: title, limit: 10 });
-  if (!result.success || !result.memos) return undefined;
-  const fingerprint = createFingerprint(title, body);
-  return result.memos.find(
-    (memo) => createFingerprint(memo.title, memo.body) === fingerprint,
-  );
 }

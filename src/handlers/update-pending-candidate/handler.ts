@@ -1,42 +1,14 @@
 import { ApiClient } from '../../services/api/client.js';
-import {
-  createFingerprint,
-  readCache,
-  updatePendingCandidate,
-} from '../../services/local-cache/index.js';
+import { updateRemoteKnowledgeCandidate } from '../../services/api/knowledge-candidate.js';
 import { PendingKnowledgeCandidate } from '../../types/knowledge.js';
 
 export async function handleUpdatePendingCandidate(
   args: Record<string, unknown> | undefined,
-  _apiClient: ApiClient,
+  apiClient: ApiClient,
 ) {
   if (!args || typeof args.candidate_id !== 'string') {
     return {
       content: [{ type: 'text', text: 'candidate_id is required' }],
-      isError: true,
-    };
-  }
-
-  const candidate = readCache().pending.find(
-    (item) => item.id === args.candidate_id,
-  );
-  if (!candidate) {
-    return {
-      content: [
-        { type: 'text', text: 'Pending candidate to update was not found' },
-      ],
-      isError: true,
-    };
-  }
-
-  if (candidate.status !== 'pending') {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Only pending candidates can be updated (current status: ${candidate.status})`,
-        },
-      ],
       isError: true,
     };
   }
@@ -48,7 +20,6 @@ export async function handleUpdatePendingCandidate(
       isError: true,
     };
   }
-
   if (Object.keys(patch.fields).length === 0) {
     return {
       content: [
@@ -61,27 +32,13 @@ export async function handleUpdatePendingCandidate(
     };
   }
 
-  const changedFields = Object.keys(patch.fields);
-  const updated = updatePendingCandidate(candidate.id, (item) => {
-    const next: PendingKnowledgeCandidate = {
-      ...item,
-      ...patch.fields,
-      updated_at: new Date().toISOString(),
-    };
-    next.fingerprint = createFingerprint(next.title, next.body);
-    return next;
+  const result = await updateRemoteKnowledgeCandidate(apiClient, {
+    candidate_id: args.candidate_id,
+    ...patch.fields,
   });
 
-  const result = {
-    updated: true,
-    candidate_id: updated?.id,
-    title: updated?.title,
-    changed_fields: changedFields,
-    candidate: updated,
-  };
-
   return {
-    structuredContent: result,
+    structuredContent: result as unknown as Record<string, unknown>,
     content: [
       {
         type: 'text',

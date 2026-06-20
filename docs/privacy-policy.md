@@ -11,9 +11,10 @@ Depending on the tools you use, the server may process:
 - PaPut memos, notes, categories, skill sheet data, and related project metadata.
 - OAuth access tokens used to authenticate requests to PaPut.
 - MCP request and response metadata needed to execute tool calls.
-- Local Claude or Codex session metadata and transcripts when you explicitly use local knowledge capture tools.
-- Local pending knowledge candidates, discarded candidate metadata, capture
-  policy documents, and cache data stored on your device.
+- Pending knowledge candidates, discarded candidate metadata, processed AI
+  session markers, and capture policy documents stored by the PaPut API.
+- Source session identifiers and optional source session timestamps when an AI
+  client submits knowledge candidates or marks sessions as processed.
 
 ## How Data Is Used
 
@@ -21,25 +22,36 @@ Data is used only to provide the MCP tools you invoke, including:
 
 - Searching, reading, creating, and updating PaPut memos and notes.
 - Reading and updating your PaPut skill sheet.
-- Synchronizing PaPut memo metadata into a local cache for duplicate detection.
-- Scanning local AI session logs and preparing reusable knowledge candidates.
-- Analyzing locally discarded knowledge candidates to generate a local capture
-  policy used by future candidate extraction.
+- Accepting reusable knowledge candidates extracted by the MCP client AI.
+- Managing pending candidates, processed session markers, and capture policies
+  through PaPut API storage.
+- Analyzing discarded knowledge candidates to generate a capture policy used by
+  future candidate extraction.
 - Completing OAuth authorization and token-based requests to the PaPut API.
 
 ## Authentication
 
 Remote MCP connections use OAuth. PaPut issues tokens after you sign in and approve the requested scopes. The MCP server receives bearer tokens on requests and forwards them to the PaPut API. The MCP server does not intentionally persist OAuth access tokens.
 
-Local stdio usage uses OAuth tokens created by `paput-mcp login`. You are responsible for keeping local token and configuration files private.
-
 ## Local Data
 
-When local knowledge capture features are used, PaPut MCP may store cache files under `~/.paput` or a configured cache directory. This local data can include synced memo summaries, pending knowledge candidates, discarded candidate metadata, capture policy documents, processed session markers, session metadata, and local OAuth tokens created by `paput-mcp login`. The default OAuth token directory is created with `0700` permissions and the token file is written with `0600` permissions. It remains on your device unless you choose to save a pending candidate to PaPut, delete local cache data, or remove the local token cache with `paput-mcp logout`.
+`paput-mcp setup-ai` stores generated skill files under `~/.paput` by default.
+Pending candidates, discarded candidate metadata, processed AI session markers,
+and capture policies are stored in PaPut API storage, not under `~/.paput`.
+PaPut MCP does not read local Claude/Codex session files. When you use
+`paput-init` in a local-file-capable client such as Claude Code or Codex, that
+client may read its own session files and submit only extracted candidates or
+processed-session markers to PaPut MCP.
 
 ## Logging
 
 Hosted infrastructure and MCP clients may record operational logs such as request timestamps, status codes, errors, and connection metadata. Logs are used for reliability, troubleshooting, abuse prevention, and security. The server is designed not to log OAuth tokens or full private content intentionally.
+
+## Retention
+
+PaPut content and API-backed MCP state are retained until the user deletes or
+updates them in PaPut, while operational logs are retained only as long as
+needed for reliability, troubleshooting, abuse prevention, and security.
 
 ## Sharing
 
@@ -51,8 +63,6 @@ You can:
 
 - Revoke OAuth access from PaPut account settings when available.
 - Remove local MCP configuration from your client.
-- Delete local cache data stored under `~/.paput` or your configured cache directory.
-- Run `paput-mcp logout` to revoke and remove the local OAuth token cache.
 - Delete or update PaPut content using PaPut or authorized MCP tools.
 
 ## Security

@@ -19,15 +19,33 @@ export async function resolveMemoProjects(
     );
   }
 
+  if (context?.projectId) {
+    return [
+      {
+        id: context.projectId,
+        title: context.projectTitle,
+      },
+    ];
+  }
+
   const projectMatch = getProjectMatch(args, context);
   if (!projectMatch) return undefined;
 
   try {
     const projects = await searchSkillSheetProjects(apiClient, projectMatch);
-    return projects.length > 0 ? [projects[0]] : undefined;
+    if (projects.length === 0) return undefined;
+    if (projects.length > 1) {
+      const candidates = projects
+        .map((project) => `${project.title} (ID: ${project.id})`)
+        .join(', ');
+      throw new Error(
+        `project_match matched multiple projects. Specify projects explicitly or configure MCP project_alias. Candidates: ${candidates}`,
+      );
+    }
+    return [projects[0]];
   } catch (error) {
     console.error('Failed to search projects:', error);
-    return undefined;
+    throw error;
   }
 }
 
@@ -38,7 +56,5 @@ function getProjectMatch(
   const explicit =
     typeof args.project_match === 'string' ? args.project_match.trim() : '';
   if (explicit) return explicit;
-
-  if (context?.projectMatch) return context.projectMatch;
-  return process.env.PAPUT_PROJECT_MATCH;
+  return undefined;
 }

@@ -1,18 +1,15 @@
 import { ApiClient } from '../../services/api/client.js';
-import { readCache } from '../../services/local-cache/index.js';
+import { listRemoteKnowledgeCandidates } from '../../services/api/knowledge-candidate.js';
 
 export async function handleListPendingCandidates(
   args: Record<string, unknown> | undefined,
-  _apiClient: ApiClient,
+  apiClient: ApiClient,
 ) {
   const limit = typeof args?.limit === 'number' ? Math.max(1, args.limit) : 20;
-  const candidates = readCache()
-    .pending.filter((candidate) => candidate.status === 'pending')
-    .slice(0, limit);
-  const result = {
-    count: candidates.length,
-    candidates,
-  };
+  const result = await listRemoteKnowledgeCandidates(apiClient, {
+    status: 'pending',
+    limit,
+  });
 
   return {
     structuredContent: result,

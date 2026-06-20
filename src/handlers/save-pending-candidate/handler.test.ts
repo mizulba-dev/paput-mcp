@@ -1,26 +1,11 @@
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { writePending } from '../../services/local-cache/index.js';
 import type { ApiClient } from '../../services/api/client.js';
 import type { PendingKnowledgeCandidate } from '../../types/knowledge.js';
 import { handleSavePendingCandidate } from './handler.js';
 
 describe('handleSavePendingCandidate', () => {
-  const originalPaputHome = process.env.PAPUT_HOME;
-  const tempDirs: string[] = [];
-
   afterEach(() => {
     vi.restoreAllMocks();
-    if (originalPaputHome === undefined) {
-      delete process.env.PAPUT_HOME;
-    } else {
-      process.env.PAPUT_HOME = originalPaputHome;
-    }
-    for (const dir of tempDirs.splice(0)) {
-      rmSync(dir, { force: true, recursive: true });
-    }
   });
 
   it('uses the source session updated timestamp when available', async () => {
@@ -81,35 +66,123 @@ describe('handleSavePendingCandidate', () => {
     });
   });
 
-  function setupSaveTest(candidate: PendingKnowledgeCandidate): ApiClient {
-    const paputHome = mkdtempSync(join(tmpdir(), 'paput-mcp-test-'));
-    tempDirs.push(paputHome);
-    process.env.PAPUT_HOME = paputHome;
-    writePending([candidate]);
+  it('uses an existing memo ID when retrying a candidate save', async () => {
+    const candidate = buildCandidate();
+    const apiClient = setupSaveTest(candidate);
 
+    const result = await handleSavePendingCandidate(
+      { candidate_id: candidate.id, saved_memo_id: 456 },
+      apiClient,
+    );
+
+    expect(apiClient.post).not.toHaveBeenCalled();
+    expect(apiClient.put).toHaveBeenCalledWith(
+      '/api/v1/mcp/knowledge-candidate/save',
+      expect.objectContaining({
+        candidate_id: candidate.id,
+        saved_memo_id: 456,
+      }),
+    );
+    expect(result.structuredContent).toMatchObject({
+      success: true,
+      memo_id: 456,
+      used_existing_memo: true,
+    });
+  });
+
+  it('treats a saved candidate with the same memo ID as an idempotent retry', async () => {
+    const candidate = buildCandidate({
+      status: 'saved',
+      saved_memo_id: 456,
+    });
+    const apiClient = setupSaveTest(candidate);
+
+    const result = await handleSavePendingCandidate(
+      { candidate_id: candidate.id, saved_memo_id: 456 },
+      apiClient,
+    );
+
+    expect(apiClient.post).not.toHaveBeenCalled();
+    expect(apiClient.put).not.toHaveBeenCalled();
+    expect(result.structuredContent).toMatchObject({
+      success: true,
+      memo_id: 456,
+      created_at_source: 'saved_candidate',
+      used_existing_memo: true,
+    });
+  });
+
+  it('returns retry args when candidate save fails after memo creation', async () => {
+    const candidate = buildCandidate();
+    const apiClient = setupSaveTest(candidate, {
+      saveError: new Error('candidate save failed'),
+    });
+
+    const result = await handleSavePendingCandidate(
+      { candidate_id: candidate.id },
+      apiClient,
+    );
+
+    expect(result.isError).toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      success: false,
+      action: 'save_candidate_failed_after_memo_created',
+      candidate_id: candidate.id,
+      memo_id: 123,
+      retry_args: {
+        candidate_id: candidate.id,
+        saved_memo_id: 123,
+      },
+    });
+  });
+
+  function setupSaveTest(
+    candidate: PendingKnowledgeCandidate,
+    options: { saveError?: Error; createdMemoId?: number } = {},
+  ): ApiClient {
     return {
-      get: vi.fn().mockResolvedValue({
-        memos: [
-          {
-            id: 123,
-            title: candidate.title,
-            body: candidate.body,
-            categories: candidate.categories.map((name) => ({ name })),
-            is_public: candidate.is_public,
-            created_at: candidate.created_at,
-            updated_at: candidate.updated_at,
-          },
-        ],
-        total: 1,
+      get: vi.fn().mockImplementation(async (endpoint: string) => {
+        if (endpoint === `/api/v1/mcp/knowledge-candidate/${candidate.id}`) {
+          return candidate;
+        }
+        throw new Error(`Unexpected endpoint: ${endpoint}`);
       }),
       post: vi.fn().mockResolvedValue({
         success: true,
         created_count: 1,
         failed_count: 0,
-        created: [{ index: 0, id: 123, title: candidate.title }],
+        created: [
+          {
+            index: 0,
+            id: options.createdMemoId ?? 123,
+            title: candidate.title,
+          },
+        ],
         failed: [],
       }),
-      put: vi.fn(),
+      put: vi
+        .fn()
+        .mockImplementation(async (endpoint: string, body: unknown) => {
+          if (endpoint === '/api/v1/mcp/knowledge-candidate/save') {
+            if (options.saveError) throw options.saveError;
+            return {
+              success: true,
+              action: 'saved',
+              candidate_id: candidate.id,
+              memo_id:
+                (body as { saved_memo_id?: number }).saved_memo_id ??
+                options.createdMemoId ??
+                123,
+              title: candidate.title,
+              candidate: {
+                ...candidate,
+                ...(body as Record<string, unknown>),
+                status: 'saved',
+              },
+            };
+          }
+          throw new Error(`Unexpected endpoint: ${endpoint}`);
+        }),
       delete: vi.fn(),
       request: vi.fn(),
     };

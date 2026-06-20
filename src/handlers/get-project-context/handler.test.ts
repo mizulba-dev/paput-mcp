@@ -1,21 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from '../../services/api/client.js';
 import { handleGetProjectContext } from './handler.js';
 
 describe('handleGetProjectContext', () => {
-  const originalProjectMatch = process.env.PAPUT_PROJECT_MATCH;
-
-  beforeEach(() => {
-    delete process.env.PAPUT_PROJECT_MATCH;
-  });
-
   afterEach(() => {
     vi.restoreAllMocks();
-    if (originalProjectMatch === undefined) {
-      delete process.env.PAPUT_PROJECT_MATCH;
-    } else {
-      process.env.PAPUT_PROJECT_MATCH = originalProjectMatch;
-    }
   });
 
   function createMockClient() {
@@ -29,16 +18,15 @@ describe('handleGetProjectContext', () => {
     } as unknown as ApiClient;
   }
 
-  it('prefers the configured project match over the explicit argument', async () => {
-    process.env.PAPUT_PROJECT_MATCH = 'env-project';
+  it('prefers the configured project ID over the explicit argument', async () => {
     const client = createMockClient();
 
     await handleGetProjectContext({ project: ' explicit-project ' }, client, {
-      projectMatch: 'ctx-project',
+      projectId: 107,
     });
 
     expect(client.get).toHaveBeenCalledWith(
-      '/api/v1/mcp/project-context?project=ctx-project',
+      '/api/v1/mcp/project-context?project_id=107',
     );
   });
 
@@ -52,30 +40,7 @@ describe('handleGetProjectContext', () => {
     );
   });
 
-  it('falls back to the tool context project match', async () => {
-    const client = createMockClient();
-
-    await handleGetProjectContext({}, client, {
-      projectMatch: 'ctx-project',
-    });
-
-    expect(client.get).toHaveBeenCalledWith(
-      '/api/v1/mcp/project-context?project=ctx-project',
-    );
-  });
-
-  it('falls back to the PAPUT_PROJECT_MATCH environment variable', async () => {
-    process.env.PAPUT_PROJECT_MATCH = ' env-project ';
-    const client = createMockClient();
-
-    await handleGetProjectContext({}, client);
-
-    expect(client.get).toHaveBeenCalledWith(
-      '/api/v1/mcp/project-context?project=env-project',
-    );
-  });
-
-  it('returns an error when no project match is configured', async () => {
+  it('returns an error when no project selector is configured', async () => {
     const client = createMockClient();
 
     const result = await handleGetProjectContext({}, client);
@@ -84,7 +49,7 @@ describe('handleGetProjectContext', () => {
       content: [
         {
           type: 'text',
-          text: 'project is required when PAPUT_PROJECT_MATCH is not configured.',
+          text: 'project is required when no MCP project_alias is configured.',
         },
       ],
       isError: true,

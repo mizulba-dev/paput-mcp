@@ -22,6 +22,11 @@ export const upsertSkillSheetProjectTool: ToolHandler = {
           type: 'string',
           description: 'Project title',
         },
+        mcp_alias: {
+          type: 'string',
+          description:
+            'Project alias used in remote MCP URLs. Use 3-40 lowercase alphanumeric characters, e.g. paput.',
+        },
         start_period: {
           type: 'string',
           description: 'Start period in YYYY-MM format',

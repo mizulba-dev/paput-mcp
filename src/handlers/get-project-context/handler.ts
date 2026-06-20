@@ -10,13 +10,13 @@ export async function handleGetProjectContext(
   apiClient: ApiClient,
   context?: ToolContext,
 ) {
-  const project = getProjectMatch(args, context);
+  const project = getProjectSelector(args, context);
   if (!project) {
     return {
       content: [
         {
           type: 'text',
-          text: 'project is required when PAPUT_PROJECT_MATCH is not configured.',
+          text: 'project is required when no MCP project_alias is configured.',
         },
       ],
       isError: true,
@@ -51,13 +51,13 @@ export async function handleGetProjectContext(
   }
 }
 
-function getProjectMatch(
+function getProjectSelector(
   args: Record<string, unknown> | undefined,
   context?: ToolContext,
-): string | undefined {
-  const configured =
-    context?.projectMatch?.trim() || process.env.PAPUT_PROJECT_MATCH?.trim();
-  if (configured) return configured;
+): string | { project_id: number } | undefined {
+  if (context?.projectId) {
+    return { project_id: context.projectId };
+  }
 
   const explicit =
     args && typeof args.project === 'string' ? args.project.trim() : '';

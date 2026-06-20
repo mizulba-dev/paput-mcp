@@ -34,6 +34,12 @@ export interface SkillSheetProjectsResponse {
   projects: GetSkillSheetProject[];
 }
 
+export interface SkillSheetProjectReference {
+  id: number;
+  title: string;
+  mcp_alias?: string | null;
+}
+
 export interface AddSkillSheetProjectResponse {
   id: number;
   type: number;
@@ -65,9 +71,18 @@ export async function getSkillSheet(
 export async function searchSkillSheetProjects(
   client: ApiClient,
   search: string,
-): Promise<Array<{ id: number; title: string }>> {
+): Promise<SkillSheetProjectReference[]> {
   const endpoint = `/api/v1/mcp/skill-sheet/projects?search=${encodeURIComponent(search)}`;
-  return client.get<Array<{ id: number; title: string }>>(endpoint);
+  return client.get<SkillSheetProjectReference[]>(endpoint);
+}
+
+export async function getSkillSheetProjectByAlias(
+  client: ApiClient,
+  alias: string,
+): Promise<SkillSheetProjectReference | undefined> {
+  const endpoint = `/api/v1/mcp/skill-sheet/projects?mcp_alias=${encodeURIComponent(alias)}`;
+  const projects = await client.get<SkillSheetProjectReference[]>(endpoint);
+  return projects[0];
 }
 
 export async function createSkillSheet(

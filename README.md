@@ -1,6 +1,6 @@
 # PaPut MCP Server
 
-PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the Model Context Protocol (MCP). Remote HTTP mode lets Claude, ChatGPT, Codex, Claude Code, and other MCP clients create, search, and organize PaPut memos, notes, and skill sheets through OAuth. Local CLI mode is convenient for Claude Code and Codex workflows that need local session scanning, pending knowledge candidates, and the local PaPut cache.
+PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the Model Context Protocol (MCP). Remote HTTP mode lets Claude, ChatGPT, Codex, Claude Code, and other MCP clients create, search, and organize PaPut memos, notes, skill sheets, and pending knowledge candidates through OAuth. Local-file-capable clients such as Claude Code and Codex can use the installed PaPut skills to read their own session files and send extracted candidates to the same API-backed workflow.
 
 ## Features
 
@@ -14,27 +14,46 @@ PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the
 - Get dashboard context and save AI-generated dashboard analysis results
 - Get private project context and manage project documents (design decisions and repeatable procedures)
 
-### Knowledge Capture From AI Sessions
+### Knowledge Capture
 
-- Scan local Claude and Codex session logs
-- Add reusable knowledge candidates to a local pending queue
+- Add reusable knowledge candidates to the API-backed pending queue
+- Track processed Claude/Codex sessions through the PaPut API
 - Reject near-duplicate candidates automatically using semantic search against existing memos
 - Prevent duplicate pending candidates with fingerprints
-- Derive a local capture policy from discarded candidates
+- Derive a capture policy from discarded candidates
 - Save pending candidates to PaPut only after explicit user approval
 - Preserve the source session updated timestamp as the PaPut memo creation timestamp
-- Link pending candidates to PaPut projects through `PAPUT_PROJECT_MATCH`
+- Link pending candidates to PaPut projects through `project_alias` in the Remote HTTP MCP URL
 - Install Claude/Codex skills and global rules for PaPut workflows
 
 ## Installation
 
-Run directly with `npx`:
+### Remote HTTP connection (URL + OAuth)
 
-```bash
-npx -y paput-mcp
+For MCP clients, use the Remote HTTP server URL and complete the OAuth flow in
+the client. No local MCP server process or local login command is required.
+
+```json
+"paput": {
+  "type": "http",
+  "url": "https://mcp.paput.io/mcp"
+}
 ```
 
-Or install globally:
+### CLI utilities (`setup-ai` / `export-skill`)
+
+The `paput-mcp` package is still useful as a local CLI utility for installing or
+exporting PaPut skills and rules:
+
+```bash
+npx -y paput-mcp setup-ai
+npx -y paput-mcp export-skill
+```
+
+Running `npx -y paput-mcp` with no subcommand prints help only. It does not
+start an MCP server and does not sign in to PaPut.
+
+You can also install the CLI globally:
 
 ```bash
 npm install -g paput-mcp
@@ -44,59 +63,32 @@ npm install -g paput-mcp
 
 ### Remote HTTP Mode
 
-Use remote HTTP mode when you want a simple OAuth-based MCP setup for memo,
-note, and skill sheet operations.
+Use Remote HTTP mode for PaPut MCP connections. It uses OAuth-based MCP setup
+for PaPut data operations, including memos, notes, skill sheets, and
+API-backed knowledge capture.
 
 ```json
 "paput": {
   "type": "http",
-  "url": "https://mcp.paput.io"
+  "url": "https://mcp.paput.io/mcp"
 }
 ```
 
-Remote HTTP mode intentionally does not expose local cache, pending candidate,
-session transcript, or capture policy tools because the hosted server cannot
-access files on your device. Remote HTTP mode also does not apply
-project-specific local configuration.
-
-### Local CLI Mode
-
-Use local CLI mode when you want Claude Code, Codex, or another local MCP client
-to scan local Claude/Codex sessions and keep a local pending cache. Log in once
-with OAuth before starting the local MCP server:
-
-```bash
-npx -y paput-mcp login
-```
+Pending candidates, processed session markers, and capture policies are
+API-backed. Use `project_alias` in the remote URL when you want to pin
+operations to a project.
 
 ```json
 "paput": {
-  "command": "npx",
-  "args": ["-y", "paput-mcp"],
-  "env": {
-    "PAPUT_PROJECT_MATCH": "optional project name fragment"
-  }
+  "type": "http",
+  "url": "https://mcp.paput.io/mcp?project_alias=paput"
 }
-```
-
-The login command stores OAuth tokens under `~/.paput/oauth.json` by default.
-The `~/.paput` directory is created with `0700` permissions and the token file is
-written with `0600` permissions. To revoke and remove the local token cache, run:
-
-```bash
-npx -y paput-mcp logout
 ```
 
 ### Environment Variables
 
-- `PAPUT_PROJECT_MATCH` - Optional project name fragment for automatic project linking when creating memos in bulk or updating memos.
-- `PAPUT_HOME` - Optional PaPut local data directory. Defaults to `~/.paput`.
-- `PAPUT_CACHE_DIR` - Optional cache directory for knowledge capture data.
-- `PAPUT_ALLOWED_ORIGINS` - Optional comma-separated list of extra allowed
-  HTTP `Origin` values for remote MCP requests. The remote server already allows
-  its own origin, PaPut, Claude, and ChatGPT origins.
-
-When `PAPUT_PROJECT_MATCH` is set, memo bulk-create and update operations search skill sheet projects whose title contains the configured text and link the first match.
+- `PAPUT_HOME` - Optional output root for `setup-ai` generated skills and
+  managed links. Defaults to `~/.paput`.
 
 ## AI Setup
 
@@ -129,11 +121,14 @@ npx -y paput-mcp setup-ai --codex-only
 
 Generated skills:
 
-- `paput-init` - Initialize PaPut usage and inspect unprocessed sessions.
+- `paput-init` - Initialize PaPut usage and inspect unprocessed sessions from local-file-capable AI clients.
 - `paput-capture` - Extract reusable knowledge candidates from the current conversation or a specified topic and add them to pending.
 - `paput-save` - Review pending candidates first, then save only candidates explicitly approved by the user.
-- `paput-analyze-discard-policy` - Analyze discarded candidates and save a local capture policy used by future captures.
+- `paput-analyze-discard-policy` - Analyze discarded candidates and save a capture policy used by future captures.
 - `paput-dashboard-analysis` - Analyze PaPut dashboard context and optionally save the generated dashboard analysis.
+- `paput-project-document` - Save a project-specific design decision or repeatable procedure as a PaPut project document.
+- `paput-project-summary` - Generate and optionally save an AI summary for a skill sheet project.
+- `paput-public-profile-summary` - Generate and save the public profile summary shown on the AI Summary tab.
 
 For Claude Desktop, export skill ZIP files and upload them from
 `Customize > Skills`:
@@ -184,7 +179,7 @@ Review my PaPut pending candidates
 ```
 
 Use `paput-analyze-discard-policy` after discarding candidates when you want the
-assistant to turn rejection history into a local capture policy. Future
+assistant to turn rejection history into a capture policy. Future
 `paput-capture` runs read this policy before adding new pending candidates.
 
 ```text
@@ -225,6 +220,7 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 - `paput_delete_skill_sheet_project` - Delete a skill sheet project.
 - `paput_get_skill_sheet_project_summary_context` - Get project information and related memo bodies so the MCP client AI model can generate a project summary.
 - `paput_update_skill_sheet_project_ai_summary` - Save an AI-generated project summary.
+- `paput_get_public_profile_context` - Get public materials so the MCP client AI model can generate a public profile summary.
 
 ### Goal Management
 
@@ -239,22 +235,42 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 - `paput_get_dashboard_analysis_context` - Get dashboard, goal, skill sheet, memo, note, and category context so the MCP client AI model can generate an analysis.
 - `paput_update_dashboard_analysis` - Save an AI-generated dashboard analysis.
 
-### Knowledge Capture And Local Cache
+### Project Document
 
-These tools are local CLI mode only. They are not exposed by the remote HTTP MCP
-server.
+Project document state is private, project-scoped, API-backed, and available
+through Remote HTTP MCP.
 
-- `paput_cache_status` - Inspect the local cache state.
-- `paput_scan_sessions` - Scan local Claude/Codex session logs.
-- `paput_get_session_transcript` - Read a session transcript.
+- `paput_get_project_context` - Get a project's always-applied instructions and document index. Call at session start.
+- `paput_get_project_document` - Read the full body of a project document by ID.
+- `paput_add_project_document` - Save a design decision, procedure, or skill candidate linked to a project.
+- `paput_update_project_document` - Replace a project document's title, summary, and body.
+- `paput_update_project_instructions` - Overwrite a project's always-applied instructions. Requires explicit user approval.
+- `paput_discard_project_proposal` - Record that the user rejected a skill proposal.
+- `paput_promote_project_documents` - Mark a skill proposal and related procedure documents as promoted after a skill is created.
+
+### Knowledge Capture
+
+Knowledge capture state is stored by the PaPut API and is available through
+Remote HTTP MCP.
+
 - `paput_add_knowledge_candidates` - Add extracted knowledge candidates to pending.
+- `paput_list_processed_sessions` - List Claude/Codex sessions already reviewed for knowledge capture.
+- `paput_mark_processed_session` - Mark a reviewed session as processed when no candidates are added.
 - `paput_list_pending_candidates` - List pending candidates.
 - `paput_update_pending_candidate` - Update a pending candidate's fields before it is saved.
 - `paput_save_pending_candidate` - Save an approved pending candidate as a PaPut memo.
 - `paput_discard_pending_candidate` - Discard a pending candidate.
-- `paput_get_capture_policy` - Read the local capture policy generated from discarded candidates.
+- `paput_get_capture_policy` - Read the capture policy generated from discarded candidates.
 - `paput_get_discard_policy_context` - Read discarded candidates and the current policy for AI-side policy analysis.
-- `paput_update_capture_policy` - Save the local capture policy generated by the AI.
+- `paput_update_capture_policy` - Save the capture policy generated by the AI.
+
+### Local Session Import
+
+PaPut MCP no longer reads local Claude/Codex session files as MCP tools. When
+using Claude Code, Codex, or another AI client with local file access, run the
+installed `paput-init` skill. The AI client reads its own session files, extracts
+reusable knowledge, and submits only the resulting candidates and processed
+session markers through PaPut MCP.
 
 ## Confirmation Guidance
 
@@ -266,7 +282,7 @@ Write and destructive tools should be used only when the user intent is clear. I
 - `paput_set_skill_sheet_skills` replaces the full skill list and should be used only when the desired final list is known.
 - `paput_update_dashboard_analysis` should be used only after the MCP client AI model has generated an analysis and the user intends to save it.
 - `paput_discard_pending_candidate` removes a pending candidate from the save flow.
-- `paput_update_capture_policy` writes only to the local cache and should be used after the MCP client AI has generated a capture policy from discarded candidates.
+- `paput_update_capture_policy` should be used after the MCP client AI has generated a capture policy from discarded candidates.
 - Update and upsert tools should preserve existing data unless the user requests a change.
 
 ## Usage Examples
@@ -291,11 +307,15 @@ Recommended tool flow:
 Scan recent Codex sessions and extract reusable knowledge from the relevant session.
 ```
 
-Recommended tool flow:
+The AI client reads its own local session files; PaPut MCP only receives the
+extracted candidates and processed-session markers.
 
-1. `paput_scan_sessions`
-2. `paput_get_session_transcript`
-3. `paput_add_knowledge_candidates`
+Recommended flow:
+
+1. Use `paput_list_processed_sessions` to skip sessions already reviewed.
+2. The local-file-capable AI client reads `~/.codex/sessions/**/*.jsonl`.
+3. Use `paput_add_knowledge_candidates` when reusable candidates are found.
+4. Use `paput_mark_processed_session` when a reviewed session has no candidates.
 
 ### 3. Update a skill sheet project
 
@@ -311,21 +331,20 @@ Recommended tool flow:
 
 ## Local Data
 
-PaPut MCP stores local data under `~/.paput` by default.
+`setup-ai` stores generated skills under `~/.paput` by default. Knowledge
+capture state is stored by the PaPut API.
 
 ```text
 ~/.paput/
   skills/  # Canonical skills linked into Claude/Codex
-  cache/   # Synced memos, pending candidates, processed sessions, and capture-policy.md
 ```
 
 ## Troubleshooting
 
-- **Connection fails or tools do not appear**: Make sure the server URL is `https://mcp.paput.io` and that you completed the PaPut sign-in and consent screen. Check `https://mcp.paput.io/healthz` returns `{"ok":true}`.
+- **Connection fails or tools do not appear**: Make sure the server URL is `https://mcp.paput.io/mcp` and that you completed the PaPut sign-in and consent screen. Check `https://mcp.paput.io/healthz` returns `{"ok":true}`.
 - **401 Unauthorized / asked to sign in again**: Your access token expired or the connector was disconnected. Reconnect the connector and re-authorize through PaPut OAuth.
 - **A write or delete tool did nothing**: Write and destructive tools require user confirmation. Approve the confirmation prompt in the client before the action runs.
 - **Read/search tools return empty results**: The account has no matching data yet. Create content first (e.g. `paput_create_memos`), then search again.
-- **Local CLI mode: `login` required**: For stdio/local usage, run `node dist/index.js login` to complete OAuth before starting the server.
 - **Still stuck**: Contact `paput.dev@gmail.com` or open an issue at https://github.com/mizulba-dev/paput-mcp/issues.
 
 ## Public Documents

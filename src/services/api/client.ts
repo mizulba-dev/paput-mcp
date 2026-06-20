@@ -1,5 +1,3 @@
-import { getValidStoredAccessToken } from '../oauth/local-auth.js';
-
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 function requireHttps(url: string): void {
@@ -42,12 +40,11 @@ export async function apiRequest<T = unknown>(
   method: HttpMethod,
   body?: unknown,
 ): Promise<T> {
-  const accessToken =
-    config.accessToken ?? (await getValidStoredAccessToken(config.apiUrl));
+  const accessToken = config.accessToken;
 
   if (!accessToken) {
     throw new Error(
-      'PaPut authentication is not configured. Run `paput-mcp login`.',
+      'PaPut authentication is not configured for this MCP request.',
     );
   }
 

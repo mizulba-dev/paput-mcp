@@ -5,14 +5,14 @@ export const getProjectContextTool: ToolHandler = {
   definition: {
     name: 'paput_get_project_context',
     description:
-      'Get the private project context (always-applied instructions and an index of accumulated project documents) for a PaPut skill sheet project, resolved by fuzzy project name match. Call this at session start when working on a known project. Document bodies are not included; fetch them on demand with paput_get_project_document.',
+      'Get the private project context (always-applied instructions and an index of accumulated project documents) for a PaPut skill sheet project, resolved from the MCP URL project_alias or a fuzzy project name. Call this at session start when working on a known project. Document bodies are not included; fetch them on demand with paput_get_project_document.',
     inputSchema: {
       type: 'object',
       properties: {
         project: {
           type: 'string',
           description:
-            'Project name to resolve (partial match allowed). Required here; in local CLI mode the project is configured by PAPUT_PROJECT_MATCH and this argument is not exposed.',
+            'Project name to resolve (partial match allowed). Required only when no MCP project_alias is configured.',
         },
       },
     },

@@ -7,3 +7,4 @@ export * from './goal.js';
 export * from './dashboard.js';
 export * from './dashboard-analysis.js';
 export * from './project-context.js';
+export * from './knowledge-candidate.js';

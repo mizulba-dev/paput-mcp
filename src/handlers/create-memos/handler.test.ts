@@ -1,21 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from '../../services/api/client.js';
 import { handleCreateMemos } from './handler.js';
 
 describe('handleCreateMemos', () => {
-  const originalProjectMatch = process.env.PAPUT_PROJECT_MATCH;
-
-  beforeEach(() => {
-    delete process.env.PAPUT_PROJECT_MATCH;
-  });
-
   afterEach(() => {
     vi.restoreAllMocks();
-    if (originalProjectMatch === undefined) {
-      delete process.env.PAPUT_PROJECT_MATCH;
-    } else {
-      process.env.PAPUT_PROJECT_MATCH = originalProjectMatch;
-    }
   });
 
   function createMockClient(overrides: Partial<Record<string, unknown>> = {}) {

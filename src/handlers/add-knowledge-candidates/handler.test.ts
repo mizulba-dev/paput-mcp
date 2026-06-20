@@ -1,62 +1,15 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from '../../services/api/client.js';
-import { readCache } from '../../services/local-cache/index.js';
 import { handleAddKnowledgeCandidates } from './handler.js';
 
-const homeDirRef = vi.hoisted(() => ({ current: '' }));
-
-vi.mock('node:os', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('node:os')>();
-  return {
-    ...actual,
-    homedir: () => homeDirRef.current || actual.homedir(),
-  };
-});
-
 describe('handleAddKnowledgeCandidates', () => {
-  const originalPaputHome = process.env.PAPUT_HOME;
-  let home: string;
-  let sessionCwd: string;
-
-  beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), 'paput-add-candidates-test-'));
-    homeDirRef.current = home;
-    process.env.PAPUT_HOME = join(home, '.paput');
-    sessionCwd = join(home, 'repo');
-    mkdirSync(sessionCwd, { recursive: true });
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
   afterEach(() => {
     vi.restoreAllMocks();
-    homeDirRef.current = '';
-    if (originalPaputHome === undefined) {
-      delete process.env.PAPUT_HOME;
-    } else {
-      process.env.PAPUT_HOME = originalPaputHome;
-    }
-    rmSync(home, { force: true, recursive: true });
   });
-
-  function writeSessionFile(sessionId: string): void {
-    const dir = join(home, '.claude', 'projects', 'repo');
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(
-      join(dir, `${sessionId}.jsonl`),
-      JSON.stringify({
-        type: 'user',
-        cwd: sessionCwd,
-        message: { role: 'user', content: [{ type: 'text', text: 'Hi' }] },
-      }),
-    );
-  }
 
   function createMockClient(handlers: {
     similar?: () => unknown;
-    projects?: () => unknown;
+    addCandidates?: (body: Record<string, unknown>) => unknown;
   }) {
     return {
       get: vi.fn().mockImplementation(async (endpoint: string) => {
@@ -65,13 +18,39 @@ describe('handleAddKnowledgeCandidates', () => {
           if (value instanceof Error) throw value;
           return value;
         }
-        if (endpoint.startsWith('/api/v1/mcp/skill-sheet/projects')) {
-          const value = (handlers.projects ?? (() => []))();
-          if (value instanceof Error) throw value;
-          return value;
-        }
         throw new Error(`Unexpected endpoint: ${endpoint}`);
       }),
+      post: vi
+        .fn()
+        .mockImplementation(async (endpoint: string, body: unknown) => {
+          if (endpoint === '/api/v1/mcp/knowledge-candidates') {
+            const request = body as {
+              source: string;
+              session_id: string;
+              source_session_updated_at?: string;
+              candidates: Array<Record<string, unknown>>;
+            };
+            const value = handlers.addCandidates?.(request) ?? {
+              added: request.candidates.length,
+              duplicates: 0,
+              candidates: request.candidates.map((candidate, index) => ({
+                id: `candidate-${index}`,
+                session_id: request.session_id,
+                source: request.source,
+                source_session_updated_at: request.source_session_updated_at,
+                status: 'pending',
+                fingerprint: `fingerprint-${index}`,
+                created_at: '2026-06-02T10:00:00.000Z',
+                updated_at: '2026-06-02T10:00:00.000Z',
+                ...candidate,
+              })),
+              duplicate_details: [],
+            };
+            if (value instanceof Error) throw value;
+            return value;
+          }
+          throw new Error(`Unexpected endpoint: ${endpoint}`);
+        }),
     } as unknown as ApiClient;
   }
 
@@ -94,8 +73,7 @@ describe('handleAddKnowledgeCandidates', () => {
     expect(badCandidates.isError).toBe(true);
   });
 
-  it('adds candidates with similar memos and the session timestamp', async () => {
-    writeSessionFile('sess-1');
+  it('adds candidates with similar memos and an explicit source timestamp', async () => {
     const client = createMockClient({
       similar: () => ({
         memos: [{ id: 9, title: 'Existing memo', score: 0.5, body: 'b' }],
@@ -106,6 +84,7 @@ describe('handleAddKnowledgeCandidates', () => {
       {
         session_id: 'sess-1',
         source: 'claude',
+        source_session_updated_at: '2026-06-21T00:00:00.000Z',
         candidates: [
           { title: 'New knowledge', body: 'Body', categories: ['Go', 1] },
           'broken',
@@ -124,15 +103,11 @@ describe('handleAddKnowledgeCandidates', () => {
       categories: ['Go'],
       projects: [],
       similar_memos: [{ id: 9, title: 'Existing memo', score: 0.5 }],
+      source_session_updated_at: '2026-06-21T00:00:00.000Z',
     });
-    expect(
-      result.structuredContent?.candidates[0].source_session_updated_at,
-    ).toEqual(expect.any(String));
-    expect(readCache().pending).toHaveLength(1);
   });
 
   it('skips semantically near-duplicate candidates', async () => {
-    writeSessionFile('sess-1');
     const client = createMockClient({
       similar: () => ({
         memos: [{ id: 9, title: 'Existing memo', score: 0.95 }],
@@ -156,11 +131,11 @@ describe('handleAddKnowledgeCandidates', () => {
       title: 'Duplicate',
       reason: 'Semantically near-duplicate of an existing memo',
     });
-    expect(readCache().pending).toHaveLength(0);
+    expect(client.post).not.toHaveBeenCalled();
   });
 
   it('still adds candidates when the similarity search fails', async () => {
-    writeSessionFile('sess-1');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     const client = createMockClient({
       similar: () => new Error('similarity down'),
     });
@@ -178,17 +153,8 @@ describe('handleAddKnowledgeCandidates', () => {
     expect(result.structuredContent?.candidates[0].similar_memos).toEqual([]);
   });
 
-  it('attaches projects resolved from the session cwd', async () => {
-    writeSessionFile('sess-1');
-    writeFileSync(
-      join(sessionCwd, '.mcp.json'),
-      JSON.stringify({
-        mcpServers: { paput: { env: { PAPUT_PROJECT_MATCH: 'paput' } } },
-      }),
-    );
-    const client = createMockClient({
-      projects: () => [{ id: 5, title: 'paput' }],
-    });
+  it('uses configured project context as the default candidate project', async () => {
+    const client = createMockClient({});
 
     const result = await handleAddKnowledgeCandidates(
       {
@@ -197,6 +163,7 @@ describe('handleAddKnowledgeCandidates', () => {
         candidates: [{ title: 'Knowledge', body: 'Body' }],
       },
       client,
+      { projectId: 5, projectTitle: 'paput' },
     );
 
     expect(result.structuredContent?.candidates[0].projects).toEqual([
@@ -204,28 +171,27 @@ describe('handleAddKnowledgeCandidates', () => {
     ]);
   });
 
-  it('adds candidates without projects when project resolution fails', async () => {
-    writeSessionFile('sess-1');
-    writeFileSync(
-      join(sessionCwd, '.mcp.json'),
-      JSON.stringify({
-        mcpServers: { paput: { env: { PAPUT_PROJECT_MATCH: 'paput' } } },
-      }),
-    );
-    const client = createMockClient({
-      projects: () => new Error('projects down'),
-    });
+  it('keeps explicit candidate projects over configured project context', async () => {
+    const client = createMockClient({});
 
     const result = await handleAddKnowledgeCandidates(
       {
         session_id: 'sess-1',
         source: 'claude',
-        candidates: [{ title: 'Knowledge', body: 'Body' }],
+        candidates: [
+          {
+            title: 'Knowledge',
+            body: 'Body',
+            projects: [{ id: 9, title: 'explicit' }],
+          },
+        ],
       },
       client,
+      { projectId: 5, projectTitle: 'paput' },
     );
 
-    expect(result.structuredContent).toMatchObject({ added: 1 });
-    expect(result.structuredContent?.candidates[0].projects).toEqual([]);
+    expect(result.structuredContent?.candidates[0].projects).toEqual([
+      { id: 9, title: 'explicit' },
+    ]);
   });
 });

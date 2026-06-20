@@ -46,10 +46,9 @@ import {
   updateProjectInstructionsTool,
   discardProjectProposalTool,
   promoteProjectDocumentsTool,
-  cacheStatusTool,
-  scanSessionsTool,
-  getSessionTranscriptTool,
   addKnowledgeCandidatesTool,
+  listProcessedSessionsTool,
+  markProcessedSessionTool,
   listPendingCandidatesTool,
   updatePendingCandidateTool,
   savePendingCandidateTool,
@@ -61,8 +60,7 @@ import {
 import type { ToolContext, ToolHandler } from './types/index.js';
 
 interface RegisteredToolsOptions {
-  includeLocalTools?: boolean;
-  projectMatchConfigured?: boolean;
+  projectContextConfigured?: boolean;
 }
 
 export function setupTool(
@@ -73,14 +71,10 @@ export function setupTool(
   registeredToolsOptions: RegisteredToolsOptions = {},
 ): void {
   const apiClient = createApiClient(apiUrl, accessToken);
-  const includeLocalTools = registeredToolsOptions.includeLocalTools ?? true;
-  const projectMatchConfigured = Boolean(
-    context.projectMatch?.trim() ||
-      (includeLocalTools && process.env.PAPUT_PROJECT_MATCH?.trim()),
-  );
+  const projectContextConfigured = Boolean(context.projectId);
   const tools = getRegisteredTools({
     ...registeredToolsOptions,
-    projectMatchConfigured,
+    projectContextConfigured,
   });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -168,10 +162,9 @@ export function setupTool(
 }
 
 export function getRegisteredTools(
-  options: RegisteredToolsOptions = {},
+  options: Pick<RegisteredToolsOptions, 'projectContextConfigured'> = {},
 ): ToolHandler[] {
-  const includeLocalTools = options.includeLocalTools ?? true;
-  const projectMatchConfigured = options.projectMatchConfigured ?? false;
+  const projectContextConfigured = options.projectContextConfigured ?? false;
   const tools = [
     createMemosTool,
     searchMemoTool,
@@ -208,10 +201,9 @@ export function getRegisteredTools(
     updateProjectInstructionsTool,
     discardProjectProposalTool,
     promoteProjectDocumentsTool,
-    cacheStatusTool,
-    scanSessionsTool,
-    getSessionTranscriptTool,
     addKnowledgeCandidatesTool,
+    listProcessedSessionsTool,
+    markProcessedSessionTool,
     listPendingCandidatesTool,
     updatePendingCandidateTool,
     savePendingCandidateTool,
@@ -222,19 +214,16 @@ export function getRegisteredTools(
   ];
 
   return tools
-    .filter(
-      (tool) => includeLocalTools || !isLocalOnlyTool(tool.definition.name),
-    )
     .map(withToolAnnotations)
     .map((tool) =>
-      projectMatchConfigured ? withConfiguredProjectMatch(tool) : tool,
+      projectContextConfigured ? withConfiguredProjectContext(tool) : tool,
     );
 }
 
 const PROJECT_CONTEXT_CONFIGURED_DESCRIPTION =
-  'Get the private project context (always-applied instructions and an index of accumulated project documents) for the project configured by PAPUT_PROJECT_MATCH. The project is resolved automatically from configuration, so call this with no arguments at session start. Document bodies are not included; fetch them on demand with paput_get_project_document.';
+  'Get the private project context (always-applied instructions and an index of accumulated project documents) for the configured project. The project is resolved automatically from the MCP URL project_alias, so call this with no arguments at session start. Document bodies are not included; fetch them on demand with paput_get_project_document.';
 
-function withConfiguredProjectMatch(tool: ToolHandler): ToolHandler {
+function withConfiguredProjectContext(tool: ToolHandler): ToolHandler {
   if (tool.definition.name !== 'paput_get_project_context') return tool;
 
   const schema = tool.definition.inputSchema;
@@ -389,16 +378,16 @@ function isReadOnlyTool(name: string): boolean {
     name.includes('_search_') ||
     name.includes('_list_') ||
     name === 'paput_get_categories' ||
-    name === 'paput_cache_status' ||
-    name === 'paput_scan_sessions' ||
     name === 'paput_get_capture_policy' ||
-    name === 'paput_get_discard_policy_context'
+    name === 'paput_get_discard_policy_context' ||
+    name === 'paput_list_processed_sessions'
   );
 }
 
 function isDestructiveTool(name: string): boolean {
   return (
     name.includes('_delete_') ||
+    name === 'paput_mark_processed_session' ||
     name === 'paput_discard_pending_candidate' ||
     name === 'paput_discard_project_proposal' ||
     name === 'paput_promote_project_documents' ||
@@ -414,21 +403,5 @@ function isIdempotentTool(name: string): boolean {
     isReadOnlyTool(name) ||
     name.startsWith('paput_update_') ||
     name === 'paput_set_skill_sheet_skills'
-  );
-}
-
-function isLocalOnlyTool(name: string): boolean {
-  return (
-    name === 'paput_cache_status' ||
-    name === 'paput_scan_sessions' ||
-    name === 'paput_get_session_transcript' ||
-    name === 'paput_add_knowledge_candidates' ||
-    name === 'paput_list_pending_candidates' ||
-    name === 'paput_update_pending_candidate' ||
-    name === 'paput_save_pending_candidate' ||
-    name === 'paput_discard_pending_candidate' ||
-    name === 'paput_get_capture_policy' ||
-    name === 'paput_get_discard_policy_context' ||
-    name === 'paput_update_capture_policy'
   );
 }

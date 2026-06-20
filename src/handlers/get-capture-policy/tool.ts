@@ -5,7 +5,7 @@ export const getCapturePolicyTool: ToolHandler = {
   definition: {
     name: 'paput_get_capture_policy',
     description:
-      'Get the local PaPut capture policy document generated from discarded knowledge candidates.',
+      'Get the PaPut capture policy document generated from discarded knowledge candidates.',
     inputSchema: {
       type: 'object',
       properties: {},

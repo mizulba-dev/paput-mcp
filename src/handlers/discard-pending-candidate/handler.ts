@@ -1,9 +1,9 @@
 import { ApiClient } from '../../services/api/client.js';
-import { updatePendingCandidate } from '../../services/local-cache/index.js';
+import { discardRemoteKnowledgeCandidate } from '../../services/api/knowledge-candidate.js';
 
 export async function handleDiscardPendingCandidate(
   args: Record<string, unknown> | undefined,
-  _apiClient: ApiClient,
+  apiClient: ApiClient,
 ) {
   if (!args || typeof args.candidate_id !== 'string') {
     return {
@@ -12,30 +12,13 @@ export async function handleDiscardPendingCandidate(
     };
   }
 
-  const updated = updatePendingCandidate(args.candidate_id, (candidate) => ({
-    ...candidate,
-    status: 'discarded',
-    discarded_reason: typeof args.reason === 'string' ? args.reason : undefined,
-    updated_at: new Date().toISOString(),
-  }));
-
-  if (!updated) {
-    return {
-      content: [
-        { type: 'text', text: 'Pending candidate to discard was not found' },
-      ],
-      isError: true,
-    };
-  }
-
-  const result = {
-    discarded: true,
-    candidate_id: updated.id,
-    title: updated.title,
-  };
+  const result = await discardRemoteKnowledgeCandidate(apiClient, {
+    candidate_id: args.candidate_id,
+    reason: typeof args.reason === 'string' ? args.reason : undefined,
+  });
 
   return {
-    structuredContent: result,
+    structuredContent: result as unknown as Record<string, unknown>,
     content: [
       {
         type: 'text',

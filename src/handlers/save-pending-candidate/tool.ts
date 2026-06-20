@@ -10,6 +10,11 @@ export const savePendingCandidateTool: ToolHandler = {
       type: 'object',
       properties: {
         candidate_id: { type: 'string', description: 'Candidate ID to save' },
+        saved_memo_id: {
+          type: 'number',
+          description:
+            'Existing memo ID to attach when retrying after memo creation succeeded but candidate save failed. Omit for normal saves.',
+        },
         title: { type: 'string', description: 'Title override when saving' },
         body: { type: 'string', description: 'Body override when saving' },
         created_at: {

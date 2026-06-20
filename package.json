@@ -10,9 +10,9 @@
   "scripts": {
     "build": "tsc && node scripts/copy-cli-assets.mjs",
     "test": "vitest run",
-    "start": "node dist/index.js",
+    "start": "node dist/http.js",
     "start:http": "node dist/http.js",
-    "dev": "ts-node --esm src/index.ts",
+    "dev": "HOST=127.0.0.1 ts-node --esm src/http.ts",
     "dev:http": "HOST=127.0.0.1 ts-node --esm src/http.ts",
     "check:http": "ts-node --esm src/check-http.ts",
     "test:mcp:transports": "vitest run src/transport.test.ts",
@@ -30,6 +30,10 @@
   ],
   "author": "mizuko",
   "homepage": "https://paput.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mizulba-dev/paput-mcp.git"
+  },
   "files": [
     "dist",
     "docs",

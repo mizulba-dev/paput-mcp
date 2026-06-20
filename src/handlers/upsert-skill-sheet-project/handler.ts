@@ -118,6 +118,9 @@ function parseProjectParams(
   if (typeof params.end_period === 'string' || params.end_period === null) {
     project.end_period = params.end_period;
   }
+  if (typeof params.mcp_alias === 'string') {
+    project.mcp_alias = params.mcp_alias;
+  }
 
   return project;
 }

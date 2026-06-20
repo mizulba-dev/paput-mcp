@@ -6,7 +6,7 @@ PaPut is a knowledge-capture tool for engineers (memos, notes, and skill sheets)
 This MCP connector lets Claude read and write PaPut content on behalf of an
 authorized user.
 
-- **Server URL:** `https://mcp.paput.io`
+- **Server URL:** `https://mcp.paput.io/mcp`
 - **Transport:** Streamable HTTP
 - **Authentication:** OAuth 2.1 (Authorization Code + PKCE/S256, Dynamic Client Registration supported)
 - **Scopes:** `paput.read`, `paput.write`
@@ -21,20 +21,29 @@ The connector exposes the following tools. All tools carry annotations
 - **Skill sheet:** get and update basic info, self PR, skills, and projects
 - **Goals:** list, create, update, delete
 - **Dashboard analysis:** get and update the user's dashboard analysis
+- **Knowledge capture:** add, list, update, save, discard pending candidates; manage processed session markers and capture policy
+- **Project documents:** get project context, read/add/update private project documents, manage project instructions and proposal promotion status
 
 ## Test account
 
 Test credentials (email and password) are provided in the submission form.
-The account is pre-populated with sample memos and a note so read/search tools
-return data.
+The account is prepared with basic sample memos and categories so read/search
+tools can return data without the reviewer having to create memos first.
+Additional representative data for notes, skill sheet projects, goals,
+dashboard analysis, pending candidates, processed session markers, capture
+policy, or private project documents may be prepared for review as needed.
 
 > Note: PaPut normally uses Google sign-in only. A dedicated email/password
 > login is enabled for the review period so you can sign in without a Google
 > account.
 
+`paput-mcp setup-ai` installs local AI-client skills and rules for Claude Code
+or Codex. It is a local utility and is outside the remote connector review
+scope.
+
 ## Steps
 
-1. In Claude, add a custom connector with the server URL `https://mcp.paput.io`.
+1. In Claude, add a custom connector with the server URL `https://mcp.paput.io/mcp`.
 2. Start the connection. You will be redirected to the PaPut sign-in page.
 3. On the sign-in page, enter the test credentials (the email/password form),
    then approve the consent screen. You will be returned to Claude and the

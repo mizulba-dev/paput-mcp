@@ -75,10 +75,14 @@ export interface ProjectInstructionsResponse {
 
 export async function getProjectContext(
   client: ApiClient,
-  project: string,
+  project: string | { project_id: number },
 ): Promise<ProjectContextResponse> {
   const queryParams = new URLSearchParams();
-  queryParams.append('project', project);
+  if (typeof project === 'string') {
+    queryParams.append('project', project);
+  } else {
+    queryParams.append('project_id', String(project.project_id));
+  }
 
   return client.get<ProjectContextResponse>(
     `/api/v1/mcp/project-context?${queryParams.toString()}`,

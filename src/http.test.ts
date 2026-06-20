@@ -104,7 +104,7 @@ describe('HTTP MCP server security handling', () => {
     expect(response.headers.get('content-type')).toContain('text/html');
   });
 
-  it('keeps returning 405 for SSE stream GET requests', async () => {
+  it('does not treat root SSE requests as MCP endpoint requests', async () => {
     const port = await startTestServer();
 
     const response = await fetch(`http://127.0.0.1:${port}/`, {
@@ -112,20 +112,33 @@ describe('HTTP MCP server security handling', () => {
     });
     const body = await response.json();
 
-    expect(response.status).toBe(405);
-    expect(response.headers.get('allow')).toBe('POST');
-    expect(body.error.message).toBe('Method not allowed.');
+    expect(response.status).toBe(404);
+    expect(body.error.message).toBe('Not found');
   });
 
   it('rejects non-POST methods on the MCP endpoint', async () => {
     const port = await startTestServer();
 
-    const response = await fetch(`http://127.0.0.1:${port}/`, {
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
       method: 'DELETE',
     });
 
     expect(response.status).toBe(405);
     expect(response.headers.get('allow')).toBe('POST');
+  });
+
+  it('does not accept root as the MCP endpoint', async () => {
+    const port = await startTestServer();
+
+    const response = await fetch(`http://127.0.0.1:${port}/`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error.message).toBe('Not found');
   });
 
   it('redirects authorization server metadata to the API origin', async () => {
@@ -145,7 +158,7 @@ describe('HTTP MCP server security handling', () => {
   it('challenges requests with an empty bearer token', async () => {
     const port = await startTestServer();
 
-    const response = await fetch(`http://127.0.0.1:${port}/`, {
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -163,7 +176,7 @@ describe('HTTP MCP server security handling', () => {
   it('challenges requests with a non-bearer authorization scheme', async () => {
     const port = await startTestServer();
 
-    const response = await fetch(`http://127.0.0.1:${port}/`, {
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -184,7 +197,7 @@ describe('HTTP MCP server security handling', () => {
     );
     const metadata = await response.json();
 
-    expect(metadata.resource).toBe(`https://127.0.0.1:${port}`);
+    expect(metadata.resource).toBe(`https://127.0.0.1:${port}/mcp`);
   });
 
   it('prefers PAPUT_PUBLIC_ORIGIN over request headers for the resource URL', async () => {
@@ -197,7 +210,7 @@ describe('HTTP MCP server security handling', () => {
     );
     const metadata = await response.json();
 
-    expect(metadata.resource).toBe('https://mcp.example.test');
+    expect(metadata.resource).toBe('https://mcp.example.test/mcp');
   });
 
   it('falls back to localhost when the Host header is malformed', async () => {
@@ -210,7 +223,7 @@ describe('HTTP MCP server security handling', () => {
     const metadata = JSON.parse(response.body);
 
     expect(response.status).toBe(200);
-    expect(metadata.resource).toBe('http://localhost');
+    expect(metadata.resource).toBe('http://localhost/mcp');
   });
 });
 

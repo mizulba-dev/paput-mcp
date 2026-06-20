@@ -40,10 +40,9 @@ const expectedToolNames = [
   'paput_update_project_instructions',
   'paput_discard_project_proposal',
   'paput_promote_project_documents',
-  'paput_cache_status',
-  'paput_scan_sessions',
-  'paput_get_session_transcript',
   'paput_add_knowledge_candidates',
+  'paput_list_processed_sessions',
+  'paput_mark_processed_session',
   'paput_list_pending_candidates',
   'paput_update_pending_candidate',
   'paput_save_pending_candidate',
@@ -67,9 +66,7 @@ const readOnlyToolNames = [
   'paput_get_public_profile_context',
   'paput_get_project_context',
   'paput_get_project_document',
-  'paput_cache_status',
-  'paput_scan_sessions',
-  'paput_get_session_transcript',
+  'paput_list_processed_sessions',
   'paput_list_pending_candidates',
   'paput_get_capture_policy',
   'paput_get_discard_policy_context',
@@ -92,41 +89,17 @@ const destructiveToolNames = [
   'paput_update_project_instructions',
   'paput_discard_project_proposal',
   'paput_promote_project_documents',
+  'paput_mark_processed_session',
   'paput_update_pending_candidate',
   'paput_discard_pending_candidate',
   'paput_update_capture_policy',
 ];
-
-const remoteToolNames = expectedToolNames.filter(
-  (name) =>
-    ![
-      'paput_cache_status',
-      'paput_scan_sessions',
-      'paput_get_session_transcript',
-      'paput_add_knowledge_candidates',
-      'paput_list_pending_candidates',
-      'paput_update_pending_candidate',
-      'paput_save_pending_candidate',
-      'paput_discard_pending_candidate',
-      'paput_get_capture_policy',
-      'paput_get_discard_policy_context',
-      'paput_update_capture_policy',
-    ].includes(name),
-);
 
 describe('registered tools', () => {
   it('registers the expected tool set in order', () => {
     const toolNames = getRegisteredTools().map((tool) => tool.definition.name);
 
     expect(toolNames).toEqual(expectedToolNames);
-  });
-
-  it('can exclude local-only tools for remote HTTP mode', () => {
-    const toolNames = getRegisteredTools({ includeLocalTools: false }).map(
-      (tool) => tool.definition.name,
-    );
-
-    expect(toolNames).toEqual(remoteToolNames);
   });
 
   it('exposes the project argument for paput_get_project_context by default', () => {
@@ -139,8 +112,8 @@ describe('registered tools', () => {
     ).toContain('project');
   });
 
-  it('drops the project argument when a project match is configured', () => {
-    const tool = getRegisteredTools({ projectMatchConfigured: true }).find(
+  it('drops the project argument when a project context is configured', () => {
+    const tool = getRegisteredTools({ projectContextConfigured: true }).find(
       (t) => t.definition.name === 'paput_get_project_context',
     );
 

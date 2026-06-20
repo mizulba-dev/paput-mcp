@@ -2,9 +2,11 @@
 
 PaPut MCP is a data-only MCP server. It exposes tools and resources for PaPut data. It does not provide UI widgets.
 
-Remote HTTP mode exposes API-backed PaPut tools only. Local cache, pending
-candidate, and session transcript tools are available in local CLI mode because
-they read or write files on the user's device.
+Remote HTTP mode exposes API-backed PaPut tools. Pending candidates, processed
+session markers, and capture policies are stored by the PaPut API. PaPut MCP
+does not expose tools that read local Claude/Codex session files; local-file-
+capable clients can read those files themselves through the `paput-init` skill
+workflow and then submit extracted candidates through MCP.
 
 ## Confirmation Policy
 
@@ -13,7 +15,7 @@ Clients and assistants should follow these rules:
 - Read-only tools may be used when they are relevant to the user's request.
 - Create, update, save, publish, discard, and delete tools should be used only when the user's intent is clear.
 - Destructive tools require explicit confirmation before execution.
-- `paput_save_pending_candidate` requires explicit user approval because it creates a PaPut memo from a local pending candidate.
+- `paput_save_pending_candidate` requires explicit user approval because it creates a PaPut memo from a pending candidate.
 - `paput_delete_skill_sheet_project` should be used only when the user clearly intends to remove a project.
 - `paput_update_skill_sheet_project_ai_summary` should be used only after the MCP client AI model has generated a project summary and the user intends to save it.
 - `paput_update_skill_sheet_public_profile` should be used only after the MCP client AI model has generated a public profile (headline, profile summary, or strength labels) and the user intends to save it.
@@ -38,8 +40,8 @@ Clients and assistants should follow these rules:
 | `paput_get_categories`           | Read-only         | List categories before assigning categories or checking duplicates.              |
 
 `paput_create_memos` and `paput_update_memo` can link projects through explicit
-`projects`, a `project_match` input, or local `PAPUT_PROJECT_MATCH` in local CLI
-mode.
+`projects`, a `project_match` input, or the Remote HTTP URL `project_alias`
+context.
 
 `paput_search_memo` matches surface text, while `paput_find_similar_memos`
 matches meaning, so it finds related memos even when the wording differs.
@@ -123,8 +125,8 @@ returned by the PaPut API.
 
 These tools manage private, project-scoped context for a PaPut skill sheet
 project: always-applied instructions, accumulated design decisions, and
-repeatable procedures. They are API-backed and available in both remote HTTP and
-local CLI modes. Project context and documents are private and are never exposed
+repeatable procedures. They are API-backed and available through Remote HTTP
+MCP. Project context and documents are private and are never exposed
 publicly.
 
 | Tool                                | Safety            | Use case                                                                                            |
@@ -137,10 +139,9 @@ publicly.
 | `paput_discard_project_proposal`    | Destructive       | Record that the user rejected a skill proposal so it is not raised again.                            |
 | `paput_promote_project_documents`   | Destructive       | Mark a skill proposal and its procedure documents as promoted after a skill is created.              |
 
-In local CLI mode the project is resolved from `PAPUT_PROJECT_MATCH`, so
-`paput_get_project_context` is called with no arguments and the `project`
-argument is not exposed. In remote HTTP mode there is no configured match, so
-`project` is provided per call.
+When `project_alias` is present in the MCP URL, `paput_get_project_context` is
+called with no arguments and the `project` argument is not exposed. Without a
+URL project context, provide `project` per call.
 
 `paput_get_project_context` returns the document index only (no bodies); fetch
 bodies on demand with `paput_get_project_document`. Save settled design
@@ -152,32 +153,35 @@ the user rejects it, call `paput_discard_project_proposal` with the reason.
 Because instructions are loaded in full at session start, change them only with
 `paput_update_project_instructions` after explicit user approval.
 
-## Knowledge Capture And Local Cache Tools
+## Knowledge Capture Tools
 
-These tools are local CLI mode only. They are not listed by the remote HTTP MCP
-server.
+Knowledge capture state is stored by the PaPut API and is available through
+Remote HTTP MCP.
 
 | Tool                               | Safety                       | Use case                                                                    |
 | ---------------------------------- | ---------------------------- | --------------------------------------------------------------------------- |
-| `paput_cache_status`               | Read-only                    | Inspect local cache, pending candidates, processed sessions, and policy.    |
-| `paput_scan_sessions`              | Read-only                    | Scan local Claude and Codex session logs for reusable knowledge sources.    |
-| `paput_get_session_transcript`     | Read-only                    | Read a selected local Claude or Codex session transcript.                   |
-| `paput_add_knowledge_candidates`   | Write to local pending queue | Add extracted reusable knowledge candidates before they are saved to PaPut. |
+| `paput_add_knowledge_candidates`   | Write to pending queue       | Add extracted reusable knowledge candidates before they are saved to PaPut. |
+| `paput_list_processed_sessions`    | Read-only                    | List Claude/Codex sessions already reviewed for knowledge capture.          |
+| `paput_mark_processed_session`     | Write                        | Mark a reviewed Claude/Codex session as processed when no candidates are added. |
 | `paput_list_pending_candidates`    | Read-only                    | List pending candidates for review.                                         |
-| `paput_update_pending_candidate`   | Write to local pending queue | Refine a pending candidate's fields before it is saved.                     |
+| `paput_update_pending_candidate`   | Write to pending queue       | Refine a pending candidate's fields before it is saved.                     |
 | `paput_save_pending_candidate`     | Write                        | Save an approved pending candidate as a PaPut memo.                         |
-| `paput_discard_pending_candidate`  | Destructive local action     | Remove a pending candidate from the save flow.                              |
-| `paput_get_capture_policy`         | Read-only                    | Read the local capture policy generated from discarded candidates.          |
+| `paput_discard_pending_candidate`  | Destructive action           | Remove a pending candidate from the save flow.                              |
+| `paput_get_capture_policy`         | Read-only                    | Read the capture policy generated from discarded candidates.                |
 | `paput_get_discard_policy_context` | Read-only                    | Read discarded candidates and current policy for AI-side policy analysis.   |
-| `paput_update_capture_policy`      | Write to local cache         | Save the local capture policy generated by the AI.                          |
+| `paput_update_capture_policy`      | Write                        | Save the capture policy generated by the AI.                                |
 
 Capture policy workflow:
 
-1. `paput_discard_pending_candidate` keeps rejected pending candidates in the local cache with their discard reason.
+1. `paput_discard_pending_candidate` keeps rejected pending candidates with their discard reason.
 2. `paput_get_discard_policy_context` returns those discarded candidates and the current policy to the MCP client AI.
 3. The MCP client AI summarizes rejection patterns into a concise Markdown policy.
-4. `paput_update_capture_policy` saves that policy locally.
+4. `paput_update_capture_policy` saves that policy.
 5. `paput-capture` reads the saved policy with `paput_get_capture_policy` before adding future candidates.
 
-The capture policy is local-only. It is not saved as a PaPut memo and is not
-available from the remote HTTP MCP server.
+The capture policy is not saved as a PaPut memo. It is stored by the PaPut API
+and is available through Remote HTTP MCP.
+
+For past-session import, a local-file-capable AI client should read its own
+Claude/Codex session files through the `paput-init` skill, then call
+`paput_add_knowledge_candidates` or `paput_mark_processed_session`.

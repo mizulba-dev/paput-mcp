@@ -9,6 +9,10 @@ import {
 import { fileURLToPath } from 'node:url';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createMcpServer, type MCPServerOptions } from './server.js';
+import {
+  createApiClient,
+  getSkillSheetProjectByAlias,
+} from './services/api/index.js';
 
 export interface HttpMcpServerOptions extends MCPServerOptions {
   allowedOrigins?: string[];
@@ -32,7 +36,7 @@ const ICON_SOURCES: Record<string, string> = {
 export async function startHttpMcpServer(
   options: HttpMcpServerOptions = {},
 ): Promise<HttpServer> {
-  const endpoint = options.endpoint ?? '/';
+  const endpoint = normalizeEndpoint(options.endpoint ?? '/mcp');
   const port = options.port ?? Number(process.env.PORT ?? 3000);
   // host 未指定は 0.0.0.0 全開放。ローカル開発では HOST=127.0.0.1 を渡すこと。
   const host = options.host ?? process.env.HOST;
@@ -66,11 +70,9 @@ export async function startHttpMcpServer(
       `http://${normalizeHostHeader(req.headers.host)}`,
     );
     const publicOrigin = getPublicOrigin(req, requestUrl);
-    const resourceUrl = getResourceUrl(publicOrigin, endpoint);
-    const protectedResourceMetadataUrl = getProtectedResourceMetadataUrl(
-      publicOrigin,
-      endpoint,
-    );
+    const effectiveEndpoint = resolveEndpoint(requestUrl.pathname, endpoint);
+    const protectedResourceMetadataUrl =
+      getProtectedResourceMetadataUrl(publicOrigin);
 
     if (requestUrl.pathname === '/healthz') {
       res.writeHead(200, { 'content-type': 'application/json' });
@@ -89,9 +91,12 @@ export async function startHttpMcpServer(
       return;
     }
 
-    if (requestUrl.pathname === '/.well-known/oauth-protected-resource') {
+    if (
+      requestUrl.pathname === '/.well-known/oauth-protected-resource' ||
+      requestUrl.pathname.startsWith('/.well-known/oauth-protected-resource/')
+    ) {
       sendJson(res, 200, {
-        resource: resourceUrl,
+        resource: getResourceUrl(publicOrigin, endpoint),
         resource_name: 'PaPut',
         authorization_servers: [apiOrigin],
         scopes_supported: OAUTH_SCOPES,
@@ -108,17 +113,18 @@ export async function startHttpMcpServer(
       return;
     }
 
-    if (requestUrl.pathname !== endpoint) {
-      sendJsonRpcError(res, 404, -32000, 'Not found');
-      return;
-    }
-
-    // 公開ランディングはクローラー向けにも 200 を返す。SSE GET と MCP POST は下の origin 検査を通す。
+    // 公開案内ページはクローラー向けにも 200 を返す。MCP endpoint ではない。
     if (
+      requestUrl.pathname === '/' &&
       (req.method === 'GET' || req.method === 'HEAD') &&
       !requestsEventStream(req)
     ) {
       sendLandingPage(res, req.method === 'HEAD');
+      return;
+    }
+
+    if (!effectiveEndpoint) {
+      sendJsonRpcError(res, 404, -32000, 'Not found');
       return;
     }
 
@@ -159,11 +165,36 @@ export async function startHttpMcpServer(
       return;
     }
 
+    const projectAlias = normalizeProjectAlias(
+      requestUrl.searchParams.get('project_alias') ??
+        requestUrl.searchParams.get('alias'),
+    );
+    if (projectAlias === false) {
+      sendJsonRpcError(
+        res,
+        400,
+        -32602,
+        'project_alias must be 3-40 lowercase alphanumeric characters.',
+      );
+      return;
+    }
+
+    const projectContext = await resolveProjectContext(
+      apiUrl,
+      accessToken,
+      projectAlias,
+    );
+    if (projectContext === false) {
+      sendJsonRpcError(res, 404, -32000, 'project_alias was not found.');
+      return;
+    }
+
     const mcpServer = createMcpServer({
       ...options,
       accessToken,
-      includeLocalTools: false,
-      projectMatch: options.projectMatch,
+      projectId: projectContext?.projectId ?? options.projectId,
+      projectTitle: projectContext?.projectTitle ?? options.projectTitle,
+      projectAlias: projectContext?.projectAlias ?? options.projectAlias,
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
@@ -204,6 +235,50 @@ export async function startHttpMcpServer(
   return httpServer;
 }
 
+function normalizeEndpoint(endpoint: string): string {
+  const trimmed = endpoint.trim();
+  if (!trimmed || trimmed === '/') return '/';
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+}
+
+function resolveEndpoint(pathname: string, endpoint: string): string | null {
+  if (pathname === endpoint) return endpoint;
+  return null;
+}
+
+function normalizeProjectAlias(value: string | null): string | null | false {
+  const alias = value?.trim() ?? '';
+  if (!alias) return null;
+  if (!/^[a-z0-9]{3,40}$/.test(alias)) return false;
+  return alias;
+}
+
+async function resolveProjectContext(
+  apiUrl: string,
+  accessToken: string,
+  projectAlias: string | null,
+): Promise<
+  | {
+      projectId: number;
+      projectTitle: string;
+      projectAlias: string;
+    }
+  | null
+  | false
+> {
+  if (!projectAlias) return null;
+
+  const apiClient = createApiClient(apiUrl, accessToken);
+  const project = await getSkillSheetProjectByAlias(apiClient, projectAlias);
+  if (!project) return false;
+
+  return {
+    projectId: project.id,
+    projectTitle: project.title,
+    projectAlias,
+  };
+}
+
 function parseAllowedOrigins(value?: string): string[] {
   return (value ?? '')
     .split(',')
@@ -233,9 +308,10 @@ function sendLandingPage(res: ServerResponse, headOnly = false): void {
   <body>
     <h1>PaPut MCP Server</h1>
     <p>
-      This is the remote Model Context Protocol endpoint for
-      <a href="https://paput.io">PaPut</a>. MCP clients connect over HTTP POST
-      with OAuth. See <a href="https://github.com/mizulba-dev/paput-mcp">the documentation</a>.
+      This is the remote Model Context Protocol server for
+      <a href="https://paput.io">PaPut</a>. MCP clients should use
+      <code>https://mcp.paput.io/mcp</code> and connect over HTTP POST with OAuth.
+      See <a href="https://github.com/mizulba-dev/paput-mcp">the documentation</a>.
     </p>
   </body>
 </html>
@@ -352,13 +428,8 @@ function getResourceUrl(publicOrigin: string, endpoint: string): string {
   return endpoint === '/' ? publicOrigin : `${publicOrigin}${endpoint}`;
 }
 
-function getProtectedResourceMetadataUrl(
-  publicOrigin: string,
-  endpoint: string,
-): string {
-  return endpoint === '/'
-    ? `${publicOrigin}/.well-known/oauth-protected-resource`
-    : `${publicOrigin}/.well-known/oauth-protected-resource${endpoint}`;
+function getProtectedResourceMetadataUrl(publicOrigin: string): string {
+  return `${publicOrigin}/.well-known/oauth-protected-resource`;
 }
 
 function extractBearerToken(authorizationHeader?: string): string | undefined {
@@ -470,7 +541,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       console.error(
         `PaPut MCP Streamable HTTP server listening on ${listeningOn}`,
       );
-      console.error('MCP endpoint: /');
+      console.error('MCP endpoint: /mcp');
     })
     .catch((error) => {
       console.error('Unexpected error:', error);

@@ -1,21 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from '../services/api/client.js';
 import { resolveMemoProjects } from './memo-projects.js';
 
 describe('resolveMemoProjects', () => {
-  const originalProjectMatch = process.env.PAPUT_PROJECT_MATCH;
-
-  beforeEach(() => {
-    delete process.env.PAPUT_PROJECT_MATCH;
-  });
-
   afterEach(() => {
     vi.restoreAllMocks();
-    if (originalProjectMatch === undefined) {
-      delete process.env.PAPUT_PROJECT_MATCH;
-    } else {
-      process.env.PAPUT_PROJECT_MATCH = originalProjectMatch;
-    }
   });
 
   function createMockClient(
@@ -43,46 +32,34 @@ describe('resolveMemoProjects', () => {
     expect(client.get).not.toHaveBeenCalled();
   });
 
-  it('searches by args.project_match and returns the first result', async () => {
+  it('rejects ambiguous args.project_match results', async () => {
     const client = createMockClient([
       { id: 1, title: 'paput' },
       { id: 2, title: 'paput-api' },
     ]);
 
-    const result = await resolveMemoProjects(
-      { project_match: ' paput ' },
-      client,
-    );
+    await expect(
+      resolveMemoProjects({ project_match: ' paput ' }, client),
+    ).rejects.toThrow('project_match matched multiple projects');
 
     expect(client.get).toHaveBeenCalledWith(
       '/api/v1/mcp/skill-sheet/projects?search=paput',
     );
-    expect(result).toEqual([{ id: 1, title: 'paput' }]);
   });
 
-  it('falls back to the tool context project match', async () => {
-    const client = createMockClient([{ id: 3, title: 'ctx' }]);
+  it('uses the configured project context', async () => {
+    const client = createMockClient();
 
     const result = await resolveMemoProjects({}, client, {
-      projectMatch: 'ctx',
+      projectId: 3,
+      projectTitle: 'ctx',
     });
 
     expect(result).toEqual([{ id: 3, title: 'ctx' }]);
+    expect(client.get).not.toHaveBeenCalled();
   });
 
-  it('falls back to the PAPUT_PROJECT_MATCH environment variable', async () => {
-    process.env.PAPUT_PROJECT_MATCH = 'env-project';
-    const client = createMockClient([{ id: 4, title: 'env-project' }]);
-
-    const result = await resolveMemoProjects({}, client);
-
-    expect(client.get).toHaveBeenCalledWith(
-      '/api/v1/mcp/skill-sheet/projects?search=env-project',
-    );
-    expect(result).toEqual([{ id: 4, title: 'env-project' }]);
-  });
-
-  it('returns undefined when no project match is configured', async () => {
+  it('returns undefined when no project selector is configured', async () => {
     const client = createMockClient();
 
     await expect(resolveMemoProjects({}, client)).resolves.toBeUndefined();
@@ -97,12 +74,12 @@ describe('resolveMemoProjects', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('returns undefined when the search fails', async () => {
+  it('rejects when the search fails', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const client = createMockClient(new Error('api down'));
 
     await expect(
       resolveMemoProjects({ project_match: 'paput' }, client),
-    ).resolves.toBeUndefined();
+    ).rejects.toThrow('api down');
   });
 });

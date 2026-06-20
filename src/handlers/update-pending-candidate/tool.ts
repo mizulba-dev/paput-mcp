@@ -5,7 +5,7 @@ export const updatePendingCandidateTool: ToolHandler = {
   definition: {
     name: 'paput_update_pending_candidate',
     description:
-      'Update an existing pending knowledge candidate in the local cache before it is saved to PaPut. Only fields you provide are changed; omitted fields keep their current value. Use this to refine a candidate (title, body, categories, memo type keys, confidence, visibility, or linked projects) instead of discarding and re-adding it. Only candidates that are still pending can be updated.',
+      'Update an existing pending knowledge candidate before it is saved to PaPut. Only fields you provide are changed; omitted fields keep their current value. Use this to refine a candidate (title, body, categories, memo type keys, confidence, visibility, or linked projects) instead of discarding and re-adding it. Only candidates that are still pending can be updated.',
     inputSchema: {
       type: 'object',
       properties: {

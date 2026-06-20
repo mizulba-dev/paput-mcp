@@ -66,9 +66,8 @@ export async function handleUpdateMemo(
     );
   }
 
-  params.projects = await resolveMemoProjects(args, apiClient, context);
-
   try {
+    params.projects = await resolveMemoProjects(args, apiClient, context);
     const result = await updateMemo(apiClient, params);
 
     if (!result.success) {

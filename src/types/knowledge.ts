@@ -33,12 +33,13 @@ export interface SimilarMemo {
 export interface ProcessedSession {
   session_id: string;
   source: SessionSource;
-  path: string;
+  path?: string;
   processed_at: string;
+  source_session_updated_at?: string;
 }
 
 export interface CapturePolicy {
-  path: string;
+  path: string | null;
   markdown: string;
   exists: boolean;
   updated_at: string | null;

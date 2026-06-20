@@ -16,7 +16,7 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 
 ## Steps
 
-1. Read the local capture policy with `paput_get_capture_policy`.
+1. Read the capture policy with `paput_get_capture_policy`.
 2. Check existing pending candidates with `paput_list_pending_candidates`.
 3. Extract only reusable knowledge from the current conversation or the user-specified topic.
 4. For each candidate, check semantically similar existing memos with `paput_find_similar_memos`, using the candidate title or a one-line gist as the query. Treat results with a score around 0.85 or higher as near-duplicates, and results around 0.7 to 0.85 as overlap that needs comparison against the candidate body. Use `paput_search_memo` in addition when the candidate centers on an exact name or identifier.

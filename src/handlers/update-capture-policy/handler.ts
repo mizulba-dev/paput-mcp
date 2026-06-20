@@ -1,9 +1,9 @@
 import { ApiClient } from '../../services/api/client.js';
-import { writeCapturePolicy } from '../../services/local-cache/index.js';
+import { updateRemoteCapturePolicy } from '../../services/api/knowledge-candidate.js';
 
 export async function handleUpdateCapturePolicy(
   args: Record<string, unknown> | undefined,
-  _apiClient: ApiClient,
+  apiClient: ApiClient,
 ) {
   if (!args || typeof args.markdown !== 'string') {
     return {
@@ -12,10 +12,10 @@ export async function handleUpdateCapturePolicy(
     };
   }
 
-  const policy = writeCapturePolicy(args.markdown);
+  const policy = await updateRemoteCapturePolicy(apiClient, args.markdown);
 
   return {
-    structuredContent: policy,
+    structuredContent: policy as unknown as Record<string, unknown>,
     content: [
       {
         type: 'text',

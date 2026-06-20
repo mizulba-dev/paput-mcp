@@ -53,6 +53,11 @@ const skillSheetProjectSchema = z.object({
     .optional(),
   type: z.number().describe('Project type: 1 business, 2 personal'),
   title: z.string().describe('Project title'),
+  mcp_alias: z
+    .string()
+    .regex(/^[a-z0-9]{3,40}$/)
+    .describe('Project alias used in remote MCP URLs, e.g. paput')
+    .optional(),
   start_period: z.string().describe('Start period in YYYY-MM format'),
   end_period: z.string().describe('End period in YYYY-MM format').optional(),
   description: z.string().describe('Project description'),
@@ -71,6 +76,8 @@ const knowledgeCandidateSchema = z.object({
   title: z.string(),
   body: z.string(),
   categories: z.array(z.string()).optional(),
+  memo_type_keys: z.array(z.string()).optional(),
+  projects: z.array(projectReferenceSchema).optional(),
   confidence: z.number().optional(),
   is_public: z.boolean().default(false).optional(),
 });
@@ -352,7 +359,7 @@ const toolInputSchemas = {
       .string()
       .min(1)
       .describe(
-        'Project name to resolve (partial match allowed). Required here; in local CLI mode the project is configured by PAPUT_PROJECT_MATCH and this argument is not exposed.',
+        'Project name to resolve (partial match allowed). Required only when no MCP project_alias is configured.',
       )
       .optional(),
   }),
@@ -443,32 +450,30 @@ const toolInputSchemas = {
         'Promotion target, e.g. the skill name or file path (max 255 chars)',
       ),
   }),
-  paput_cache_status: emptySchema,
-  paput_scan_sessions: z.object({
-    sources: z
-      .array(z.enum(['claude', 'codex']))
-      .describe('Session sources to scan')
-      .optional(),
-    include_processed: z
-      .boolean()
-      .default(false)
-      .describe('Whether to include already processed sessions')
-      .optional(),
-  }),
-  paput_get_session_transcript: z.object({
-    session_id: z.string().describe('Session ID to read'),
-    source: z.enum(['claude', 'codex']).describe('Session source'),
-    max_chars: z
-      .number()
-      .describe('Maximum number of characters to return. Defaults to 20000.')
-      .optional(),
-  }),
   paput_add_knowledge_candidates: z.object({
     session_id: z.string().describe('Source session ID'),
     source: z.enum(['claude', 'codex']).describe('Source session provider'),
+    source_session_updated_at: z
+      .string()
+      .describe('Source session updated timestamp in ISO 8601 format')
+      .optional(),
     candidates: z
       .array(knowledgeCandidateSchema)
       .describe('Knowledge candidates to add'),
+  }),
+  paput_list_processed_sessions: z.object({
+    source: z
+      .enum(['claude', 'codex'])
+      .describe('Optional session source to filter by')
+      .optional(),
+  }),
+  paput_mark_processed_session: z.object({
+    source: z.enum(['claude', 'codex']).describe('Session source'),
+    session_id: z.string().describe('Session ID that was reviewed'),
+    source_session_updated_at: z
+      .string()
+      .describe('Source session updated timestamp in ISO 8601 format')
+      .optional(),
   }),
   paput_list_pending_candidates: z.object({
     limit: z
@@ -502,6 +507,12 @@ const toolInputSchemas = {
   }),
   paput_save_pending_candidate: z.object({
     candidate_id: z.string().describe('Candidate ID to save'),
+    saved_memo_id: z
+      .number()
+      .describe(
+        'Existing memo ID to attach when retrying after memo creation succeeded but candidate save failed. Omit for normal saves.',
+      )
+      .optional(),
     title: z.string().describe('Title override when saving').optional(),
     body: z.string().describe('Body override when saving').optional(),
     created_at: z

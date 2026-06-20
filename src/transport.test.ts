@@ -17,7 +17,7 @@ afterEach(async () => {
 });
 
 describe('MCP transports', () => {
-  it('serves registered tools through an in-memory stdio-compatible transport', async () => {
+  it('serves registered tools through an in-memory transport', async () => {
     const mcpServer = createMcpServer(testServerOptions);
     const client = createTestClient();
     clients.push(client);
@@ -54,7 +54,7 @@ describe('MCP transports', () => {
       const client = createTestClient();
       clients.push(client);
       const transport = new StreamableHTTPClientTransport(
-        new URL(`http://127.0.0.1:${address.port}`),
+        new URL(`http://127.0.0.1:${address.port}/mcp`),
         {
           requestInit: {
             headers: { Authorization: 'Bearer test-access-token' },
@@ -71,11 +71,8 @@ describe('MCP transports', () => {
       expect(result.tools.map((tool) => tool.name)).toContain(
         'paput_create_memos',
       );
-      expect(result.tools.map((tool) => tool.name)).not.toContain(
-        'paput_cache_status',
-      );
-      expect(result.tools.map((tool) => tool.name)).not.toContain(
-        'paput_scan_sessions',
+      expect(result.tools.map((tool) => tool.name)).toContain(
+        'paput_mark_processed_session',
       );
     } finally {
       await new Promise<void>((resolve, reject) => {
@@ -138,7 +135,7 @@ describe('MCP transports', () => {
       const metadata = await response.json();
 
       expect(response.status).toBe(200);
-      expect(metadata.resource).toBe(`http://127.0.0.1:${address.port}`);
+      expect(metadata.resource).toBe(`http://127.0.0.1:${address.port}/mcp`);
       expect(metadata.resource_name).toBe('PaPut');
       expect(metadata.authorization_servers).toEqual([
         'https://api.example.test',
@@ -158,7 +155,7 @@ describe('MCP transports', () => {
 
     try {
       const address = httpServer.address() as AddressInfo;
-      const response = await fetch(`http://127.0.0.1:${address.port}`, {
+      const response = await fetch(`http://127.0.0.1:${address.port}/mcp`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
@@ -186,7 +183,7 @@ describe('MCP transports', () => {
 
     try {
       const address = httpServer.address() as AddressInfo;
-      const response = await fetch(`http://127.0.0.1:${address.port}`, {
+      const response = await fetch(`http://127.0.0.1:${address.port}/mcp`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -213,7 +210,7 @@ describe('MCP transports', () => {
 
     try {
       const address = httpServer.address() as AddressInfo;
-      const response = await fetch(`http://127.0.0.1:${address.port}`, {
+      const response = await fetch(`http://127.0.0.1:${address.port}/mcp`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',

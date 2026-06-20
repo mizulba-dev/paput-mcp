@@ -1,13 +1,12 @@
 import { ApiClient } from '../../services/api/client.js';
+import { addRemoteKnowledgeCandidates } from '../../services/api/knowledge-candidate.js';
 import { findSimilarMemos } from '../../services/api/memo.js';
-import { addKnowledgeCandidates } from '../../services/local-cache/index.js';
-import { resolveProjectsForCwd } from '../../services/project-match/index.js';
-import { scanSessions } from '../../services/session/index.js';
 import {
   KnowledgeCandidateInput,
   SessionSource,
   SimilarMemo,
 } from '../../types/knowledge.js';
+import type { ToolContext } from '../../types/index.js';
 
 // 重複とみなす類似スコア閾値（この値以上は自動除外）
 const NEAR_DUPLICATE_SCORE = 0.9;
@@ -16,6 +15,7 @@ const SIMILAR_MEMO_LIMIT = 5;
 export async function handleAddKnowledgeCandidates(
   args: Record<string, unknown> | undefined,
   apiClient: ApiClient,
+  context?: ToolContext,
 ) {
   if (!args || typeof args.session_id !== 'string') {
     return {
@@ -67,6 +67,15 @@ export async function handleAddKnowledgeCandidates(
             (key): key is string => typeof key === 'string',
           )
         : [];
+      const projects = Array.isArray(rawCandidate.projects)
+        ? rawCandidate.projects.filter(
+            (project): project is { id: number; title?: string } =>
+              typeof project === 'object' &&
+              project !== null &&
+              'id' in project &&
+              typeof (project as { id: unknown }).id === 'number',
+          )
+        : undefined;
 
       return [
         {
@@ -82,17 +91,32 @@ export async function handleAddKnowledgeCandidates(
             typeof rawCandidate.is_public === 'boolean'
               ? rawCandidate.is_public
               : false,
+          projects,
         },
       ];
     },
   );
 
   const source = args.source as SessionSource;
-  const sourceSession = scanSessions([source], true).find(
-    (session) => session.session_id === args.session_id,
+  return await addRemoteCandidates(
+    args,
+    apiClient,
+    context,
+    source,
+    candidates,
   );
-  const sourceSessionUpdatedAt = sourceSession?.updated_at;
-  const projects = await resolveProjects(apiClient, sourceSession?.cwd);
+}
+
+async function addRemoteCandidates(
+  args: Record<string, unknown>,
+  apiClient: ApiClient,
+  context: ToolContext = {},
+  source: SessionSource,
+  candidates: KnowledgeCandidateInput[],
+) {
+  const contextProjects = context.projectId
+    ? [{ id: context.projectId, title: context.projectTitle }]
+    : [];
 
   const semanticDuplicates: Array<{
     title: string;
@@ -124,23 +148,51 @@ export async function handleAddKnowledgeCandidates(
 
     candidatesToAdd.push({
       ...candidate,
-      projects,
+      projects:
+        candidate.projects && candidate.projects.length > 0
+          ? candidate.projects
+          : contextProjects,
       similar_memos: similarMemos,
     });
   }
 
-  const result = addKnowledgeCandidates(
-    source,
-    args.session_id,
-    candidatesToAdd,
-    sourceSessionUpdatedAt,
-  );
+  if (candidatesToAdd.length === 0) {
+    const response = {
+      added: 0,
+      duplicates: semanticDuplicates.length,
+      candidates: [],
+      duplicate_details: semanticDuplicates,
+    };
 
-  const duplicateDetails = [...semanticDuplicates, ...result.duplicates];
+    return {
+      structuredContent: response,
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(response, null, 2),
+        },
+      ],
+    };
+  }
+
+  const result = await addRemoteKnowledgeCandidates(apiClient, {
+    source,
+    session_id: args.session_id as string,
+    source_session_updated_at:
+      typeof args.source_session_updated_at === 'string'
+        ? args.source_session_updated_at
+        : undefined,
+    candidates: candidatesToAdd,
+  });
+
+  const duplicateDetails = [
+    ...semanticDuplicates,
+    ...(result.duplicate_details ?? []),
+  ];
   const response = {
-    added: result.added.length,
+    added: result.candidates.length,
     duplicates: duplicateDetails.length,
-    candidates: result.added,
+    candidates: result.candidates,
     duplicate_details: duplicateDetails,
   };
 
@@ -153,18 +205,6 @@ export async function handleAddKnowledgeCandidates(
       },
     ],
   };
-}
-
-async function resolveProjects(
-  apiClient: ApiClient,
-  cwd: string | undefined,
-): Promise<Array<{ id: number; title?: string }>> {
-  try {
-    return await resolveProjectsForCwd(apiClient, cwd);
-  } catch (error) {
-    console.error('Failed to resolve projects for pending candidate:', error);
-    return [];
-  }
 }
 
 async function findSimilarMemosForCandidate(

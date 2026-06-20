@@ -3,7 +3,9 @@ import { ApiClient } from '../services/api/client.js';
 export type ToolResult = Record<string, unknown>;
 
 export interface ToolContext {
-  projectMatch?: string;
+  projectId?: number;
+  projectTitle?: string;
+  projectAlias?: string;
 }
 
 export interface ToolDefinition {

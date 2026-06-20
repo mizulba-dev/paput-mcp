@@ -1,11 +1,11 @@
 ---
 name: paput-analyze-discard-policy
-description: Use this to analyze locally discarded PaPut knowledge candidates, derive reusable capture rejection criteria, and save the resulting capture policy document.
+description: Use this to analyze discarded PaPut knowledge candidates, derive reusable capture rejection criteria, and save the resulting capture policy document.
 ---
 
 # PaPut Analyze Discard Policy
 
-Analyze locally discarded PaPut knowledge candidates, derive reusable capture rejection criteria, and save the resulting capture policy document. The saved policy is read by `paput-capture` before adding new knowledge candidates.
+Analyze discarded PaPut knowledge candidates, derive reusable capture rejection criteria, and save the resulting capture policy document. The saved policy is read by `paput-capture` before adding new knowledge candidates.
 
 ## When To Use
 
@@ -62,5 +62,5 @@ Use this structure:
 ## Notes
 
 - This skill does not save PaPut memos.
-- The policy is local-only and stored in the PaPut cache.
+- The policy is stored by the PaPut API and is available through Remote HTTP MCP.
 - The policy guides future capture decisions; it should not be treated as an immutable blocklist.

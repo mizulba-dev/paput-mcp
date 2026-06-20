@@ -1,6 +1,5 @@
 import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { setupTool } from './tool.js';
 import { setupErrorHandling } from './utils/error-handler.js';
 
@@ -10,8 +9,9 @@ const packageJson = require('../package.json') as { version: string };
 export interface MCPServerOptions {
   apiUrl?: string;
   accessToken?: string;
-  includeLocalTools?: boolean;
-  projectMatch?: string;
+  projectId?: number;
+  projectTitle?: string;
+  projectAlias?: string;
 }
 
 export function createMcpServer(options: MCPServerOptions = {}): Server {
@@ -37,31 +37,12 @@ export function createMcpServer(options: MCPServerOptions = {}): Server {
     apiUrl,
     accessToken,
     {
-      projectMatch: options.projectMatch,
-    },
-    {
-      includeLocalTools: options.includeLocalTools,
+      projectId: options.projectId,
+      projectTitle: options.projectTitle,
+      projectAlias: options.projectAlias,
     },
   );
   setupErrorHandling(server);
 
   return server;
-}
-
-export class MCPServer {
-  private server: Server;
-
-  constructor(options: MCPServerOptions = {}) {
-    this.server = createMcpServer(options);
-  }
-
-  async run(): Promise<void> {
-    const transport = new StdioServerTransport();
-
-    transport.onerror = (error: unknown) => {
-      console.error(`MCP error: ${error}`);
-    };
-
-    await this.server.connect(transport);
-  }
 }

@@ -6,7 +6,7 @@ This document collects public submission information for PaPut MCP.
 
 - Name: PaPut MCP
 - Website: https://paput.io
-- Remote MCP server URL: https://mcp.paput.io
+- Remote MCP server URL: https://mcp.paput.io/mcp
 - Transport: Streamable HTTP
 - Authentication: OAuth 2.1-style authorization code with PKCE
 - Dynamic client registration: Supported through PaPut OAuth metadata
@@ -32,7 +32,7 @@ Recommended listing details:
 
 - Connector name: PaPut
 - Description: Connect Claude to PaPut memos, notes, and skill sheets.
-- Server URL: `https://mcp.paput.io`
+- Server URL: `https://mcp.paput.io/mcp`
 - Authentication: OAuth
 - Transport: Streamable HTTP
 - Scopes: `paput.read paput.write`
@@ -47,7 +47,7 @@ Validation checklist:
 
 Status: verified with Claude custom connector UI.
 
-1. Add `https://mcp.paput.io` as a remote MCP connector in Claude.
+1. Add `https://mcp.paput.io/mcp` as a remote MCP connector in Claude.
 2. Complete the PaPut OAuth consent flow.
 3. Confirm `tools/list` returns PaPut tools.
 4. Call a read-only tool such as `paput_get_categories`.
@@ -61,7 +61,7 @@ Status: verified with Claude custom connector UI.
 Recommended listing details:
 
 - App name: PaPut
-- Remote MCP server URL: `https://mcp.paput.io`
+- Remote MCP server URL: `https://mcp.paput.io/mcp`
 - Authentication: OAuth with dynamic client registration
 - Transport: Streamable HTTP
 - Tool access: Remote API-backed PaPut tools, data-only, no UI widgets
@@ -74,7 +74,7 @@ Developer Mode validation checklist:
 Status: verified with ChatGPT Developer Mode.
 
 1. Enable Developer Mode in ChatGPT settings.
-2. Create an app for the remote MCP server URL `https://mcp.paput.io`.
+2. Create an app for the remote MCP server URL `https://mcp.paput.io/mcp`.
 3. Use OAuth without static credentials so dynamic client registration is exercised.
 4. Complete the PaPut OAuth flow in the browser.
 5. Refresh the app tools and confirm PaPut tools are listed.

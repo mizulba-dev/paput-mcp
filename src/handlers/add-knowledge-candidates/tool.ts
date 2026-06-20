@@ -5,7 +5,7 @@ export const addKnowledgeCandidatesTool: ToolHandler = {
   definition: {
     name: 'paput_add_knowledge_candidates',
     description:
-      'Add reusable knowledge candidates extracted from a Claude or Codex session to the local pending queue. Use this before saving knowledge to PaPut when candidates still need review or deduplication.',
+      'Add reusable knowledge candidates extracted from a Claude or Codex session to the pending queue. Use this before saving knowledge to PaPut when candidates still need review or deduplication.',
     inputSchema: {
       type: 'object',
       properties: {
