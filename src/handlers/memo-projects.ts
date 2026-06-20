@@ -19,15 +19,6 @@ export async function resolveMemoProjects(
     );
   }
 
-  if (context?.projectId) {
-    return [
-      {
-        id: context.projectId,
-        title: context.projectTitle,
-      },
-    ];
-  }
-
   const projectMatch = getProjectMatch(args, context);
   if (!projectMatch) return undefined;
 

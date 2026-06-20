@@ -47,7 +47,7 @@ describe('resolveMemoProjects', () => {
     );
   });
 
-  it('uses the configured project context', async () => {
+  it('ignores the configured project context and does not auto-link', async () => {
     const client = createMockClient();
 
     const result = await resolveMemoProjects({}, client, {
@@ -55,7 +55,20 @@ describe('resolveMemoProjects', () => {
       projectTitle: 'ctx',
     });
 
-    expect(result).toEqual([{ id: 3, title: 'ctx' }]);
+    expect(result).toBeUndefined();
+    expect(client.get).not.toHaveBeenCalled();
+  });
+
+  it('prefers an explicit projects array over the configured context', async () => {
+    const client = createMockClient();
+
+    const result = await resolveMemoProjects(
+      { projects: [{ id: 1, title: 'PaPut' }] },
+      client,
+      { projectId: 3, projectTitle: 'ctx' },
+    );
+
+    expect(result).toEqual([{ id: 1, title: 'PaPut' }]);
     expect(client.get).not.toHaveBeenCalled();
   });
 

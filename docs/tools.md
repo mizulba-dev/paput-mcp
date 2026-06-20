@@ -39,9 +39,10 @@ Clients and assistants should follow these rules:
 | `paput_update_memo`              | Destructive/write | Update an existing memo title, body, visibility, categories, or linked projects. |
 | `paput_get_categories`           | Read-only         | List categories before assigning categories or checking duplicates.              |
 
-`paput_create_memos` and `paput_update_memo` can link projects through explicit
-`projects`, a `project_match` input, or the Remote HTTP URL `project_alias`
-context.
+`paput_create_memos` and `paput_update_memo` link projects only when you pass an
+explicit `projects` array or a `project_match` input. They do not auto-link from
+the Remote HTTP URL `project_alias` context, so a memo with neither stays
+unlinked.
 
 `paput_search_memo` matches surface text, while `paput_find_similar_memos`
 matches meaning, so it finds related memos even when the wording differs.
