@@ -149,9 +149,7 @@ async function addRemoteCandidates(
     candidatesToAdd.push({
       ...candidate,
       projects:
-        candidate.projects && candidate.projects.length > 0
-          ? candidate.projects
-          : contextProjects,
+        candidate.projects !== undefined ? candidate.projects : contextProjects,
       similar_memos: similarMemos,
     });
   }

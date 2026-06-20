@@ -194,4 +194,26 @@ describe('handleAddKnowledgeCandidates', () => {
       { id: 9, title: 'explicit' },
     ]);
   });
+
+  it('keeps an explicit empty candidate projects array over configured project context', async () => {
+    const client = createMockClient({});
+
+    const result = await handleAddKnowledgeCandidates(
+      {
+        session_id: 'sess-1',
+        source: 'claude',
+        candidates: [
+          {
+            title: 'Knowledge',
+            body: 'Body',
+            projects: [],
+          },
+        ],
+      },
+      client,
+      { projectId: 5, projectTitle: 'paput' },
+    );
+
+    expect(result.structuredContent?.candidates[0].projects).toEqual([]);
+  });
 });
