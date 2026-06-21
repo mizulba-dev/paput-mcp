@@ -28,6 +28,11 @@ export interface DashboardCategoryTimelineData {
   data: DashboardCategoryTimelineItem[];
 }
 
+export interface DashboardMemoTypeCount {
+  key: string;
+  count: number;
+}
+
 export interface DashboardSummary {
   total_memo_count: number;
   total_note_count: number;
@@ -35,6 +40,7 @@ export interface DashboardSummary {
   category_item_counts: DashboardCategoryItemCount[];
   category_relations: DashboardCategoryRelation[];
   category_timeline_data: DashboardCategoryTimelineData[];
+  memo_type_counts: DashboardMemoTypeCount[];
   recent_memo_count: number;
   last_memo_created_at: string | null;
   active_days_in_last_30_days: number;

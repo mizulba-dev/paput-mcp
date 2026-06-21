@@ -52,6 +52,7 @@ export async function handleGetDashboardAnalysisContext(
     const prompt = buildPrompt({
       dashboardSummary,
       goals,
+      memoTypeCounts: dashboardSummary.memo_type_counts || [],
       recentMemoCount: recentMemos.length,
       noteCount: notes.length,
       categoryCount: categories?.length || 0,
@@ -118,6 +119,7 @@ function buildPrompt(context: {
     active_days_in_last_30_days: number;
   };
   goals: Array<{ id: number; title: string; status: string }>;
+  memoTypeCounts: Array<{ key: string; count: number }>;
   recentMemoCount: number;
   noteCount: number;
   categoryCount: number;
@@ -129,15 +131,22 @@ function buildPrompt(context: {
     (goal) => goal.status === 'archived',
   );
 
+  const countOf = (key: string): number =>
+    context.memoTypeCounts.find((entry) => entry.key === key)?.count ?? 0;
+  const memoTypeLine = `decision ${countOf('decision')}, operation ${countOf('operation')}, principle ${countOf('principle')}, knowledge ${countOf('knowledge')}`;
+
   return `Create a dashboard analysis as the MCP client AI, using the PaPut data in structuredContent. paput-mcp does not contain analysis logic, so you should read the source data and adapt the analysis to the user's goals and context. Write the final output in the user's language and match the user's tone when possible.
+
+Lead with the judgment axis, not raw volume. The durable, hard-to-commoditize part of what the user accumulates is their JUDGMENT and PRACTICE — captured as memo_type: decision (judgment criteria), operation (operating practices: observability, eval, testing, review), and principle (stated stances). knowledge is commodity. So assess the user by how thick those three axes are, not by how many memos or categories they have. structuredContent.dashboard_summary.memo_type_counts holds the per-type accumulation.
 
 Assumptions:
 - Do not recalculate dashboard continuity from activities. Use the summary values returned by the API.
 - Treat active goals as the current basis for analysis and archived goals as historical context.
-- Do not assume that the user should write memos next. Analyze how knowledge that naturally accumulates through daily development can grow toward the goals.
+- Frame current position, strengths, and thin areas in terms of decision / operation / principle thickness — not "how much knowledge has accumulated". Categories describe the domains the user works in; use them as a secondary lens, not the main axis. knowledge is commodity and is not a strength on its own.
 - If existing skill sheet or project AI summaries are available, use them as references for career-history phrasing.
 
 Context summary:
+- Memo type accumulation (the main axis): ${memoTypeLine}
 - Total memo count: ${context.dashboardSummary.total_memo_count}
 - Total note count: ${context.dashboardSummary.total_note_count}
 - Recent memo count: ${context.dashboardSummary.recent_memo_count}
@@ -151,13 +160,13 @@ Context summary:
 - Saved analysis: ${context.hasSavedAnalysis ? 'available' : 'not available'}
 
 Include these analysis points:
-1. The user's current position
-2. Areas that can be presented as strengths
-3. Areas that have been growing recently
-4. Thin or underdeveloped areas
-5. Knowledge missing against the user's goals
-6. Knowledge the user should learn next
-7. Phrasing that can be used in a skill sheet or career history
+1. The user's current position, read through the judgment/practice/principle axes (which axes are thick, which are thin).
+2. Strengths — the judgment criteria and operating practices the user has accumulated (decision / operation / principle), with the domains (categories) they show up in as supporting context.
+3. Areas that have been growing recently.
+4. Thin or underdeveloped axes — name the memo_type that is thin (e.g. principle is thin) and what that means, not just thin categories.
+5. Knowledge missing against the user's goals.
+6. What to do next to thicken the thin durable axis (e.g. distill recurring decisions into principles, capture operating practices), rather than just "learn more".
+7. Phrasing that can be used in a skill sheet or career history.
 
-If saving the result, build values suitable for paput_update_dashboard_analysis: current_summary, strengths, growing_areas, weak_areas, next_knowledge_suggestions, and analyzed_at. strengths, growing_areas, and weak_areas should include title, description, category_names, memo_count, and goal_ids. next_knowledge_suggestions should include title, reason, priority, category_names, and goal_ids.`;
+If saving the result, build values suitable for paput_update_dashboard_analysis: current_summary, strengths, growing_areas, weak_areas, next_knowledge_suggestions, and analyzed_at. strengths, growing_areas, and weak_areas should include title, description, category_names, memo_count, and goal_ids — and in each description speak in the judgment/practice/principle axis (e.g. which memo_type backs the strength, which type is thin). next_knowledge_suggestions should include title, reason, priority, category_names, and goal_ids.`;
 }
