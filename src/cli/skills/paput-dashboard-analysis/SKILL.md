@@ -39,6 +39,7 @@ Include these points when relevant, read through the decision / operation / prin
 - `knowledge`-type memos are commodity. Do not present knowledge volume as a strength on its own.
 - When the thin axis is `principle` or `operation`, say so plainly and make the next step about thickening it (distilling decisions into principles, capturing eval / observability / review as operation).
 - In each saved item's `description`, speak in the judgment/practice/principle axis (which memo_type backs the strength, which type is thin). The output fields are unchanged; the axis is carried in the wording.
+- `category_names` must be EXACT names taken from `structuredContent.categories`. Do not invent, translate, or paraphrase category names (e.g. do not write "可観測性" or "CI/開発基盤" if those are not in the list). If no listed category matches the item, leave `category_names` empty — categories are a secondary lens, so an empty list is fine and better than an approximate name.
 - When saving, map the generated result to:
   - `current_summary`
   - `strengths`
