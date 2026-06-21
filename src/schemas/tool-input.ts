@@ -284,9 +284,38 @@ const toolInputSchemas = {
             .array(z.string())
             .describe('Related project IDs')
             .optional(),
+          supporting_memo_ids: z
+            .array(z.number())
+            .describe(
+              'Public memo IDs that back this strength. Use only public decision/operation/principle memo IDs from the index; non-public or non-owned IDs are dropped server-side.',
+            )
+            .optional(),
         }),
       )
       .describe('Array of strength labels')
+      .optional(),
+    stances: z
+      .array(
+        z.object({
+          type: z
+            .enum(['decision', 'operation'])
+            .describe('Which axis this stance belongs to'),
+          statement: z
+            .string()
+            .describe(
+              'One-line stance synthesized from decision/operation memos. Weave in what was chosen and what was rejected; dissolve principle into the wording.',
+            ),
+          supporting_memo_ids: z
+            .array(z.number())
+            .describe(
+              'Public memo IDs backing this stance (the drill-down judgment cards). Use only public decision/operation/principle memo IDs from the index.',
+            )
+            .optional(),
+        }),
+      )
+      .describe(
+        'Stances (judgment and operating practices) shown as the lead of the AI Summary tab. Aim for about 3 decision and 3 operation stances.',
+      )
       .optional(),
     project_highlights: z
       .array(

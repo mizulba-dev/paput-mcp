@@ -80,13 +80,16 @@ structuredContent.public_summary_memos is an index of ALL the person's PUBLIC de
 - Read the index, pick the memos most relevant to the headline and strengths, and fetch their bodies with paput_get_memo. There is no fixed limit; the index is the full set.
 - If the index is empty, say so and base the summary on the skill sheet, knowledge_map, and growing_areas alone, noting that judgment/operation/principle material is thin.
 
-Produce these fields:
-1. headline: a one-line catchphrase of what the person can do (around 100 characters).
-2. profile_summary: a 3-4 sentence overall summary written for a recruiter. Ground it in the judgment, operating practices, and principles visible in the fetched decision/operation/principle memo bodies, not just a list of technologies.
-3. strength_labels: the top 3-5 strengths. Each has a label, an optional short description, and evidence via category_names and project_ids drawn from the context and the fetched memos.
+Produce these fields. stances is the lead of the page; the rest are supporting layers.
+1. stances (the lead): cluster the fetched decision/operation memos by theme and turn each cluster into one stance. Each stance has type (decision | operation), a one-line statement that weaves in what was chosen and what was rejected (dissolve principle into the wording), and supporting_memo_ids (the public memo IDs from the index that back it; these become the drill-down judgment cards). Aim for about 3 decision and 3 operation stances. Drop any stance you cannot back with at least one public memo ID.
+2. headline: a one-line catchphrase of what the person can do (around 100 characters), demoted to a thin intro.
+3. profile_summary: a 3-4 sentence overall summary written for a recruiter, also a thin intro. Ground it in the judgment, operating practices, and principles visible in the fetched decision/operation/principle memo bodies, not just a list of technologies.
+4. strength_labels: the top 3-5 strengths. Each has a label, an optional short description, evidence via category_names and project_ids, and supporting_memo_ids (public memo IDs backing the strength) where available.
 
 Guidance:
-- Tie strengths to concrete projects and the fetched public memos. Do not exaggerate.
+- Tie strengths and stances to concrete projects and the fetched public memos. Do not exaggerate.
+- Drop any claim you cannot back with public material. Build stances only from decision/operation memos (principle dissolved in); knowledge-type memos are commodity and are not stance material.
+- Use only public memo IDs from the index for supporting_memo_ids. The server drops any ID that is not the user's own public memo, so do not pad with guesses.
 - Do not present memo counts as skill proficiency. Activity volume is not mastery.
 - Use the category map (knowledge_map) and growing_areas to describe what the person works on, not as ability scores.
 - Keep the tone factual and easy to read in a short time.
@@ -99,5 +102,5 @@ Context summary:
 - Public summary memos in index: ${context.summaryMemoCount}
 - Existing profile summary: ${context.hasProfileSummary ? 'available' : 'not available'}
 
-Present the draft to the user first. Only when the user asks to save, call paput_update_skill_sheet_public_profile with headline, profile_summary, and strength_labels, then verify with paput_get_skill_sheet.`;
+Present the draft to the user first, leading with the stances. Only when the user asks to save, call paput_update_skill_sheet_public_profile with stances, headline, profile_summary, and strength_labels, then verify with paput_get_skill_sheet.`;
 }

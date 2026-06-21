@@ -1,10 +1,26 @@
 export interface GetSkillSheetParams {}
 
+export interface SupportingMemo {
+  id: number;
+  title: string;
+}
+
 export interface StrengthLabel {
   label: string;
   description?: string | null;
   category_names?: string[] | null;
   project_ids?: string[] | null;
+  supporting_memo_ids?: number[] | null;
+  // 読み出しレスポンスでのみ解決される（書き込み時は id だけ送る）
+  supporting_memos?: SupportingMemo[] | null;
+}
+
+export interface Stance {
+  type: 'decision' | 'operation';
+  statement: string;
+  supporting_memo_ids?: number[] | null;
+  // 読み出しレスポンスでのみ解決される
+  supporting_memos?: SupportingMemo[] | null;
 }
 
 export interface ProjectHighlight {
@@ -26,6 +42,7 @@ export interface GetSkillSheetResponse {
   profile_summary?: string | null;
   strength_labels?: StrengthLabel[] | null;
   project_highlights?: ProjectHighlight[] | null;
+  stances?: Stance[] | null;
   skills: GetSkillSheetSkill[];
   projects: GetSkillSheetProject[];
 }
@@ -35,6 +52,7 @@ export interface UpdatePublicProfileParams {
   profile_summary?: string;
   strength_labels?: StrengthLabel[];
   project_highlights?: ProjectHighlight[];
+  stances?: Stance[];
 }
 
 export interface GetSkillSheetSkill {

@@ -4,6 +4,7 @@ import type {
   ProjectHighlight,
   UpdatePublicProfileParams,
   StrengthLabel,
+  Stance,
 } from '../../types/index.js';
 
 export async function handler(
@@ -21,6 +22,7 @@ export async function handler(
       profile_summary: publicProfile.profile_summary ?? null,
       strength_labels: publicProfile.strength_labels ?? null,
       project_highlights: publicProfile.project_highlights ?? null,
+      stances: publicProfile.stances ?? null,
     },
     content: [
       {
@@ -77,9 +79,40 @@ function parsePublicProfileParams(
           label.project_ids = item.project_ids as string[];
         }
 
+        const supportingMemoIds = parseMemoIds(item.supporting_memo_ids);
+        if (supportingMemoIds.length > 0) {
+          label.supporting_memo_ids = supportingMemoIds;
+        }
+
         return label;
       })
       .filter((item) => item.label.length > 0);
+  }
+
+  if (Array.isArray(params.stances)) {
+    result.stances = params.stances
+      .filter(
+        (item): item is Record<string, unknown> =>
+          typeof item === 'object' && item !== null,
+      )
+      .map((item): Stance => {
+        const stance: Stance = {
+          type: item.type === 'operation' ? 'operation' : 'decision',
+          statement: typeof item.statement === 'string' ? item.statement : '',
+        };
+
+        const supportingMemoIds = parseMemoIds(item.supporting_memo_ids);
+        if (supportingMemoIds.length > 0) {
+          stance.supporting_memo_ids = supportingMemoIds;
+        }
+
+        return stance;
+      })
+      .filter(
+        (item) =>
+          item.statement.length > 0 &&
+          (item.type === 'decision' || item.type === 'operation'),
+      );
   }
 
   if (Array.isArray(params.project_highlights)) {
@@ -121,4 +154,14 @@ function parsePublicProfileParams(
   }
 
   return result;
+}
+
+function parseMemoIds(value: unknown): number[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter(
+    (id): id is number =>
+      typeof id === 'number' && Number.isInteger(id) && id > 0,
+  );
 }
