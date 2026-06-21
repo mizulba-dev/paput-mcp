@@ -139,6 +139,8 @@ function buildPrompt(context: {
 
 Lead with the judgment axis, not raw volume. The durable, hard-to-commoditize part of what the user accumulates is their JUDGMENT and PRACTICE — captured as memo_type: decision (judgment criteria), operation (operating practices: observability, eval, testing, review), and principle (stated stances). knowledge is commodity. So assess the user by how thick those three axes are, not by how many memos or categories they have. structuredContent.dashboard_summary.memo_type_counts holds the per-type accumulation.
 
+The judgment axis is the LENS, not a replacement for goal analysis. The dashboard's core job is "where am I against my goals", so keep goals first-class: read each active goal THROUGH the axis — which judgment/practice/principle axis that goal requires, and whether it is currently thick or thin. Do not drop the goal overview in favor of axis-only talk.
+
 Assumptions:
 - Do not recalculate dashboard continuity from activities. Use the summary values returned by the API.
 - Treat active goals as the current basis for analysis and archived goals as historical context.
@@ -160,14 +162,14 @@ Context summary:
 - Saved analysis: ${context.hasSavedAnalysis ? 'available' : 'not available'}
 
 Include these analysis points:
-1. The user's current position, read through the judgment/practice/principle axes (which axes are thick, which are thin).
+1. The user's current position, read through the judgment/practice/principle axes (which axes are thick, which are thin), AND a goal overview: name the active goals and, for each, the axis it requires and whether that axis is thick or thin. The current_summary must keep this goal overview, not just axis talk.
 2. Strengths — the judgment criteria and operating practices the user has accumulated (decision / operation / principle), with the domains (categories) they show up in as supporting context.
 3. Areas that have been growing recently.
 4. Thin or underdeveloped axes — name the memo_type that is thin (e.g. principle is thin) and what that means, not just thin categories.
-5. Knowledge missing against the user's goals.
-6. What to do next to thicken the thin durable axis (e.g. distill recurring decisions into principles, capture operating practices), rather than just "learn more".
+5. Gaps against active goals — for each active goal, the judgment axis it needs that is still thin (e.g. "G2 needs principle, which is the thinnest axis"). This is the goal-alignment view; connect it to goal_ids.
+6. What to do next to thicken the thin durable axis the goals require (e.g. distill recurring decisions into principles, capture operating practices), rather than just "learn more". Link each suggestion to the goal it serves via goal_ids.
 7. Phrasing that can be used in a skill sheet or career history.
 
 If saving the result, build values suitable for paput_update_dashboard_analysis: current_summary, strengths, growing_areas, weak_areas, next_knowledge_suggestions, and analyzed_at. strengths, growing_areas, and weak_areas should include title, description, category_names, memo_count, and goal_ids — and in each description speak in the judgment/practice/principle axis (e.g. which memo_type backs the strength, which type is thin). next_knowledge_suggestions should include title, reason, priority, category_names, and goal_ids.
-category_names must be EXACT names the user actually uses — take them from structuredContent.dashboard_summary.category_item_counts (the user's own categories), falling back to structuredContent.categories (the global list) only for exact spelling. Do not invent, translate, or paraphrase category names. If no listed category matches the item, leave category_names empty; categories are a secondary lens, so an empty list is better than an approximate name.`;
+category_names must be EXACT names the user actually uses — take them from structuredContent.dashboard_summary.category_item_counts (the user's own categories), falling back to structuredContent.categories (the global list) only for exact spelling. DO populate them with the real categories that genuinely apply to the item (e.g. a deployment/observability strength should list the user's actual categories like Datadog / OpenSearch / ECS when present); do not default to empty when real matches exist. Only leave category_names empty when none of the user's categories match. Never invent, translate, or paraphrase a category name; an empty list is better than an approximate name.`;
 }
