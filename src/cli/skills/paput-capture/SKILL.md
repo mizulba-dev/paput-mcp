@@ -53,6 +53,7 @@ Guidance:
 
 - Capture candidates are reusable decision criteria, procedures, or principles, so prefer `decision` / `operation` / `principle` when they fit; use `knowledge` for commodity technical know-how.
 - `decision` / `operation` / `principle` are the primary material for the public AI summary; `knowledge` usually is not.
+- AI-collaboration practices and stances belong here, not in the reject pile: how you structure a task or spec for an AI, your review discipline for AI-generated changes, where you verify versus trust AI output, when you delegate versus do it yourself. Capture the reusable practice as `operation` or the stated stance as `principle` — generalized so it would hold with a different AI tool, on a different project, for someone else to learn. This is the scarcest, most durable axis; do not drop it as workflow chatter.
 - Leaving a candidate unclassified (no type) is allowed, but classifying it improves analysis and the public profile. Do not force a type when none fits.
 
 ## Quality Bar
@@ -73,7 +74,7 @@ Prefer generalized but concrete writing:
 Do not add these to pending:
 
 - Project-specific specifications, screen names, button names, business workflows, operational rules, or local context.
-- Personal workflow notes about PRs, GitHub, Codex, Claude, AI review, editors, or OS operations.
+- One-off tool mechanics or configuration: editor / OS / CLI settings, keybindings, which button was clicked, model- or version-specific quirks, project-specific CI wiring, or anecdotes about a single session (for example, "the AI got confused here"). These are commodity even when they mention AI tools — capture the reusable practice or stance instead, not the mechanics. Reusable AI-collaboration practices and stances ARE worth capturing (see the AI-collaboration note under Memo Type); do not discard them as workflow chatter.
 - Content that third parties cannot understand from the title and body alone.
 - Rejected designs, anecdotes, work logs, impressions, or decision histories without reusable guidance.
 - Content semantically close to existing memos or pending candidates.

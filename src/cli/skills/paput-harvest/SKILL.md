@@ -1,16 +1,21 @@
 ---
-name: paput-init
-description: Use this to initialize PaPut usage and inspect unprocessed local Claude/Codex sessions when the AI client can read local files.
+name: paput-harvest
+description: Use this to harvest reusable knowledge from past local Claude/Codex sessions when the AI client can read local files. Safe to run repeatedly — it skips already-processed sessions and only reviews new ones — so use it both for first-time onboarding and for periodic catch-up. Pay special attention to AI-collaboration practices and stances (operation / principle), the scarce, durable axis.
 ---
 
-# PaPut Init
+# PaPut Harvest
 
-Initialize PaPut knowledge capture from past local AI sessions.
+Harvest reusable knowledge from past local AI sessions into pending candidates.
 
 This skill is for local-file-capable AI clients such as Claude Code or Codex.
-PaPut MCP does not read local session files. The AI client should read the
-session files directly, then use PaPut MCP only to check processed-session
-markers and add or mark reviewed sessions.
+PaPut MCP does not read local session files. The AI client reads the session
+files directly, then uses PaPut MCP only to check processed-session markers and
+add or mark reviewed sessions.
+
+Run it whenever you want — it is idempotent. It checks which sessions are already
+processed and reviews only the new ones, so the first run doubles as onboarding
+(nothing is processed yet, so it surveys your history) and later runs are
+periodic catch-up. There is no separate "init" step.
 
 ## Steps
 
@@ -26,6 +31,9 @@ markers and add or mark reviewed sessions.
 5. Report the count and a short summary of unprocessed sessions to the user.
 6. Only when the user wants it, read the relevant session transcript directly
    from the JSONL file and create candidates that meet the extraction criteria.
+   While reading, actively look for the AI-collaboration axis (see Extraction
+   Criteria) in addition to ordinary technical knowledge — it is easy to miss
+   because it shows up as how the work was directed, not as the work itself.
 7. Before adding candidates with `paput_add_knowledge_candidates`, check that
    they do not contain project-specific specifications, implementation details,
    operational rules, code, customer data, or secrets. Duplicate checks against
@@ -33,6 +41,8 @@ markers and add or mark reviewed sessions.
    using semantic search.
 8. If reusable candidates exist, call `paput_add_knowledge_candidates` with
    `source`, `session_id`, `source_session_updated_at`, and the candidates.
+   Set `memo_type_keys` on each candidate (see Memo Type below); classify
+   AI-collaboration practices as `operation` and stances as `principle`.
 9. If the session was reviewed but no candidates should be added, call
    `paput_mark_processed_session` with `source`, `session_id`, and
    `source_session_updated_at`.
@@ -67,10 +77,27 @@ tail sections first, then ask before reading more.
 
 Only add technical knowledge, decision criteria, and procedures that can be reused in other projects.
 
-Do not add these to pending:
+### Capture the AI-collaboration axis
+
+Reusable AI-collaboration practices and stances are first-class material here —
+they are the scarcest, most durable axis and are easy to discard by mistake.
+Capture them as `operation` (practice) or `principle` (stance). Examples:
+
+- How you structure a task or spec so an AI implements it correctly.
+- Your review discipline for AI-generated changes — where you always verify
+  versus where you trust the output.
+- When you delegate to an AI versus do it yourself.
+- How you decompose work for parallel agents, or recover when an AI goes wrong.
+
+The test: would this still hold with a different AI tool, on a different
+project, for someone else to learn? If yes, capture it as `operation` or
+`principle`, generalized one level above the specific session. If it is only
+about this tool's mechanics or this one session's events, exclude it.
+
+### Do not add these to pending
 
 - Project-specific specifications, screen names, button names, business workflows, operational rules, or local context.
-- Personal workflow notes about PRs, GitHub, Codex, Claude, AI review, editors, or OS operations.
+- One-off tool mechanics or configuration: editor / OS / CLI settings, keybindings, which button was clicked, model- or version-specific quirks, project-specific CI wiring, or anecdotes about a single session (for example, "the AI got confused here"). These are commodity even when they mention AI tools — capture the reusable practice or stance instead, not the mechanics.
 - Content that third parties cannot understand from the title and body alone.
 - Rejected designs, anecdotes, work logs, impressions, or decision histories without reusable guidance.
 - Content semantically close to existing memos or pending candidates.
@@ -78,6 +105,19 @@ Do not add these to pending:
 - Code fragments or project-specific naming that has not been generalized.
 
 When unsure, do not add the candidate. Report that there is no knowledge to save or that the candidate was rejected.
+
+## Memo Type
+
+Classify each candidate with one or more memo types via `memo_type_keys`:
+
+- `decision`: reusable judgment criteria independent of any project.
+- `operation`: operating practices — observability, eval, testing, review, and how you direct and verify AI collaboration.
+- `principle`: a stance you have explicitly stated, generalized above individual decisions, including stances on how to work with AI.
+- `knowledge`: commodity technical know-how, usage, or implementation knowledge.
+
+`decision` / `operation` / `principle` are the primary material for the public
+AI summary and the principle synthesizer; `knowledge` usually is not. Prefer the
+durable types when they fit, and do not force a type when none does.
 
 ## Notes
 

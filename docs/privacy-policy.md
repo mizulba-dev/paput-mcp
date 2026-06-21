@@ -39,7 +39,7 @@ Remote MCP connections use OAuth. PaPut issues tokens after you sign in and appr
 Pending candidates, discarded candidate metadata, processed AI session markers,
 and capture policies are stored in PaPut API storage, not under `~/.paput`.
 PaPut MCP does not read local Claude/Codex session files. When you use
-`paput-init` in a local-file-capable client such as Claude Code or Codex, that
+`paput-harvest` in a local-file-capable client such as Claude Code or Codex, that
 client may read its own session files and submit only extracted candidates or
 processed-session markers to PaPut MCP.
 

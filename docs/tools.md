@@ -5,8 +5,8 @@ PaPut MCP is a data-only MCP server. It exposes tools and resources for PaPut da
 Remote HTTP mode exposes API-backed PaPut tools. Pending candidates, processed
 session markers, and capture policies are stored by the PaPut API. PaPut MCP
 does not expose tools that read local Claude/Codex session files; local-file-
-capable clients can read those files themselves through the `paput-init` skill
-workflow and then submit extracted candidates through MCP.
+capable clients can read those files themselves through the `paput-harvest`
+skill workflow and then submit extracted candidates through MCP.
 
 ## Confirmation Policy
 
@@ -184,5 +184,5 @@ The capture policy is not saved as a PaPut memo. It is stored by the PaPut API
 and is available through Remote HTTP MCP.
 
 For past-session import, a local-file-capable AI client should read its own
-Claude/Codex session files through the `paput-init` skill, then call
+Claude/Codex session files through the `paput-harvest` skill, then call
 `paput_add_knowledge_candidates` or `paput_mark_processed_session`.

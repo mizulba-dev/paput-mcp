@@ -121,7 +121,7 @@ npx -y paput-mcp setup-ai --codex-only
 
 Generated skills:
 
-- `paput-init` - Initialize PaPut usage and inspect unprocessed sessions from local-file-capable AI clients.
+- `paput-harvest` - Harvest reusable knowledge from past local sessions in local-file-capable AI clients. Safe to run repeatedly; skips already-processed sessions.
 - `paput-capture` - Extract reusable knowledge candidates from the current conversation or a specified topic and add them to pending.
 - `paput-save` - Review pending candidates first, then save only candidates explicitly approved by the user.
 - `paput-analyze-discard-policy` - Analyze discarded candidates and save a capture policy used by future captures.
@@ -268,7 +268,8 @@ Remote HTTP MCP.
 
 PaPut MCP no longer reads local Claude/Codex session files as MCP tools. When
 using Claude Code, Codex, or another AI client with local file access, run the
-installed `paput-init` skill. The AI client reads its own session files, extracts
+installed `paput-harvest` skill (safe to run repeatedly; it skips
+already-processed sessions). The AI client reads its own session files, extracts
 reusable knowledge, and submits only the resulting candidates and processed
 session markers through PaPut MCP.
 
