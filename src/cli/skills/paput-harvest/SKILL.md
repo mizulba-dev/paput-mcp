@@ -94,6 +94,26 @@ project, for someone else to learn? If yes, capture it as `operation` or
 `principle`, generalized one level above the specific session. If it is only
 about this tool's mechanics or this one session's events, exclude it.
 
+### Capture the eval / observability axis
+
+Eval, observability, and measurement practices are another scarce, durable
+`operation` sub-axis that is easy to lose — they show up as how the work was
+measured and watched, not as the work itself. When a session touched
+measurement, evaluation, monitoring, alerting, test strategy, SLO / SLI,
+threshold or pass-fail tuning, or incident review, capture the reusable practice
+as `operation` (or `principle` for a stance, `decision` for an adopt/reject
+criterion). Look for:
+
+- What was measured and why that signal; how signal was separated from noise.
+- How a threshold or pass-fail was decided — by feel or by offline evaluation.
+- What is watched in production and where alerts sit, and why there.
+- What a failure or false positive changed in the judgment.
+
+Generalize above the project (drop service / metric / dashboard names, keep the
+criterion and verification). A bare "added monitoring" or "wrote tests" with no
+rationale or verification is a work log — exclude it. This is a lens for
+capturing methodology, not a reason to log routine test/monitoring chores.
+
 ### Do not add these to pending
 
 - Project-specific specifications, screen names, button names, business workflows, operational rules, or local context.

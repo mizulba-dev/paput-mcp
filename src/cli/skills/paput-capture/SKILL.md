@@ -56,6 +56,20 @@ Guidance:
 - AI-collaboration practices and stances belong here, not in the reject pile: how you structure a task or spec for an AI, your review discipline for AI-generated changes, where you verify versus trust AI output, when you delegate versus do it yourself. Capture the reusable practice as `operation` or the stated stance as `principle` — generalized so it would hold with a different AI tool, on a different project, for someone else to learn. This is the scarcest, most durable axis; do not drop it as workflow chatter.
 - Leaving a candidate unclassified (no type) is allowed, but classifying it improves analysis and the public profile. Do not force a type when none fits.
 
+## Eliciting scarce operating practices (eval / observability)
+
+`operation` is a primary public-summary axis, but its eval / observability / measurement part is the scarcest and most easily lost — it surfaces as "how the work was measured and watched", not as a deliverable, so generic free-form capture tends to miss it or leave thin, ad-hoc candidates. When the conversation touched measurement, evaluation, monitoring, alerting, test strategy, SLO / SLI, threshold or pass-fail tuning, or incident review, do not let it pass as a work log: actively draw out the reusable practice and capture it as `operation` (or `principle` for a stated stance, `decision` for an adopt/reject criterion).
+
+Draw out only what fits the conversation — do not interrogate:
+
+- What was measured, and why that signal rather than another?
+- How was signal separated from noise?
+- How was the threshold / pass-fail decided — by feel, or by offline evaluation?
+- What is watched in production, and where were alerts placed, and why there?
+- What did a failure or false positive teach, and how did it change the judgment?
+
+Generalize one level above the project: drop service, metric, and dashboard names; keep the criterion, the rationale, and the verification method. A candidate here must carry at least one of measurement target + why, threshold rationale, or verification method — a bare "added monitoring" or "wrote tests" is a work log, not knowledge. This is a lens for capturing the user's methodology, not a feature: do not turn PaPut into an eval or monitoring tool.
+
 ## Quality Bar
 
 Before adding a candidate, make sure the body preserves enough reasoning for future reuse. A good candidate is not just a conclusion; it should include the relevant problem context, decision criteria, applicability conditions, tradeoffs, pitfalls, operational guidance, or verification method.
