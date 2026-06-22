@@ -139,6 +139,17 @@ Classify each candidate with one or more memo types via `memo_type_keys`:
 AI summary and the principle synthesizer; `knowledge` usually is not. Prefer the
 durable types when they fit, and do not force a type when none does.
 
+Tagging review — do not under-label. The default failure mode is dropping a
+judgment memo into `knowledge` and missing `decision` / `operation` /
+`principle`; this is a main reason the `principle` axis stays thin. Consider the
+durable three FIRST and use `knowledge` only when none genuinely fit. Quick
+catches: a stated reason for choosing or avoiding an option → `decision`; an
+operating practice (how you measure, review, run, or verify) → `operation`; a
+generalized stance one level above a single decision → `principle`. Before
+finalizing `memo_type_keys`, re-read the candidate once and ask whether there is
+a judgment you labeled as mere knowledge. Do not over-correct: `principle` needs
+an explicitly generalized stance, not a one-off opinion.
+
 ## Notes
 
 - Do not save directly to PaPut.
