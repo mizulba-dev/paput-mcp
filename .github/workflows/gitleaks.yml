@@ -1,0 +1,21 @@
+name: gitleaks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # git 履歴全体をスキャンするため full clone する。
+          fetch-depth: 0
+      - uses: jdx/mise-action@v2
+        with:
+          # mise.toml の [tools] から gitleaks を導入する。
+          install: true
+          cache: true
+      - name: Scan for secrets
+        run: mise run secret-scan

@@ -1,0 +1,14 @@
+#!/bin/sh
+# ステージ済み変更に対する秘密情報スキャン（mise 管理の gitleaks を使用）。
+# 有効化: このリポジトリで `mise run setup-hooks`（= git config core.hooksPath .githooks）を一度実行する。
+set -e
+
+if command -v mise >/dev/null 2>&1; then
+  exec mise exec -- gitleaks git . --staged --redact --no-banner --exit-code 1
+elif command -v gitleaks >/dev/null 2>&1; then
+  exec gitleaks git . --staged --redact --no-banner --exit-code 1
+else
+  echo "warning: mise も gitleaks も見つからないため秘密情報スキャンをスキップします。" >&2
+  echo "         mise を導入し 'mise install' を実行してください。" >&2
+  exit 0
+fi

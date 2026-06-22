@@ -1,0 +1,4 @@
+# gitleaks baseline: 既知・対応済みの検出を無視する。
+# - client.test.ts のトークンはテスト fixture（ダミー値）。
+# 新規コミットで同じ値を再導入すると別 fingerprint になり検出される。
+18f43941a80ef53988ba6847ea9dd5481cd6715f:src/services/api/client.test.ts:generic-api-key:120

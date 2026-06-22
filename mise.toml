@@ -1,2 +1,24 @@
 [tools]
 node = "22.20"
+gitleaks = "8.30.1"
+
+[tasks.secret-scan]
+description = "git 履歴全体を gitleaks でスキャンする（CI 用）"
+run = "gitleaks git . --redact --no-banner --exit-code 1"
+
+[tasks.secret-scan-staged]
+description = "ステージ済み変更だけを gitleaks でスキャンする（pre-commit 用）"
+run = "gitleaks git . --staged --redact --no-banner --exit-code 1"
+
+[tasks.setup-hooks]
+description = "リポジトリ同梱の git hooks（.githooks）を有効化する"
+run = "git config core.hooksPath .githooks"
+
+[tasks.secure-env]
+description = "ローカルの env ファイルの権限を 600 に揃える"
+run = """
+for f in .env .env.worktree; do
+  [ -e "$f" ] && chmod 600 "$f" && echo "chmod 600 $f"
+done
+true
+"""
