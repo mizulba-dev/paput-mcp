@@ -303,7 +303,7 @@ const toolInputSchemas = {
           statement: z
             .string()
             .describe(
-              'One-line stance synthesized from decision/operation memos. Weave in what was chosen and what was rejected; dissolve principle into the wording.',
+              'One-line stance synthesized from decision/operation memos, in plain non-expert vocabulary a non-technical recruiter grasps in one read (no domain jargon or English technical terms in the line — those belong in the drill-down memos). Keep the rejected alternative ("B, not A"): weave in what was chosen and what was rejected; dissolve principle into the wording.',
             ),
           supporting_memo_ids: z
             .array(z.number())
@@ -314,7 +314,7 @@ const toolInputSchemas = {
         }),
       )
       .describe(
-        'Stances (judgment and operating practices) shown as the lead of the AI Summary tab. Aim for about 3 decision and 3 operation stances.',
+        'Stances (judgment and operating practices) shown as the lead of the AI Summary tab. Lead with 3-4 stances total with one clear anchor stance, ordered by strength; keep each line in plain non-expert vocabulary with its rejected-alternative intact.',
       )
       .optional(),
     project_highlights: z
