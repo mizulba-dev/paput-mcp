@@ -126,6 +126,7 @@ Generated skills:
 - `paput-harvest` - Harvest reusable knowledge from past local sessions in local-file-capable AI clients. Safe to run repeatedly; skips already-processed sessions.
 - `paput-capture` - Extract reusable knowledge candidates from the current conversation or a specified topic and add them to pending.
 - `paput-save` - Review pending candidates first, then save only candidates explicitly approved by the user.
+- `paput-principle-synthesizer` - Synthesize cross-cutting principle candidates from your accumulated decision/operation memos and add them to pending.
 - `paput-analyze-discard-policy` - Analyze discarded candidates and save a capture policy used by future captures.
 - `paput-dashboard-analysis` - Analyze PaPut dashboard context and optionally save the generated dashboard analysis.
 - `paput-project-document` - Save a project-specific design decision or repeatable procedure as a PaPut project document.
