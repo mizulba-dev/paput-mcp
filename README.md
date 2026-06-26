@@ -1,6 +1,8 @@
 # PaPut MCP Server
 
-PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the Model Context Protocol (MCP). Remote HTTP mode lets Claude, ChatGPT, Codex, Claude Code, and other MCP clients create, search, and organize PaPut memos, notes, skill sheets, and pending knowledge candidates through OAuth. Local-file-capable clients such as Claude Code and Codex can use the installed PaPut skills to read their own session files and send extracted candidates to the same API-backed workflow.
+PaPut MCP Server connects [PaPut](https://paput.io) to AI assistants through the Model Context Protocol (MCP). PaPut helps you capture the decisions, trade-offs, and operating practices behind your work — not just the facts an AI can already recall — and turn them into a durable record of how you think and work, including your skill sheet.
+
+Remote HTTP mode lets Claude, ChatGPT, Codex, Claude Code, and other MCP clients create, search, and organize your PaPut memos, notes, and skill sheet through OAuth. As AI commoditizes raw know-how, PaPut focuses on the judgment that stays yours: why you chose one approach over another, and how you work. Local-file-capable clients such as Claude Code and Codex can also use the installed PaPut skills to harvest reusable decisions and practices from their own session files into the same API-backed workflow.
 
 ## Features
 
