@@ -70,6 +70,19 @@ Draw out only what fits the conversation — do not interrogate:
 
 Generalize one level above the project: drop service, metric, and dashboard names; keep the criterion, the rationale, and the verification method. A candidate here must carry at least one of measurement target + why, threshold rationale, or verification method — a bare "added monitoring" or "wrote tests" is a work log, not knowledge. This is a lens for capturing the user's methodology, not a feature: do not turn PaPut into an eval or monitoring tool.
 
+## Eliciting prompt-derived judgment
+
+The user's own prompts in the current conversation are first-party evidence of judgment. Corrections, constraints, repeated instructions, and choices among AI-presented options often reveal reusable operating practices or stances before they appear in the final artifact. When the conversation includes this signal, do not treat it as disposable task wording: actively draw out the reusable judgment and capture it as `operation`, `principle`, or `decision` as appropriate.
+
+Draw out only what fits the conversation — do not interrogate:
+
+- Where did the user reject or correct the AI's output, and what reason did they give? This is the strongest material for `operation` or `principle`.
+- What constraints or prohibitions did the user declare — "do not ..." or "always ..." — and do they generalize beyond this task?
+- Is the user repeating nearly the same boilerplate instruction? If it is project-specific, route it to a project document as a `procedure` through Check 1; if it is cross-project, capture the practice as `operation` in pending through Check 2.
+- Did the AI present options, and did the user choose, reject, or combine them with a reason? That reason is `decision` material.
+
+Generalize one level above the prompt: keep the judgment criterion, operating practice, stance, or repeatable procedure; drop local paths, project names, customer details, and exact task facts. Short verbatim phrasing from the user may be preserved for authenticity, but pending candidates must not include sensitive or project-specific content. A one-off "fix this" or "run tests" instruction is a work log, not knowledge, unless it exposes a reusable judgment criterion, operating practice, or procedure. Project-specific repeated instructions belong in project documents (`procedure`, Check 1); cross-project practices and stances belong in pending candidates (Check 2).
+
 ## Quality Bar
 
 Before adding a candidate, make sure the body preserves enough reasoning for future reuse. A good candidate is not just a conclusion; it should include the relevant problem context, decision criteria, applicability conditions, tradeoffs, pitfalls, operational guidance, or verification method.

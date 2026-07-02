@@ -30,9 +30,10 @@ periodic catch-up. There is no separate "init" step.
 5. Report the count and a short summary of unprocessed sessions to the user.
 6. Only when the user wants it, read the relevant session transcript directly
    from the JSONL file and create candidates that meet the extraction criteria.
-   While reading, actively look for the AI-collaboration axis (see Extraction
-   Criteria) in addition to ordinary technical knowledge — it is easy to miss
-   because it shows up as how the work was directed, not as the work itself.
+   While reading, actively look for the AI-collaboration axis and the
+   user-prompt axis (see Extraction Criteria) in addition to ordinary technical
+   knowledge — they are easy to miss because they show up as how the work was
+   directed, not as the work itself.
 7. Before adding candidates with `paput_add_knowledge_candidates`, check that
    they do not contain project-specific specifications, implementation details,
    operational rules, code, customer data, or secrets. Duplicate checks against
@@ -112,6 +113,39 @@ Generalize above the project (drop service / metric / dashboard names, keep the
 criterion and verification). A bare "added monitoring" or "wrote tests" with no
 rationale or verification is a work log — exclude it. This is a lens for
 capturing methodology, not a reason to log routine test/monitoring chores.
+
+### Capture the user-prompt axis
+
+The user's own prompts are first-party evidence of judgment. They often expose
+how the user corrected the AI, declared constraints, repeated a desired
+procedure, or chose among options before the final artifact exists. When reading
+sessions, inspect user prompts as a scarce signal, not just as task input. Look
+for:
+
+- Correction / course-correction: where the user rejected or corrected the AI's
+  output and gave a reason. This is the strongest material for `operation` or
+  `principle`.
+- Declared constraint / prohibition: "do not ..." or "always ..." style
+  instructions. When the same constraint recurs across projects, treat it as
+  `principle` material.
+- Repeated boilerplate instruction: nearly the same request appearing again and
+  again. If it is project-specific, try to save it as a `procedure` with
+  `paput_add_project_document` so that repeated registrations are counted toward
+  a server-side skill proposal; in a single harvest run, it is fine to try each
+  repeated occurrence as it appears.
+  If it is cross-project, capture the practice as `operation` in pending.
+- Choice among AI-presented options: the user accepted, rejected, or combined
+  options the AI presented and explained why. This is `decision` material.
+
+Generalize above the prompt: keep the judgment, constraint, or repeatable
+procedure; drop local paths, project names, customer details, and exact task
+facts. Short verbatim phrasing from the user may be preserved for authenticity,
+but pending candidates must not include sensitive or project-specific content. A
+one-off "fix this" or "run tests" instruction is a work log — exclude it unless
+the prompt reveals a reusable judgment criterion, operating practice, or
+procedure. Route project-specific repeated instructions to project documents
+(`procedure`, Check 1); route cross-project practices and stances to pending
+candidates (Check 2).
 
 ### Do not add these to pending
 
