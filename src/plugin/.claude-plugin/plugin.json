@@ -1,7 +1,7 @@
 {
   "name": "paput",
   "description": "PaPut — turn AI-assisted work into a verifiable knowledge and judgment portfolio. Bundles the PaPut remote MCP server connection and skills for capturing, reviewing, and publishing reusable knowledge.",
-  "version": "4.2.13",
+  "version": "4.2.14",
   "author": {
     "name": "mizulba",
     "url": "https://paput.io"
