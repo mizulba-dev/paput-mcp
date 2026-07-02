@@ -10,6 +10,7 @@
   "plugins": [
     {
       "name": "paput",
+      "displayName": "PaPut",
       "source": "./src/plugin",
       "description": "PaPut — turn AI-assisted work into a verifiable knowledge and judgment portfolio. Bundles the PaPut remote MCP server connection and skills for capturing, reviewing, and publishing reusable knowledge.",
       "homepage": "https://paput.io/mcp-integration"
