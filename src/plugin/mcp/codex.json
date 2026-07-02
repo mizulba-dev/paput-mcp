@@ -2,7 +2,11 @@
   "mcpServers": {
     "paput": {
       "type": "http",
-      "url": "https://mcp.paput.io/mcp"
+      "url": "https://mcp.paput.io/mcp",
+      "_meta": {
+        "ideToolIconPath": "./assets/icon.svg",
+        "ideToolIconRendersAsTemplate": false
+      }
     }
   }
 }
