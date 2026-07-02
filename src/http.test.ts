@@ -1,7 +1,7 @@
 import { request, type IncomingHttpHeaders } from 'node:http';
 import { type AddressInfo, type Server as HttpServer } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
-import { startHttpMcpServer } from './http.js';
+import { normalizeProjectAlias, startHttpMcpServer } from './http.js';
 
 const testServerOptions = {
   apiUrl: 'https://api.example.test',
@@ -269,3 +269,17 @@ async function closeHttpServer(httpServer: HttpServer): Promise<void> {
     });
   });
 }
+
+describe('normalizeProjectAlias', () => {
+  it('treats empty and unexpanded placeholder values as no alias', () => {
+    expect(normalizeProjectAlias(null)).toBeNull();
+    expect(normalizeProjectAlias('')).toBeNull();
+    expect(normalizeProjectAlias('${user_config.project_alias}')).toBeNull();
+  });
+
+  it('accepts a valid alias and rejects malformed values', () => {
+    expect(normalizeProjectAlias('paput')).toBe('paput');
+    expect(normalizeProjectAlias('Pa Put')).toBe(false);
+    expect(normalizeProjectAlias('ab')).toBe(false);
+  });
+});

@@ -246,9 +246,13 @@ function resolveEndpoint(pathname: string, endpoint: string): string | null {
   return null;
 }
 
-function normalizeProjectAlias(value: string | null): string | null | false {
+export function normalizeProjectAlias(
+  value: string | null,
+): string | null | false {
   const alias = value?.trim() ?? '';
   if (!alias) return null;
+  // Clients that do not substitute config placeholders (claude.ai web plugins, Codex) send the raw template.
+  if (alias.includes('${')) return null;
   if (!/^[a-z0-9]{3,40}$/.test(alias)) return false;
   return alias;
 }
