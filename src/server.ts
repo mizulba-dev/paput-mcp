@@ -22,7 +22,21 @@ export function createMcpServer(options: MCPServerOptions = {}): Server {
   const server = new Server(
     {
       name: 'paput-mcp',
+      title: 'PaPut',
       version: packageJson.version,
+      websiteUrl: 'https://paput.io',
+      icons: [
+        {
+          src: 'https://paput.io/icons/icon-192x192.png',
+          mimeType: 'image/png',
+          sizes: ['192x192'],
+        },
+        {
+          src: 'https://paput.io/icons/icon-512x512.png',
+          mimeType: 'image/png',
+          sizes: ['512x512'],
+        },
+      ],
     },
     {
       capabilities: {
