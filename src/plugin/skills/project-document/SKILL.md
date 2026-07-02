@@ -1,5 +1,4 @@
 ---
-name: paput-project-document
 description: Use this to save a project-specific design decision (design_doc) or repeatable procedure (procedure) as a PaPut project document via paput_add_project_document. This is Check 1 of the completion checklist, independent from reusable-knowledge capture.
 ---
 

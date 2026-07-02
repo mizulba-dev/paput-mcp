@@ -1,11 +1,14 @@
 import { chmodSync, cpSync, rmSync } from 'node:fs';
 
-const assets = ['skills', 'rules'];
+const assets = [
+  { from: 'src/plugin/skills', to: 'dist/plugin/skills' },
+  { from: 'src/cli/rules', to: 'dist/cli/rules' },
+];
 
-for (const asset of assets) {
-  rmSync(`dist/cli/${asset}`, { recursive: true, force: true });
-  cpSync(`src/cli/${asset}`, `dist/cli/${asset}`, { recursive: true });
-  console.log(`copied ${asset} to dist/cli/${asset}`);
+for (const { from, to } of assets) {
+  rmSync(to, { recursive: true, force: true });
+  cpSync(from, to, { recursive: true });
+  console.log(`copied ${from} to ${to}`);
 }
 
 chmodSync('dist/index.js', 0o755);

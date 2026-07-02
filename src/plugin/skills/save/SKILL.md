@@ -1,5 +1,4 @@
 ---
-name: paput-save
 description: Use this to review pending candidates first, then save only candidates explicitly approved by the user. This skill never saves automatically.
 ---
 

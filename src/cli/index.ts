@@ -44,6 +44,10 @@ function printHelp(): void {
 Options:
   --force               Refresh existing PaPut-managed links and rules
   --no-rules            Do not update global rules
+  --rules-only          Update global rules without installing skills
+                        (e.g. when skills come from the PaPut plugin)
+  --remove-skills       Remove CLI-managed skills and their links
+                        (rules are kept; for plugin migration run setup-ai --rules-only afterwards)
   --claude-only         Configure Claude only
   --codex-only          Configure Codex only
   -o, --output <PATH>   Output directory or ZIP path for export-skill. Defaults to ~/Downloads

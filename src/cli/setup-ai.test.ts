@@ -219,6 +219,80 @@ describe('setupAi', () => {
     expect(process.exitCode).toBe(1);
     expect(existsSync(join(paputHome, 'skills'))).toBe(true);
   });
+
+  it('installs only rules with --rules-only', () => {
+    mkdirSync(claudeHome, { recursive: true });
+    mkdirSync(codexHome, { recursive: true });
+
+    setupAi(['--rules-only']);
+
+    expect(existsSync(join(paputHome, 'skills'))).toBe(false);
+    expect(existsSync(join(claudeHome, 'skills'))).toBe(false);
+    expect(existsSync(join(agentsHome, 'skills'))).toBe(false);
+    expect(readFileSync(join(claudeHome, 'CLAUDE.md'), 'utf8')).toContain(
+      '<!-- paput-mcp:start -->',
+    );
+    expect(readFileSync(join(codexHome, 'AGENTS.md'), 'utf8')).toContain(
+      '<!-- paput-mcp:start -->',
+    );
+  });
+
+  it('removes CLI-managed skills and keeps rules with --remove-skills', () => {
+    mkdirSync(claudeHome, { recursive: true });
+    mkdirSync(codexHome, { recursive: true });
+    setupAi([]);
+
+    const unrelatedDir = join(paputHome, 'skills', 'my-own-skill');
+    mkdirSync(unrelatedDir, { recursive: true });
+    const foreignSource = join(root, 'foreign-skill');
+    mkdirSync(foreignSource, { recursive: true });
+    const foreignLink = join(claudeHome, 'skills', 'paput-foreign');
+    symlinkSync(foreignSource, foreignLink);
+
+    setupAi(['--remove-skills']);
+
+    for (const skill of SKILLS) {
+      expect(existsSync(join(paputHome, 'skills', skill.name))).toBe(false);
+      expect(existsSync(join(claudeHome, 'skills', skill.name))).toBe(false);
+      expect(existsSync(join(agentsHome, 'skills', skill.name))).toBe(false);
+    }
+    expect(existsSync(unrelatedDir)).toBe(true);
+    expect(lstatSync(foreignLink).isSymbolicLink()).toBe(true);
+    expect(readFileSync(join(claudeHome, 'CLAUDE.md'), 'utf8')).toContain(
+      '<!-- paput-mcp:start -->',
+    );
+  });
+
+  it('keeps source skills when --remove-skills is limited to one target', () => {
+    mkdirSync(claudeHome, { recursive: true });
+    mkdirSync(codexHome, { recursive: true });
+    setupAi([]);
+
+    setupAi(['--remove-skills', '--claude-only']);
+
+    const skill = SKILLS[0];
+    expect(existsSync(join(claudeHome, 'skills', skill.name))).toBe(false);
+    expect(
+      lstatSync(join(agentsHome, 'skills', skill.name)).isSymbolicLink(),
+    ).toBe(true);
+    expect(existsSync(join(paputHome, 'skills', skill.name))).toBe(true);
+  });
+
+  it('fails when --rules-only and --remove-skills are combined', () => {
+    setupAi(['--rules-only', '--remove-skills']);
+
+    expect(process.exitCode).toBe(1);
+    expect(existsSync(join(paputHome, 'skills'))).toBe(false);
+  });
+
+  it('fails when --rules-only and --no-rules are combined', () => {
+    mkdirSync(claudeHome, { recursive: true });
+
+    setupAi(['--rules-only', '--no-rules']);
+
+    expect(process.exitCode).toBe(1);
+    expect(existsSync(join(claudeHome, 'CLAUDE.md'))).toBe(false);
+  });
 });
 
 describe('findSkill', () => {

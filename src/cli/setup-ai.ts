@@ -16,6 +16,8 @@ import { fileURLToPath } from 'node:url';
 interface SetupOptions {
   force: boolean;
   noRules: boolean;
+  rulesOnly: boolean;
+  removeSkills: boolean;
   claude: boolean;
   codex: boolean;
 }
@@ -26,7 +28,7 @@ interface SkillSpec {
   body: string;
 }
 
-const skillsDir = fileURLToPath(new URL('./skills', import.meta.url));
+const skillsDir = fileURLToPath(new URL('../plugin/skills', import.meta.url));
 const rulesDir = fileURLToPath(new URL('./rules', import.meta.url));
 
 function parseSkill(markdown: string, fallbackName: string): SkillSpec {
@@ -51,7 +53,7 @@ function loadSkills(): SkillSpec[] {
     .map((dirName) =>
       parseSkill(
         readFileSync(join(skillsDir, dirName, 'SKILL.md'), 'utf8'),
-        dirName,
+        `paput-${dirName}`,
       ),
     );
 }
@@ -68,12 +70,21 @@ const RULE_END = '<!-- paput-mcp:end -->';
 
 export function setupAi(args: string[]): void {
   const options = parseOptions(args);
+  if (!options) return;
   const paputHome = process.env.PAPUT_HOME || join(homedir(), '.paput');
   const sourceSkillsDir = join(paputHome, 'skills');
 
+  if (options.removeSkills) {
+    removeSkillsCommand(sourceSkillsDir, options);
+    return;
+  }
+
   printSetupNotice(options);
-  createSourceSkills(sourceSkillsDir, options.force);
-  pruneSourceSkills(sourceSkillsDir);
+
+  if (!options.rulesOnly) {
+    createSourceSkills(sourceSkillsDir, options.force);
+    pruneSourceSkills(sourceSkillsDir);
+  }
 
   if (options.claude) {
     setupClaude(sourceSkillsDir, options);
@@ -84,9 +95,23 @@ export function setupAi(args: string[]): void {
   }
 }
 
-function parseOptions(args: string[]): SetupOptions {
+function parseOptions(args: string[]): SetupOptions | null {
   const claudeOnly = args.includes('--claude-only');
   const codexOnly = args.includes('--codex-only');
+  const rulesOnly = args.includes('--rules-only');
+  const removeSkills = args.includes('--remove-skills');
+
+  if (rulesOnly && removeSkills) {
+    console.error('--rules-only and --remove-skills cannot be used together.');
+    process.exitCode = 1;
+    return null;
+  }
+
+  if (rulesOnly && args.includes('--no-rules')) {
+    console.error('--rules-only and --no-rules cannot be used together.');
+    process.exitCode = 1;
+    return null;
+  }
 
   if (claudeOnly && codexOnly) {
     console.error('--claude-only and --codex-only cannot be used together.');
@@ -94,6 +119,8 @@ function parseOptions(args: string[]): SetupOptions {
     return {
       force: false,
       noRules: false,
+      rulesOnly: false,
+      removeSkills: false,
       claude: false,
       codex: false,
     };
@@ -102,6 +129,8 @@ function parseOptions(args: string[]): SetupOptions {
   return {
     force: args.includes('--force'),
     noRules: args.includes('--no-rules'),
+    rulesOnly,
+    removeSkills,
     claude: !codexOnly,
     codex: !claudeOnly,
   };
@@ -111,12 +140,18 @@ function printSetupNotice(options: SetupOptions): void {
   console.log('Setting up PaPut AI integration.');
   console.log('');
   console.log('This command will:');
-  console.log('- Create canonical PaPut skills under ~/.paput/skills');
-  if (options.claude) {
-    console.log('- Link skills into ~/.claude/skills when Claude is available');
-  }
-  if (options.codex) {
-    console.log('- Link skills into ~/.agents/skills when Codex is available');
+  if (!options.rulesOnly) {
+    console.log('- Create canonical PaPut skills under ~/.paput/skills');
+    if (options.claude) {
+      console.log(
+        '- Link skills into ~/.claude/skills when Claude is available',
+      );
+    }
+    if (options.codex) {
+      console.log(
+        '- Link skills into ~/.agents/skills when Codex is available',
+      );
+    }
   }
   if (!options.noRules) {
     console.log('- Add PaPut usage rules to Claude/Codex global rules');
@@ -124,9 +159,69 @@ function printSetupNotice(options: SetupOptions): void {
   console.log('');
   console.log('Use --no-rules if you do not want to update global rules.');
   console.log(
+    'Use --rules-only to update global rules without installing skills (e.g. when skills come from the PaPut plugin).',
+  );
+  console.log(
     'Use --force to refresh existing PaPut-managed blocks and links.',
   );
   console.log('');
+}
+
+function removeSkillsCommand(
+  sourceSkillsDir: string,
+  options: SetupOptions,
+): void {
+  console.log('Removing CLI-managed PaPut skills. Rules are kept as-is.');
+  console.log('');
+
+  if (options.claude) {
+    const claudeHome = process.env.CLAUDE_HOME || join(homedir(), '.claude');
+    removeSkillLinks(sourceSkillsDir, join(claudeHome, 'skills'), 'Claude');
+  }
+
+  if (options.codex) {
+    const agentsHome = process.env.AGENTS_HOME || join(homedir(), '.agents');
+    removeSkillLinks(sourceSkillsDir, join(agentsHome, 'skills'), 'Codex');
+  }
+
+  if (options.claude && options.codex) {
+    removeSourceSkills(sourceSkillsDir);
+  } else {
+    console.log(
+      'Keep source skills under ~/.paput/skills: the other target may still link to them. Run --remove-skills without --claude-only/--codex-only to remove them too.',
+    );
+  }
+}
+
+function removeSkillLinks(
+  sourceSkillsDir: string,
+  targetSkillsDir: string,
+  label: string,
+): void {
+  if (!existsSync(targetSkillsDir)) return;
+
+  for (const entry of readdirSync(targetSkillsDir, { withFileTypes: true })) {
+    if (!entry.name.startsWith('paput-')) continue;
+
+    const targetPath = join(targetSkillsDir, entry.name);
+    if (!lstatSync(targetPath).isSymbolicLink()) continue;
+    if (!readlinkSync(targetPath).startsWith(sourceSkillsDir)) continue;
+
+    rmSync(targetPath, { force: true });
+    console.log(`Remove ${label} skill link: ${targetPath}`);
+  }
+}
+
+function removeSourceSkills(sourceSkillsDir: string): void {
+  if (!existsSync(sourceSkillsDir)) return;
+
+  for (const entry of readdirSync(sourceSkillsDir, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !entry.name.startsWith('paput-')) continue;
+
+    const sourcePath = join(sourceSkillsDir, entry.name);
+    rmSync(sourcePath, { recursive: true, force: true });
+    console.log(`Remove source skill: ${sourcePath}`);
+  }
 }
 
 function createSourceSkills(sourceSkillsDir: string, force: boolean): void {
@@ -188,12 +283,14 @@ function setupClaude(sourceSkillsDir: string, options: SetupOptions): void {
     return;
   }
 
-  linkSkills(
-    sourceSkillsDir,
-    join(claudeHome, 'skills'),
-    'Claude',
-    options.force,
-  );
+  if (!options.rulesOnly) {
+    linkSkills(
+      sourceSkillsDir,
+      join(claudeHome, 'skills'),
+      'Claude',
+      options.force,
+    );
+  }
 
   if (!options.noRules) {
     upsertRules(join(claudeHome, 'CLAUDE.md'), options.force, 'Claude');
@@ -208,12 +305,14 @@ function setupCodex(sourceSkillsDir: string, options: SetupOptions): void {
     return;
   }
 
-  linkSkills(
-    sourceSkillsDir,
-    join(agentsHome, 'skills'),
-    'Codex',
-    options.force,
-  );
+  if (!options.rulesOnly) {
+    linkSkills(
+      sourceSkillsDir,
+      join(agentsHome, 'skills'),
+      'Codex',
+      options.force,
+    );
+  }
 
   if (!options.noRules) {
     upsertRules(join(codexHome, 'AGENTS.md'), options.force, 'Codex');
@@ -277,7 +376,9 @@ function upsertRules(path: string, force: boolean, label: string): void {
 }
 
 export function findSkill(name: string): SkillSpec | undefined {
-  return SKILLS.find((skill) => skill.name === name);
+  return SKILLS.find(
+    (skill) => skill.name === name || skill.name === `paput-${name}`,
+  );
 }
 
 export function renderSkill(skill: SkillSpec): string {

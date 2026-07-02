@@ -18,7 +18,8 @@
     "test:mcp:transports": "vitest run src/transport.test.ts",
     "prepare": "npm run build",
     "format": "prettier --write .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "version": "node scripts/sync-plugin-version.mjs && git add src/plugin/.claude-plugin/plugin.json src/plugin/.codex-plugin/plugin.json"
   },
   "keywords": [
     "mcp",

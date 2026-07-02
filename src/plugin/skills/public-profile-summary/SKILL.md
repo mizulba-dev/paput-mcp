@@ -1,5 +1,4 @@
 ---
-name: paput-public-profile-summary
 description: Use this to generate and save the user's PaPut public profile summary shown on the AI Summary tab to recruiters. The lead is stances (the judgment-and-operating-practices ◆ lines synthesized from public decision/operation memos), backed by drill-down evidence memos; headline, profile summary, strength labels, and project highlights are the supporting layers. Build it only from public materials such as the skill sheet, public memos and notes, and category and growth aggregates. Never use private dashboard analysis or goals.
 ---
 

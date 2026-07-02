@@ -1,0 +1,21 @@
+{
+  "name": "paput",
+  "description": "PaPut — turn AI-assisted work into a verifiable knowledge and judgment portfolio. Bundles the PaPut remote MCP server connection and skills for capturing, reviewing, and publishing reusable knowledge.",
+  "version": "4.2.13",
+  "author": {
+    "name": "mizulba",
+    "url": "https://paput.io"
+  },
+  "homepage": "https://paput.io/mcp-integration",
+  "repository": "https://github.com/mizulba-dev/paput-mcp",
+  "license": "MIT",
+  "mcpServers": "./mcp/claude.json",
+  "userConfig": {
+    "project_alias": {
+      "type": "string",
+      "title": "Project alias",
+      "description": "Optional PaPut project alias to pin the project context (3-40 lowercase alphanumeric characters). Leave empty to connect without a project.",
+      "default": ""
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "paput": {
+      "type": "http",
+      "url": "https://mcp.paput.io/mcp?project_alias=${user_config.project_alias}"
+    }
+  }
+}

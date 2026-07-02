@@ -1,5 +1,4 @@
 ---
-name: paput-project-summary
 description: Use this to generate and optionally save an AI summary for a PaPut skill sheet project from the project information and memos linked to that project. Trigger when the user asks to summarize project-linked memos, create a project summary, refresh a skill sheet project AI summary, or save a project summary.
 ---
 

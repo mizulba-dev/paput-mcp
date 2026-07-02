@@ -119,7 +119,19 @@ npx -y paput-mcp setup-ai --force
 # Configure only Claude or only Codex
 npx -y paput-mcp setup-ai --claude-only
 npx -y paput-mcp setup-ai --codex-only
+
+# Update global rules only, without installing skills
+# (e.g. when skills come from the PaPut plugin)
+npx -y paput-mcp setup-ai --rules-only
+
+# Remove CLI-managed skills and their symlinks (rules are kept)
+npx -y paput-mcp setup-ai --remove-skills
 ```
+
+Migrating to the PaPut plugin? Run `setup-ai --remove-skills` to drop the
+CLI-installed skills, then `setup-ai --rules-only --force` to keep the global
+rules up to date. The plugin provides the same skills under the `paput`
+namespace (e.g. `/paput:capture`).
 
 Generated skills:
 

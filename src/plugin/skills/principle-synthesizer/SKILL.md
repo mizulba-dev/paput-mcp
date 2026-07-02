@@ -1,5 +1,4 @@
 ---
-name: paput-principle-synthesizer
 description: Use this to synthesize cross-cutting principle candidates from the user's accumulated public decision/operation memos (and private design docs) and add them to pending. It surfaces the stances that run through many decisions — the thinnest, most AI-durable memo type — which the per-conversation paput-capture cannot reach. It only proposes to pending; it never saves to PaPut.
 ---
 
