@@ -3,5 +3,11 @@
   "displayName": "PaPut",
   "description": "PaPut — turn AI-assisted work into a verifiable knowledge and judgment portfolio. Bundles the PaPut remote MCP server connection and skills for capturing, reviewing, and publishing reusable knowledge.",
   "version": "4.2.15",
-  "mcpServers": "./mcp/codex.json"
+  "mcpServers": "./mcp/codex.json",
+  "logo": "./assets/icon.png",
+  "composerIcon": "./assets/icon.png",
+  "interface": {
+    "displayName": "PaPut",
+    "shortDescription": "Turn AI-assisted work into a verifiable knowledge and judgment portfolio."
+  }
 }
