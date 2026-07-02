@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="8 2 140 140" role="img" aria-label="PaPut">
+  <g transform="translate(-2.03,-3.52) scale(1.5733) rotate(-90 48 48)">
+    <path d="M27 40 L48 56 L69 40 V74 a8 8 0 0 1 -8 8 H35 a8 8 0 0 1 -8 -8 Z" fill="#F59E0B" />
+    <circle cx="48" cy="40" r="9" fill="#F59E0B" />
+    <line x1="48" y1="20" x2="48" y2="27" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" opacity=".8" />
+    <line x1="39" y1="23" x2="41" y2="29" stroke="#F59E0B" stroke-width="3.6" stroke-linecap="round" opacity=".55" />
+    <line x1="57" y1="23" x2="55" y2="29" stroke="#F59E0B" stroke-width="3.6" stroke-linecap="round" opacity=".55" />
+  </g>
+</svg>

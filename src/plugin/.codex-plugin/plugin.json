@@ -4,10 +4,14 @@
   "description": "PaPut — turn AI-assisted work into a verifiable knowledge and judgment portfolio. Bundles the PaPut remote MCP server connection and skills for capturing, reviewing, and publishing reusable knowledge.",
   "version": "4.2.16",
   "mcpServers": "./mcp/codex.json",
-  "logo": "./assets/icon.png",
-  "composerIcon": "./assets/icon.png",
   "interface": {
     "displayName": "PaPut",
-    "shortDescription": "Turn AI-assisted work into a verifiable knowledge and judgment portfolio."
+    "developerName": "mizulba",
+    "shortDescription": "Turn AI-assisted work into a verifiable knowledge and judgment portfolio.",
+    "longDescription": "PaPut — turn AI-assisted work into a verifiable knowledge and judgment portfolio. Bundles the PaPut remote MCP server connection and skills for capturing, reviewing, and publishing reusable knowledge.",
+    "websiteURL": "https://paput.io/mcp-integration/plugin-setup",
+    "privacyPolicyURL": "https://github.com/mizulba-dev/paput-mcp/blob/main/docs/privacy-policy.md",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.png"
   }
 }
