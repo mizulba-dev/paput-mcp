@@ -41,8 +41,10 @@ periodic catch-up. There is no separate "init" step.
    using semantic search.
 8. If reusable candidates exist, call `paput_add_knowledge_candidates` with
    `source`, `session_id`, `source_session_updated_at`, and the candidates.
-   Set `memo_type_keys` on each candidate (see Memo Type below); classify
-   AI-collaboration practices as `operation` and stances as `principle`.
+   Draft each body first, structured to fit the content itself — do not shape
+   it around memo types. Then set `memo_type_keys` from the finalized body
+   (see Memo Type below); classify AI-collaboration practices as `operation`
+   and stances as `principle`.
 9. If the session was reviewed but no candidates should be added, call
    `paput_mark_processed_session` with `source`, `session_id`, and
    `source_session_updated_at`.
@@ -76,6 +78,8 @@ tail sections first, then ask before reading more.
 ## Extraction Criteria
 
 Only add technical knowledge, decision criteria, and procedures that can be reused in other projects.
+
+Structure each candidate body to fit its content. Do not impose a judgment-memo skeleton (criteria / why / pitfalls / verification headings) on knowledge-centered candidates; let the content decide the structure.
 
 ### Capture the AI-collaboration axis
 
@@ -182,6 +186,15 @@ generalized stance one level above a single decision → `principle`. Before
 finalizing `memo_type_keys`, re-read the candidate once and ask whether there is
 a judgment you labeled as mere knowledge. Do not over-correct: `principle` needs
 an explicitly generalized stance, not a one-off opinion.
+
+Typing is a reading step, not a writing step. Classify only after the body is
+final, and only from what the body already says — never add headings, criteria
+sections, or choice wording to a body to justify a type. Do not over-label
+`decision` either: it requires a judgment that actually happened in the source
+session, recorded in the body — an option taken, an alternative rejected, or a
+tradeoff resolved. A criteria-style heading, or a list of options with no record
+of what was chosen, does not make a candidate a `decision`; plain library, API,
+or service behavior stays `knowledge` even when written as guidance.
 
 ## Notes
 

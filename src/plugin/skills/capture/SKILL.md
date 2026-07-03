@@ -20,7 +20,7 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 3. Extract only reusable knowledge from the current conversation or the user-specified topic.
 4. For each candidate, check semantically similar existing memos with `paput_find_similar_memos`, using the candidate title or a one-line gist as the query. Treat results with a score around 0.85 or higher as near-duplicates, and results around 0.7 to 0.85 as overlap that needs comparison against the candidate body. Use `paput_search_memo` in addition when the candidate centers on an exact name or identifier.
 5. Apply the capture policy when deciding whether to add, reject, or ask about candidates. If no policy exists yet, use the Candidate Rules and Rejected Candidates sections below.
-6. Keep each candidate focused on one reusable idea, and prepare a title, Markdown body, categories, memo type classification (see the Memo Type section), and visibility.
+6. Keep each candidate focused on one reusable idea. Draft the title and Markdown body first, structured to fit the content itself — do not shape the body around memo types. Classify the finalized body afterwards (see the Memo Type section), and set categories and visibility.
 7. Self-review the candidate against the Quality Bar below. If the body is only a short summary or conclusion, enrich it before adding.
 8. Do not add candidates that may duplicate existing memos or pending candidates. Suggest reusing or updating the existing memo or candidate instead.
 9. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` (including `memo_type_keys`) without waiting for user approval.
@@ -43,6 +43,8 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 
 Classify each candidate with one or more memo types via `memo_type_keys`. A memo can have several. This axis is what lets PaPut surface judgment and practices in the public AI summary, so classify deliberately.
 
+Typing is a reading step, not a writing step. Classify only after the body is final, and only from what the body already says. Never add headings, criteria sections, or choice wording to the body to justify a type — if a type fits only after such an edit, the type does not fit.
+
 - `decision`: reusable judgment criteria that do not depend on a project — why you choose one option over another, what you optimize for, what you avoid.
 - `operation`: operating practices — observability, eval, testing, review, and improvement procedures.
 - `principle`: a stance you have explicitly stated, generalized one level above individual decisions.
@@ -53,6 +55,7 @@ Guidance:
 - Capture candidates are reusable decision criteria, procedures, or principles, so prefer `decision` / `operation` / `principle` when they fit; use `knowledge` for commodity technical know-how.
 - `decision` / `operation` / `principle` are the primary material for the public AI summary; `knowledge` usually is not.
 - Tagging review — do not under-label. The default failure mode is dropping a judgment memo into `knowledge` and missing `decision` / `operation` / `principle`; this is a main reason the `principle` axis stays thin. Consider the durable three FIRST and use `knowledge` only when none genuinely fit. Quick catches: a stated reason for choosing or avoiding an option → `decision`; an operating practice (how you measure, review, run, or verify) → `operation`; a generalized stance one level above a single decision → `principle`. Before finalizing `memo_type_keys`, re-read the candidate once and ask "is there a judgment here that I labeled as mere knowledge?". Do not over-correct either: `principle` needs an explicitly generalized stance, not a one-off opinion — keep it honest against the Quality Bar.
+- Do not over-label `decision` — it requires a judgment that actually happened, recorded in the body: an option taken, an alternative rejected, or a tradeoff resolved. A criteria-style heading, or a list of options with no record of what was chosen, does not make a memo a `decision`; plain library, API, or service behavior stays `knowledge` even when written as guidance.
 - AI-collaboration practices and stances belong here, not in the reject pile: how you structure a task or spec for an AI, your review discipline for AI-generated changes, where you verify versus trust AI output, when you delegate versus do it yourself. Capture the reusable practice as `operation` or the stated stance as `principle` — generalized so it would hold with a different AI tool, on a different project, for someone else to learn. This is the scarcest, most durable axis; do not drop it as workflow chatter.
 - Leaving a candidate unclassified (no type) is allowed, but classifying it improves analysis and the public profile. Do not force a type when none fits.
 
@@ -87,7 +90,7 @@ Generalize one level above the prompt: keep the judgment criterion, operating pr
 
 Before adding a candidate, make sure the body preserves enough reasoning for future reuse. A good candidate is not just a conclusion; it should include the relevant problem context, decision criteria, applicability conditions, tradeoffs, pitfalls, operational guidance, or verification method.
 
-Do not force a fixed template. Include the pieces that are useful for the specific knowledge. If the body only states a conclusion or summary, enrich it before adding the candidate.
+Do not force a fixed template. Include the pieces that are useful for the specific knowledge, and let the content decide the structure: a judgment-memo skeleton (criteria / why / pitfalls / verification headings) fits judgment candidates, not every candidate — a knowledge-centered body should follow its own natural shape. If the body only states a conclusion or summary, enrich it before adding the candidate.
 
 Prefer generalized but concrete writing:
 
