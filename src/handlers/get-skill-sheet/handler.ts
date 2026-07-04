@@ -1,6 +1,11 @@
 import { ApiClient } from '../../services/api/client.js';
 import { getSkillSheet } from '../../services/api/skill-sheet.js';
-import { GENDER, PROJECT_TYPE, CATEGORY_TYPE } from '../../types/index.js';
+import {
+  GENDER,
+  PROJECT_TYPE,
+  CATEGORY_TYPE,
+  PROCESS,
+} from '../../types/index.js';
 
 export async function handleGetSkillSheet(
   _args: Record<string, unknown> | undefined,
@@ -35,6 +40,15 @@ export async function handleGetSkillSheet(
               const techNames = project.technologies
                 .map((t) => t.name)
                 .join(', ');
+              const processNames =
+                project.processes.length > 0
+                  ? project.processes
+                      .map((id) => {
+                        const name = PROCESS[id as keyof typeof PROCESS];
+                        return name ? `${id} (${name})` : `${id}`;
+                      })
+                      .join(', ')
+                  : 'None';
               const memoNames = project.memos.map((m) => m.title).join(', ');
               const achievements =
                 project.achievements && project.achievements.length > 0
@@ -61,6 +75,7 @@ export async function handleGetSkillSheet(
     Scale: ${project.scale}
     Description: ${project.description}
     Technologies: ${techNames || 'None'}
+    Processes: ${processNames}
     Memos: ${memoNames || 'None'}
     Achievements:
 ${achievements}
