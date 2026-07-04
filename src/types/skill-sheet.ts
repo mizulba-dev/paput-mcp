@@ -12,8 +12,31 @@ export interface GetSkillSheetResponse {
   birth_date: string;
   years_of_experience: number;
   self_pr: string | null;
+  faq?: SkillSheetFaqItem[];
   skills: GetSkillSheetSkill[];
   projects: GetSkillSheetProject[];
+}
+
+export interface SkillSheetFaqItem {
+  question: string;
+  answer: string;
+  theme?: string;
+  related_memos?: SupportingMemo[];
+}
+
+export interface SkillSheetFaqItemInput {
+  question: string;
+  answer: string;
+  theme?: string;
+  related_memo_ids?: number[];
+}
+
+export interface UpdateSkillSheetFaqItemResponse extends SkillSheetFaqItem {
+  dropped_ids: number[];
+}
+
+export interface UpdateSkillSheetFaqResponse {
+  faq: UpdateSkillSheetFaqItemResponse[];
 }
 
 export interface GetSkillSheetSkill {

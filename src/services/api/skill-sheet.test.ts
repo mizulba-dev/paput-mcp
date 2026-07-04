@@ -7,6 +7,7 @@ import {
   getSkillSheetProjects,
   searchSkillSheetProjects,
   updateSkillSheetBasicInfo,
+  updateSkillSheetFaq,
   updateSkillSheetProjectEpisodes,
   updateSkillSheetSkills,
 } from './skill-sheet.js';
@@ -40,6 +41,27 @@ describe('skill sheet API service', () => {
       await expect(getSkillSheet(client)).rejects.toThrow(
         'Invalid skill sheet response format',
       );
+    });
+
+    it('passes through a faq list with resolved related memos', async () => {
+      const faq = [
+        {
+          question: 'What do you check first when the database is slow?',
+          answer: 'I start with the slow query log, then check indexes.',
+          theme: 'Database',
+          related_memos: [{ id: 42, title: 'Slow query triage' }],
+        },
+      ];
+      const client = createMockClient({
+        get: vi.fn().mockResolvedValue({
+          id: 1,
+          skills: [],
+          projects: [],
+          faq,
+        }),
+      });
+
+      await expect(getSkillSheet(client)).resolves.toMatchObject({ faq });
     });
   });
 
@@ -140,6 +162,24 @@ describe('skill sheet API service', () => {
         '/api/v1/mcp/skill-sheet/projects/5/episodes',
         { episodes },
       );
+    });
+
+    it('puts the whole faq list as a full replace', async () => {
+      const client = createMockClient();
+      const faq = [
+        {
+          question: 'What do you check first when the database is slow?',
+          answer: 'I start with the slow query log, then check indexes.',
+          theme: 'Database',
+          related_memo_ids: [42],
+        },
+      ];
+
+      await updateSkillSheetFaq(client, faq);
+
+      expect(client.put).toHaveBeenCalledWith('/api/v1/mcp/skill-sheet/faq', {
+        faq,
+      });
     });
   });
 });

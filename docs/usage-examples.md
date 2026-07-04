@@ -204,3 +204,25 @@ If older memos never appear in similarity results, run
 `paput_backfill_memo_embeddings` and repeat while the response reports
 `has_more: true`. This is a one-time setup step; new and updated memos are
 embedded automatically.
+
+## 12. Source And Save Interview Q&A (FAQ)
+
+Prompt:
+
+```text
+Help me build out my PaPut FAQ from questions I've been asked in interviews and my memos, then save it after I approve it.
+```
+
+Expected tool flow:
+
+1. `paput_get_skill_sheet` to see the current `faq` and profile
+2. `paput_get_categories` and `paput_search_memo` to find decision/operation/principle clusters for memo-derived question candidates
+3. Web search (or, if unavailable, general model knowledge labeled as tentative) for general technical interview questions, filtered to the user's skills
+4. MCP client AI presents candidates from all three sources; the user adopts or rejects each one
+5. MCP client AI drafts a first-person answer for each adopted question
+6. `paput_get_skill_sheet` again, then `paput_update_skill_sheet_faq` with the merged full list, after the user approves the drafts. Check the per-item `dropped_ids` in that response.
+7. `paput_get_skill_sheet` to verify the saved result
+
+Use case: build the skill sheet's Q&A section from real interview questions,
+existing memo evidence, and general interview-question research, without
+locking the question set to a static list baked into the skill.

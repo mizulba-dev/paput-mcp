@@ -12,6 +12,8 @@ import {
   UpsertSkillSheetProjectParams,
   SkillSheetProjectEpisode,
   UpdateSkillSheetProjectEpisodesResponse,
+  SkillSheetFaqItemInput,
+  UpdateSkillSheetFaqResponse,
 } from '../../types/index.js';
 
 export interface UpdateBasicInfoParams {
@@ -224,10 +226,14 @@ export async function updateSkillSheetProjectEpisodes(
   projectId: number,
   episodes: SkillSheetProjectEpisode[],
 ): Promise<UpdateSkillSheetProjectEpisodesResponse> {
-  return client.put(
-    `/api/v1/mcp/skill-sheet/projects/${projectId}/episodes`,
-    {
-      episodes,
-    },
-  );
+  return client.put(`/api/v1/mcp/skill-sheet/projects/${projectId}/episodes`, {
+    episodes,
+  });
+}
+
+export async function updateSkillSheetFaq(
+  client: ApiClient,
+  faq: SkillSheetFaqItemInput[],
+): Promise<UpdateSkillSheetFaqResponse> {
+  return client.put('/api/v1/mcp/skill-sheet/faq', { faq });
 }

@@ -17,6 +17,7 @@ export * from './upsert-skill-sheet-project/index.js';
 export * from './delete-skill-sheet-project/index.js';
 export * from './get-skill-sheet-project-episodes-context/index.js';
 export * from './update-skill-sheet-project-episodes/index.js';
+export * from './update-skill-sheet-faq/index.js';
 export * from './list-goals/index.js';
 export * from './create-goal/index.js';
 export * from './update-goal/index.js';

@@ -112,6 +112,30 @@ const skillSheetProjectEpisodeSchema = z.object({
     ),
 });
 
+const skillSheetFaqItemSchema = z.object({
+  question: z
+    .string()
+    .min(1)
+    .max(200)
+    .describe("Required question text, in the user's own words"),
+  answer: z
+    .string()
+    .min(1)
+    .max(2000)
+    .describe("Required answer text, in the user's own words"),
+  theme: z
+    .string()
+    .max(40)
+    .describe('Optional theme label used to group items for display')
+    .optional(),
+  related_memo_ids: z
+    .array(z.number().int().positive())
+    .describe(
+      'Optional public memo IDs backing this answer. Non-public or non-owned IDs are dropped silently and reported in dropped_ids.',
+    )
+    .optional(),
+});
+
 const knowledgeCandidateSchema = z.object({
   title: z.string(),
   body: z.string(),
@@ -323,6 +347,14 @@ const toolInputSchemas = {
       .max(5)
       .describe(
         'Episodes to save. Pass an empty array to clear all project episodes.',
+      ),
+  }),
+  paput_update_skill_sheet_faq: z.object({
+    faq: z
+      .array(skillSheetFaqItemSchema)
+      .max(15)
+      .describe(
+        'FAQ items to save as a full replace. Pass an empty array to clear all items.',
       ),
   }),
   paput_list_goals: emptySchema,

@@ -88,6 +88,18 @@ ${episodes}`;
     const genderText =
       GENDER[skillSheet.gender as keyof typeof GENDER] || `Other`;
 
+    const faq = skillSheet.faq ?? [];
+    const faqText =
+      faq.length > 0
+        ? faq
+            .map((item) => {
+              const theme = item.theme ? ` [${item.theme}]` : '';
+              const relatedMemoCount = item.related_memos?.length ?? 0;
+              return `  Q${theme}: ${item.question}\n  A: ${item.answer} (related memos: ${relatedMemoCount})`;
+            })
+            .join('\n\n')
+        : '  None';
+
     const content = `Skill sheet:
 ID: ${skillSheet.id}
 Nearest station: ${skillSheet.nearest_station || 'Not set'}
@@ -97,6 +109,9 @@ Years of experience: ${skillSheet.years_of_experience} year(s)
 
 Self PR:
 ${skillSheet.self_pr || 'Not set'}
+
+FAQ:
+${faqText}
 
 Skills:
 ${skillsText}
