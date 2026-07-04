@@ -18,7 +18,7 @@ The connector exposes the following tools. All tools carry annotations
 
 - **Memos:** create, search, get, update, list categories
 - **Notes:** create, search, get, update
-- **Skill sheet:** get and update basic info, self PR, skills, and projects
+- **Skill sheet:** get and update basic info, self PR, skills, projects, project achievements, and generated project episodes
 - **Goals:** list, create, update, delete
 - **Dashboard analysis:** get and update the user's dashboard analysis
 - **Knowledge capture:** add, list, update, save, discard pending candidates; manage processed session markers and capture policy

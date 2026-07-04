@@ -91,6 +91,16 @@ export const upsertSkillSheetProjectTool: ToolHandler = {
             required: ['id', 'title'],
           },
         },
+        achievements: {
+          type: 'array',
+          description:
+            'Achievement bullets owned by the user. Omit to keep existing values; pass an empty array to clear them. Maximum 10 items, 100 characters each.',
+          maxItems: 10,
+          items: {
+            type: 'string',
+            maxLength: 100,
+          },
+        },
       },
       required: [
         'type',

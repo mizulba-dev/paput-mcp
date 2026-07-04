@@ -5,32 +5,6 @@ export interface SupportingMemo {
   title: string;
 }
 
-export interface StrengthLabel {
-  label: string;
-  description?: string | null;
-  category_names?: string[] | null;
-  project_ids?: string[] | null;
-  supporting_memo_ids?: number[] | null;
-  // 読み出しレスポンスでのみ解決される（書き込み時は id だけ送る）
-  supporting_memos?: SupportingMemo[] | null;
-}
-
-export interface Stance {
-  type: 'decision' | 'operation';
-  statement: string;
-  supporting_memo_ids?: number[] | null;
-  // 読み出しレスポンスでのみ解決される
-  supporting_memos?: SupportingMemo[] | null;
-}
-
-export interface ProjectHighlight {
-  project_id: string;
-  title: string;
-  summary: string;
-  strength_labels?: string[] | null;
-  achievement_bullets?: string[] | null;
-}
-
 export interface GetSkillSheetResponse {
   id: number;
   nearest_station: string | null;
@@ -38,21 +12,8 @@ export interface GetSkillSheetResponse {
   birth_date: string;
   years_of_experience: number;
   self_pr: string | null;
-  headline?: string | null;
-  profile_summary?: string | null;
-  strength_labels?: StrengthLabel[] | null;
-  project_highlights?: ProjectHighlight[] | null;
-  stances?: Stance[] | null;
   skills: GetSkillSheetSkill[];
   projects: GetSkillSheetProject[];
-}
-
-export interface UpdatePublicProfileParams {
-  headline?: string;
-  profile_summary?: string;
-  strength_labels?: StrengthLabel[];
-  project_highlights?: ProjectHighlight[];
-  stances?: Stance[];
 }
 
 export interface GetSkillSheetSkill {
@@ -63,6 +24,16 @@ export interface GetSkillSheetSkill {
   category_type: number;
   level: string;
   years: number;
+}
+
+export interface SkillSheetProjectEpisode {
+  claim: string;
+  situation?: string | null;
+  decision?: string | null;
+  reason?: string | null;
+  supporting_memo_ids?: number[] | null;
+  supporting_memos?: SupportingMemo[] | null;
+  dropped_ids?: number[] | null;
 }
 
 export interface GetSkillSheetProject {
@@ -78,13 +49,14 @@ export interface GetSkillSheetProject {
   technologies: Technology[];
   processes: number[];
   memos: SkillSheetMemo[];
-  ai_summary?: string | null;
-  ai_summary_updated_at?: string | null;
+  episodes?: SkillSheetProjectEpisode[] | null;
+  episodes_updated_at?: string | null;
+  achievements?: string[] | null;
 }
 
 export type UpsertSkillSheetProjectParams = Omit<
   GetSkillSheetProject,
-  'id' | 'end_period'
+  'id' | 'end_period' | 'episodes' | 'episodes_updated_at'
 > & {
   id?: number;
   end_period?: string | null;
@@ -146,48 +118,8 @@ export interface GetProjectsResponse {
   projects: GetSkillSheetProject[];
 }
 
-export interface UpdateSkillSheetProjectAiSummaryResponse {
-  id: number;
-  title: string;
-  ai_summary: string | null;
-  ai_summary_updated_at: string | null;
-}
-
-export interface PublicProfileContextSkill {
-  name: string;
-  level: string | null;
-  category_name: string | null;
-}
-
-export interface PublicProfileContextProject {
-  id: string;
-  name: string;
-  role: string | null;
-  ai_summary: string | null;
-  description: string | null;
-}
-
-export interface PublicProfileContextSkillSheet {
-  headline: string | null;
-  profile_summary: string | null;
-  self_pr: string | null;
-  years_of_experience: number;
-  skills: PublicProfileContextSkill[];
-  projects: PublicProfileContextProject[];
-  strength_labels: StrengthLabel[];
-  project_highlights: ProjectHighlight[];
-}
-
-export interface PublicProfileContextSummaryMemo {
-  id: number;
-  title: string;
-  memo_types: string[];
-  updated_at: string;
-}
-
-export interface PublicProfileContextResponse {
-  skill_sheet: PublicProfileContextSkillSheet;
-  knowledge_map: unknown;
-  growing_areas: unknown[];
-  public_summary_memos: PublicProfileContextSummaryMemo[];
+export interface UpdateSkillSheetProjectEpisodesResponse {
+  project_id: number;
+  episodes: SkillSheetProjectEpisode[];
+  episodes_updated_at: string | null;
 }

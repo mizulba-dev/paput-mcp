@@ -35,8 +35,8 @@ const memoInputSchema = {
         type: 'string',
         enum: ['knowledge', 'decision', 'operation', 'principle'],
       },
-      description:
-        'Memo type classification keys (a memo can have multiple). knowledge: technical know-how (commodity); decision: reusable judgment criteria; operation: observability/eval/test/review practices; principle: explicitly stated stances. decision/operation/principle are the primary material for the public AI summary.',
+              description:
+                'Memo type classification keys (a memo can have multiple). knowledge: technical know-how (commodity); decision: reusable judgment criteria; operation: observability/eval/test/review practices; principle: explicitly stated principles. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
     },
     projects: {
       type: 'array',

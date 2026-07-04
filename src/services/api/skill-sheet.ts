@@ -10,9 +10,8 @@ import {
   Technology,
   SkillSheetMemo,
   UpsertSkillSheetProjectParams,
-  UpdateSkillSheetProjectAiSummaryResponse,
-  UpdatePublicProfileParams,
-  PublicProfileContextResponse,
+  SkillSheetProjectEpisode,
+  UpdateSkillSheetProjectEpisodesResponse,
 } from '../../types/index.js';
 
 export interface UpdateBasicInfoParams {
@@ -52,6 +51,7 @@ export interface AddSkillSheetProjectResponse {
   technologies: Technology[];
   processes: number[];
   memos: SkillSheetMemo[];
+  achievements?: string[] | null;
 }
 
 export async function getSkillSheet(
@@ -155,21 +155,6 @@ export async function updateSkillSheetSelfPr(
   await client.put('/api/v1/mcp/skill-sheet/self-pr', params);
 }
 
-export async function updateSkillSheetPublicProfile(
-  client: ApiClient,
-  params: UpdatePublicProfileParams,
-): Promise<void> {
-  await client.put('/api/v1/mcp/skill-sheet/public-profile', params);
-}
-
-export async function getPublicProfileContext(
-  client: ApiClient,
-): Promise<PublicProfileContextResponse> {
-  return client.get<PublicProfileContextResponse>(
-    '/api/v1/mcp/skill-sheet/public-profile-context',
-  );
-}
-
 export async function getSkillSheetSkills(
   client: ApiClient,
 ): Promise<SkillSheetSkillsResponse> {
@@ -234,12 +219,15 @@ export async function deleteSkillSheetProject(
   await client.delete(`/api/v1/mcp/skill-sheet/project/${projectId}`);
 }
 
-export async function updateSkillSheetProjectAiSummary(
+export async function updateSkillSheetProjectEpisodes(
   client: ApiClient,
   projectId: number,
-  aiSummary: string,
-): Promise<UpdateSkillSheetProjectAiSummaryResponse> {
-  return client.put(`/api/v1/mcp/skill-sheet/project/${projectId}/ai-summary`, {
-    ai_summary: aiSummary,
-  });
+  episodes: SkillSheetProjectEpisode[],
+): Promise<UpdateSkillSheetProjectEpisodesResponse> {
+  return client.put(
+    `/api/v1/mcp/skill-sheet/projects/${projectId}/episodes`,
+    {
+      episodes,
+    },
+  );
 }

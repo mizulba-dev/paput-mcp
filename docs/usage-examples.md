@@ -145,25 +145,44 @@ Expected tool flow:
 Use case: keep analysis generation in the MCP client AI while PaPut MCP only
 retrieves source data and saves the finished analysis.
 
-## 9. Generate And Save AI Summary
+## 9. Draft And Save Project Episodes
 
 Prompt:
 
 ```text
-Create my PaPut public AI summary, then save it.
+Draft design-and-judgment episodes for my PaPut MCP project, then save them after I approve the draft.
 ```
 
 Expected tool flow:
 
-1. `paput_get_public_profile_context`
-2. MCP client AI generates headline, profile_summary, and strength_labels from `structuredContent`
-3. `paput_update_skill_sheet_public_profile` after the user intends to save the result
-4. `paput_get_skill_sheet` to verify the saved result
+1. `paput_get_skill_sheet`
+2. `paput_get_skill_sheet_project_episodes_context`
+3. MCP client AI drafts episodes from the public linked memos in `structuredContent`
+4. `paput_update_skill_sheet_project_episodes` after the user approves the draft
+5. `paput_get_skill_sheet` to verify the saved result
 
-Use case: generate the public profile shown on the AI Summary tab from public
-materials only. The context excludes private dashboard analysis and goals.
+Use case: publish project-level judgment evidence backed by public linked memos.
 
-## 10. Find Related Memos By Meaning
+## 10. Draft And Save Self PR
+
+Prompt:
+
+```text
+Draft a new self PR for my PaPut skill sheet and save it after I approve it.
+```
+
+Expected tool flow:
+
+1. `paput_get_skill_sheet`
+2. `paput_search_memo` and `paput_get_memo` only when additional public memo evidence is needed
+3. MCP client AI drafts the self PR
+4. `paput_update_skill_sheet_self_pr` after the user approves the text
+5. `paput_get_skill_sheet` to verify the saved result
+
+Use case: draft the skill sheet self PR from existing profile, skills, projects,
+episodes, achievements, and public decision/operation/principle memos.
+
+## 11. Find Related Memos By Meaning
 
 Prompt:
 

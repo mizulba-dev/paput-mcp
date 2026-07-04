@@ -137,7 +137,7 @@ function buildPrompt(context: {
 
   return `Create a dashboard analysis as the MCP client AI, using the PaPut data in structuredContent. paput-mcp does not contain analysis logic, so you should read the source data and adapt the analysis to the user's goals and context. Write the final output in the user's language and match the user's tone when possible.
 
-Lead with the judgment axis, not raw volume. The durable, hard-to-commoditize part of what the user accumulates is their JUDGMENT and PRACTICE — captured as memo_type: decision (judgment criteria), operation (operating practices: observability, eval, testing, review), and principle (stated stances). knowledge is commodity. So assess the user by how thick those three axes are, not by how many memos or categories they have. structuredContent.dashboard_summary.memo_type_counts holds the per-type accumulation.
+Lead with the judgment axis, not raw volume. The durable, hard-to-commoditize part of what the user accumulates is their JUDGMENT and PRACTICE — captured as memo_type: decision (judgment criteria), operation (operating practices: observability, eval, testing, review), and principle (stated principles). knowledge is commodity. So assess the user by how thick those three axes are, not by how many memos or categories they have. structuredContent.dashboard_summary.memo_type_counts holds the per-type accumulation.
 
 The judgment axis is the LENS, not a replacement for goal analysis. The dashboard's core job is "where am I against my goals", so keep goals first-class: read each active goal THROUGH the axis — which judgment/practice/principle axis that goal requires, and whether it is currently thick or thin. Do not drop the goal overview in favor of axis-only talk.
 

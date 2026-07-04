@@ -27,6 +27,27 @@ describe('getGeneratedInputSchema', () => {
       type: 'number',
       description: 'Project ID to update. Omit when creating a new project.',
     });
+    expect(schema?.properties.achievements).toMatchObject({
+      type: 'array',
+      description: expect.stringContaining('Omit to keep existing values'),
+    });
+  });
+
+  it('generates required fields for updating project episodes', () => {
+    const schema = getGeneratedInputSchema(
+      'paput_update_skill_sheet_project_episodes',
+    );
+
+    expect(schema).toMatchObject({
+      type: 'object',
+      required: ['project_id', 'episodes'],
+    });
+    expect(schema?.properties.episodes).toMatchObject({
+      type: 'array',
+      items: {
+        required: ['claim', 'supporting_memo_ids'],
+      },
+    });
   });
 
   it('returns undefined for unknown tools', () => {

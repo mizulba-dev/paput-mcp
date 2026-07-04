@@ -70,6 +70,46 @@ const skillSheetProjectSchema = z.object({
       'Development process IDs: 1 requirements, 2 basic design, 3 detailed design, 4 implementation, 5 testing, 6 maintenance',
     ),
   memos: z.array(skillSheetMemoSchema).describe('Related memos'),
+  achievements: z
+    .array(
+      z.string().max(100).describe('Achievement bullet, max 100 characters'),
+    )
+    .max(10)
+    .describe(
+      'Achievement bullets owned by the user. Omit to keep existing values; pass an empty array to clear them.',
+    )
+    .optional(),
+});
+
+const skillSheetProjectEpisodeSchema = z.object({
+  claim: z
+    .string()
+    .min(1)
+    .max(200)
+    .describe(
+      'Required one-line claim for the episode, grounded in public linked memos',
+    ),
+  situation: z
+    .string()
+    .max(1000)
+    .describe('Optional situation context, 1-2 sentences')
+    .optional(),
+  decision: z
+    .string()
+    .max(1000)
+    .describe('Optional decision description, 1-2 sentences')
+    .optional(),
+  reason: z
+    .string()
+    .max(1000)
+    .describe('Optional reason, 1-2 sentences')
+    .optional(),
+  supporting_memo_ids: z
+    .array(z.number())
+    .min(1)
+    .describe(
+      'Public memo IDs returned by the project episodes context tool that support this episode',
+    ),
 });
 
 const knowledgeCandidateSchema = z.object({
@@ -165,6 +205,10 @@ const toolInputSchemas = {
   paput_search_memo: z.object({
     word: z.string().describe('Search keyword').optional(),
     category_id: z.number().describe('Category ID').optional(),
+    memo_type: z
+      .enum(['knowledge', 'decision', 'operation', 'principle'])
+      .describe('Memo type filter')
+      .optional(),
     ids: z.array(z.number()).describe('Memo IDs').optional(),
     date: z.string().describe('Date in YYYY-MM-DD format').optional(),
     is_public: z.boolean().describe('Visibility filter').optional(),
@@ -262,82 +306,6 @@ const toolInputSchemas = {
   paput_update_skill_sheet_self_pr: z.object({
     self_pr: z.string().describe('Self PR text').optional(),
   }),
-  paput_update_skill_sheet_public_profile: z.object({
-    headline: z
-      .string()
-      .describe('One-line catchphrase summarizing the user')
-      .optional(),
-    profile_summary: z
-      .string()
-      .describe('Multi-line overall summary of the user')
-      .optional(),
-    strength_labels: z
-      .array(
-        z.object({
-          label: z.string().describe('Strength label name'),
-          description: z.string().describe('Strength description').optional(),
-          category_names: z
-            .array(z.string())
-            .describe('Related category names')
-            .optional(),
-          project_ids: z
-            .array(z.string())
-            .describe('Related project IDs')
-            .optional(),
-          supporting_memo_ids: z
-            .array(z.number())
-            .describe(
-              'Public memo IDs that back this strength. Use only public decision/operation/principle memo IDs from the index; non-public or non-owned IDs are dropped server-side.',
-            )
-            .optional(),
-        }),
-      )
-      .describe('Array of strength labels')
-      .optional(),
-    stances: z
-      .array(
-        z.object({
-          type: z
-            .enum(['decision', 'operation'])
-            .describe('Which axis this stance belongs to'),
-          statement: z
-            .string()
-            .describe(
-              'One-line stance synthesized from decision/operation memos, in plain non-expert vocabulary a non-technical recruiter grasps in one read (no domain jargon or English technical terms in the line — those belong in the drill-down memos). Keep the rejected alternative ("B, not A"): weave in what was chosen and what was rejected; dissolve principle into the wording.',
-            ),
-          supporting_memo_ids: z
-            .array(z.number())
-            .describe(
-              'Public memo IDs backing this stance (the drill-down judgment cards). Use only public decision/operation/principle memo IDs from the index.',
-            )
-            .optional(),
-        }),
-      )
-      .describe(
-        'Stances (judgment and operating practices) shown as the lead of the AI Summary tab. Lead with 3-4 stances total with one clear anchor stance, ordered by strength; keep each line in plain non-expert vocabulary with its rejected-alternative intact.',
-      )
-      .optional(),
-    project_highlights: z
-      .array(
-        z.object({
-          project_id: z.string().describe('Related project ID'),
-          title: z.string().describe('Project title'),
-          summary: z
-            .string()
-            .describe('Short public-profile summary for the project'),
-          strength_labels: z
-            .array(z.string())
-            .describe('Strength labels supported by the project')
-            .optional(),
-          achievement_bullets: z
-            .array(z.string())
-            .describe('Top achievement bullets for the project')
-            .optional(),
-        }),
-      )
-      .describe('Short project highlights shown on the AI Summary tab')
-      .optional(),
-  }),
   paput_set_skill_sheet_skills: z.object({
     skills: z.array(skillSchema).describe('Skill list'),
   }),
@@ -345,12 +313,17 @@ const toolInputSchemas = {
   paput_delete_skill_sheet_project: z.object({
     project_id: z.number().describe('Project ID to delete'),
   }),
-  paput_get_skill_sheet_project_summary_context: z.object({
+  paput_get_skill_sheet_project_episodes_context: z.object({
     project_id: z.number().describe('Project ID'),
   }),
-  paput_update_skill_sheet_project_ai_summary: z.object({
+  paput_update_skill_sheet_project_episodes: z.object({
     project_id: z.number().describe('Project ID'),
-    ai_summary: z.string().describe('AI-generated project summary to save'),
+    episodes: z
+      .array(skillSheetProjectEpisodeSchema)
+      .max(5)
+      .describe(
+        'Episodes to save. Pass an empty array to clear all project episodes.',
+      ),
   }),
   paput_list_goals: emptySchema,
   paput_create_goal: goalInputSchema,
@@ -382,7 +355,6 @@ const toolInputSchemas = {
     analyzed_at: z.string().describe('Analysis timestamp in ISO 8601 format'),
   }),
   paput_get_dashboard_analysis_context: emptySchema,
-  paput_get_public_profile_context: emptySchema,
   paput_get_project_context: z.object({
     project: z
       .string()
@@ -521,7 +493,7 @@ const toolInputSchemas = {
     memo_type_keys: z
       .array(z.enum(['knowledge', 'decision', 'operation', 'principle']))
       .describe(
-        'Memo type classification keys (a memo can have multiple). decision/operation/principle are the primary material for the public AI summary.',
+        'Memo type classification keys (a memo can have multiple). decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
       )
       .optional(),
     confidence: z.number().describe('Confidence score').optional(),

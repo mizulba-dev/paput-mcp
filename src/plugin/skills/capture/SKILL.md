@@ -41,7 +41,7 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 
 ## Memo Type
 
-Classify each candidate with one or more memo types via `memo_type_keys`. A memo can have several. This axis is what lets PaPut surface judgment and practices in the public AI summary, so classify deliberately.
+Classify each candidate with one or more memo types via `memo_type_keys`. A memo can have several. This axis is what lets PaPut surface judgment and practices in project episodes, self PR drafting, and analysis, so classify deliberately.
 
 Typing is a reading step, not a writing step. Classify only after the body is final, and only from what the body already says. Never add headings, criteria sections, or choice wording to the body to justify a type — if a type fits only after such an edit, the type does not fit.
 
@@ -53,10 +53,10 @@ Typing is a reading step, not a writing step. Classify only after the body is fi
 Guidance:
 
 - Capture candidates are reusable decision criteria, procedures, or principles, so prefer `decision` / `operation` / `principle` when they fit; use `knowledge` for commodity technical know-how.
-- `decision` / `operation` / `principle` are the primary material for the public AI summary; `knowledge` usually is not.
+- `decision` / `operation` / `principle` are the primary material for durable judgment and working-practice summaries; `knowledge` usually is not.
 - Tagging review — do not under-label. The default failure mode is dropping a judgment memo into `knowledge` and missing `decision` / `operation` / `principle`; this is a main reason the `principle` axis stays thin. Consider the durable three FIRST and use `knowledge` only when none genuinely fit. Quick catches: a stated reason for choosing or avoiding an option → `decision`; an operating practice (how you measure, review, run, or verify) → `operation`; a generalized stance one level above a single decision → `principle`. Before finalizing `memo_type_keys`, re-read the candidate once and ask "is there a judgment here that I labeled as mere knowledge?". Do not over-correct either: `principle` needs an explicitly generalized stance, not a one-off opinion — keep it honest against the Quality Bar.
 - Do not over-label `decision` — it requires a judgment that actually happened, recorded in the body: an option taken, an alternative rejected, or a tradeoff resolved. A criteria-style heading, or a list of options with no record of what was chosen, does not make a memo a `decision`; plain library, API, or service behavior stays `knowledge` even when written as guidance.
-- AI-collaboration practices and stances belong here, not in the reject pile: how you structure a task or spec for an AI, your review discipline for AI-generated changes, where you verify versus trust AI output, when you delegate versus do it yourself. Capture the reusable practice as `operation` or the stated stance as `principle` — generalized so it would hold with a different AI tool, on a different project, for someone else to learn. This is the scarcest, most durable axis; do not drop it as workflow chatter.
+- AI-collaboration practices and postures belong here, not in the reject pile: how you structure a task or spec for an AI, your review discipline for AI-generated changes, where you verify versus trust AI output, when you delegate versus do it yourself. Capture the reusable practice as `operation` or the stated stance as `principle` — generalized so it would hold with a different AI tool, on a different project, for someone else to learn. This is the scarcest, most durable axis; do not drop it as workflow chatter.
 - Leaving a candidate unclassified (no type) is allowed, but classifying it improves analysis and the public profile. Do not force a type when none fits.
 
 ## Eliciting scarce operating practices (eval / observability)
@@ -75,7 +75,7 @@ Generalize one level above the project: drop service, metric, and dashboard name
 
 ## Eliciting prompt-derived judgment
 
-The user's own prompts in the current conversation are first-party evidence of judgment. Corrections, constraints, repeated instructions, and choices among AI-presented options often reveal reusable operating practices or stances before they appear in the final artifact. When the conversation includes this signal, do not treat it as disposable task wording: actively draw out the reusable judgment and capture it as `operation`, `principle`, or `decision` as appropriate.
+The user's own prompts in the current conversation are first-party evidence of judgment. Corrections, constraints, repeated instructions, and choices among AI-presented options often reveal reusable operating practices or postures before they appear in the final artifact. When the conversation includes this signal, do not treat it as disposable task wording: actively draw out the reusable judgment and capture it as `operation`, `principle`, or `decision` as appropriate.
 
 Draw out only what fits the conversation — do not interrogate:
 
@@ -84,7 +84,7 @@ Draw out only what fits the conversation — do not interrogate:
 - Is the user repeating nearly the same boilerplate instruction? If it is project-specific, route it to a project document as a `procedure` through Check 1; if it is cross-project, capture the practice as `operation` in pending through Check 2.
 - Did the AI present options, and did the user choose, reject, or combine them with a reason? That reason is `decision` material.
 
-Generalize one level above the prompt: keep the judgment criterion, operating practice, stance, or repeatable procedure; drop local paths, project names, customer details, and exact task facts. Short verbatim phrasing from the user may be preserved for authenticity, but pending candidates must not include sensitive or project-specific content. A one-off "fix this" or "run tests" instruction is a work log, not knowledge, unless it exposes a reusable judgment criterion, operating practice, or procedure. Project-specific repeated instructions belong in project documents (`procedure`, Check 1); cross-project practices and stances belong in pending candidates (Check 2).
+Generalize one level above the prompt: keep the judgment criterion, operating practice, stance, or repeatable procedure; drop local paths, project names, customer details, and exact task facts. Short verbatim phrasing from the user may be preserved for authenticity, but pending candidates must not include sensitive or project-specific content. A one-off "fix this" or "run tests" instruction is a work log, not knowledge, unless it exposes a reusable judgment criterion, operating practice, or procedure. Project-specific repeated instructions belong in project documents (`procedure`, Check 1); cross-project practices and postures belong in pending candidates (Check 2).
 
 ## Quality Bar
 
@@ -104,7 +104,7 @@ Prefer generalized but concrete writing:
 Do not add these to pending:
 
 - Project-specific specifications, screen names, button names, business workflows, operational rules, or local context.
-- One-off tool mechanics or configuration: editor / OS / CLI settings, keybindings, which button was clicked, model- or version-specific quirks, project-specific CI wiring, or anecdotes about a single session (for example, "the AI got confused here"). These are commodity even when they mention AI tools — capture the reusable practice or stance instead, not the mechanics. Reusable AI-collaboration practices and stances ARE worth capturing (see the AI-collaboration note under Memo Type); do not discard them as workflow chatter.
+- One-off tool mechanics or configuration: editor / OS / CLI settings, keybindings, which button was clicked, model- or version-specific quirks, project-specific CI wiring, or anecdotes about a single session (for example, "the AI got confused here"). These are commodity even when they mention AI tools — capture the reusable practice or stance instead, not the mechanics. Reusable AI-collaboration practices and postures ARE worth capturing (see the AI-collaboration note under Memo Type); do not discard them as workflow chatter.
 - Content that third parties cannot understand from the title and body alone.
 - Rejected designs, anecdotes, work logs, impressions, or decision histories without reusable guidance.
 - Content semantically close to existing memos or pending candidates.

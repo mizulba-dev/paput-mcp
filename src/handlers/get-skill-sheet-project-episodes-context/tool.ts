@@ -1,11 +1,11 @@
 import { ToolHandler } from '../../types/index.js';
 import { handler } from './handler.js';
 
-export const getSkillSheetProjectSummaryContextTool: ToolHandler = {
+export const getSkillSheetProjectEpisodesContextTool: ToolHandler = {
   definition: {
-    name: 'paput_get_skill_sheet_project_summary_context',
+    name: 'paput_get_skill_sheet_project_episodes_context',
     description:
-      'Get project information and related memo bodies so the MCP client AI model can generate a skill sheet project summary.',
+      'Get project information and public linked memo bodies so the MCP client AI model can draft design-and-judgment episodes for a skill sheet project. Private linked memos are returned only as a count.',
     inputSchema: {
       type: 'object',
       properties: {

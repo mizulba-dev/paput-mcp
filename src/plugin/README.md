@@ -36,8 +36,8 @@ All skills are invoked with the `paput` namespace, e.g. `/paput:capture`.
 | `principle-synthesizer` | Synthesize cross-cutting principle candidates from accumulated public memos |
 | `analyze-discard-policy` | Derive capture rejection criteria from discarded candidates |
 | `project-document` | Save a project design decision or repeatable procedure as a project document |
-| `project-summary` | Generate an AI summary for a skill sheet project from linked memos |
-| `public-profile-summary` | Generate the public profile AI summary shown to recruiters |
+| `project-episodes` | Draft design-and-judgment episodes for a skill sheet project from public linked memos |
+| `self-pr-draft` | Draft the skill sheet self PR and save it only after explicit approval |
 | `dashboard-analysis` | Analyze the dashboard, goals, and memos through the judgment axis |
 
 ## Project alias (optional)

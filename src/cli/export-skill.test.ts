@@ -43,18 +43,18 @@ describe('exportSkill', () => {
     expect(entry.content).toContain('paput_get_dashboard_analysis_context');
   });
 
-  it('exports paput-project-summary as a ZIP file', () => {
+  it('exports paput-project-episodes as a ZIP file', () => {
     const dir = mkdtempSync(join(tmpdir(), 'paput-export-skill-test-'));
     tempDirs.push(dir);
-    const outputPath = join(dir, 'project-summary.zip');
+    const outputPath = join(dir, 'project-episodes.zip');
 
-    exportSkill(['paput-project-summary', '--output', outputPath]);
+    exportSkill(['paput-project-episodes', '--output', outputPath]);
 
     const entry = readFirstZipEntry(readFileSync(outputPath));
-    expect(entry.path).toBe('paput-project-summary/SKILL.md');
-    expect(entry.content).toContain('name: paput-project-summary');
+    expect(entry.path).toBe('paput-project-episodes/SKILL.md');
+    expect(entry.content).toContain('name: paput-project-episodes');
     expect(entry.content).toContain(
-      'paput_get_skill_sheet_project_summary_context',
+      'paput_get_skill_sheet_project_episodes_context',
     );
   });
 

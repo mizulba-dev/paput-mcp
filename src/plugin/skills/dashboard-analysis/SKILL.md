@@ -6,7 +6,7 @@ description: Use this to analyze the user's PaPut dashboard, goals, skill sheet,
 
 Analyze the user's PaPut dashboard and goals. Use this skill when the user asks about dashboard analysis, goals, progress, strengths, weak areas, next learning topics, or career-history phrasing.
 
-Read the user through the JUDGMENT axis, not raw volume. The durable, hard-to-commoditize part of what they accumulate is their judgment and practice — captured as `memo_type`: `decision` (judgment criteria), `operation` (operating practices), `principle` (stated stances). `knowledge` is commodity. `structuredContent.dashboard_summary.memo_type_counts` holds the per-type accumulation; assess the user by how thick those three durable axes are, with categories as a secondary lens for the domains they work in.
+Read the user through the JUDGMENT axis, not raw volume. The durable, hard-to-commoditize part of what they accumulate is their judgment and practice — captured as `memo_type`: `decision` (judgment criteria), `operation` (operating practices), `principle` (stated principles). `knowledge` is commodity. `structuredContent.dashboard_summary.memo_type_counts` holds the per-type accumulation; assess the user by how thick those three durable axes are, with categories as a secondary lens for the domains they work in.
 
 The judgment axis is the LENS, not a replacement for goal analysis. The dashboard's core job is "where am I against my goals", so keep goals first-class: read each active goal THROUGH the axis — which judgment/practice/principle axis that goal requires, and whether that axis is currently thick or thin. Do not drop the goal overview in favor of axis-only talk.
 

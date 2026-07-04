@@ -121,6 +121,12 @@ function parseProjectParams(
   if (typeof params.mcp_alias === 'string') {
     project.mcp_alias = params.mcp_alias;
   }
+  if (Array.isArray(params.achievements)) {
+    if (!params.achievements.every((item) => typeof item === 'string')) {
+      return undefined;
+    }
+    project.achievements = params.achievements;
+  }
 
   return project;
 }

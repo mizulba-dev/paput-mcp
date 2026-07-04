@@ -31,7 +31,7 @@ export const addKnowledgeCandidatesTool: ToolHandler = {
                   enum: ['knowledge', 'decision', 'operation', 'principle'],
                 },
                 description:
-                  'Memo type classification keys (a memo can have multiple). decision/operation/principle are the primary material for the public AI summary.',
+                  'Memo type classification keys (a memo can have multiple). decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
               },
               confidence: { type: 'number' },
               is_public: { type: 'boolean', default: false },

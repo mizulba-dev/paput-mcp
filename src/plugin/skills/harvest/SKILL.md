@@ -1,5 +1,5 @@
 ---
-description: Use this to harvest reusable knowledge from past local Claude/Codex sessions when the AI client can read local files. Safe to run repeatedly — it skips already-processed sessions and only reviews new ones — so use it both for first-time onboarding and for periodic catch-up. Pay special attention to AI-collaboration practices and stances (operation / principle), the scarce, durable axis.
+description: Use this to harvest reusable knowledge from past local Claude/Codex sessions when the AI client can read local files. Safe to run repeatedly — it skips already-processed sessions and only reviews new ones — so use it both for first-time onboarding and for periodic catch-up. Pay special attention to AI-collaboration practices and postures (operation / principle), the scarce, durable axis.
 ---
 
 # PaPut Harvest
@@ -44,7 +44,7 @@ periodic catch-up. There is no separate "init" step.
    Draft each body first, structured to fit the content itself — do not shape
    it around memo types. Then set `memo_type_keys` from the finalized body
    (see Memo Type below); classify AI-collaboration practices as `operation`
-   and stances as `principle`.
+   and postures as `principle`.
 9. If the session was reviewed but no candidates should be added, call
    `paput_mark_processed_session` with `source`, `session_id`, and
    `source_session_updated_at`.
@@ -83,7 +83,7 @@ Structure each candidate body to fit its content. Do not impose a judgment-memo 
 
 ### Capture the AI-collaboration axis
 
-Reusable AI-collaboration practices and stances are first-class material here —
+Reusable AI-collaboration practices and postures are first-class material here —
 they are the scarcest, most durable axis and are easy to discard by mistake.
 Capture them as `operation` (practice) or `principle` (stance). Examples:
 
@@ -148,7 +148,7 @@ but pending candidates must not include sensitive or project-specific content. A
 one-off "fix this" or "run tests" instruction is a work log — exclude it unless
 the prompt reveals a reusable judgment criterion, operating practice, or
 procedure. Route project-specific repeated instructions to project documents
-(`procedure`, Check 1); route cross-project practices and stances to pending
+(`procedure`, Check 1); route cross-project practices and postures to pending
 candidates (Check 2).
 
 ### Do not add these to pending
@@ -169,7 +169,7 @@ Classify each candidate with one or more memo types via `memo_type_keys`:
 
 - `decision`: reusable judgment criteria independent of any project.
 - `operation`: operating practices — observability, eval, testing, review, and how you direct and verify AI collaboration.
-- `principle`: a stance you have explicitly stated, generalized above individual decisions, including stances on how to work with AI.
+- `principle`: a stance you have explicitly stated, generalized above individual decisions, including postures on how to work with AI.
 - `knowledge`: commodity technical know-how, usage, or implementation knowledge.
 
 `decision` / `operation` / `principle` are the primary material for the public

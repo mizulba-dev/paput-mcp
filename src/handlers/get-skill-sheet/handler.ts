@@ -36,6 +36,24 @@ export async function handleGetSkillSheet(
                 .map((t) => t.name)
                 .join(', ');
               const memoNames = project.memos.map((m) => m.title).join(', ');
+              const achievements =
+                project.achievements && project.achievements.length > 0
+                  ? project.achievements
+                      .map((achievement) => `      - ${achievement}`)
+                      .join('\n')
+                  : '      None';
+              const episodes =
+                project.episodes && project.episodes.length > 0
+                  ? project.episodes
+                      .map((episode) => {
+                        const supportingMemoCount =
+                          episode.supporting_memos?.length ??
+                          episode.supporting_memo_ids?.length ??
+                          0;
+                        return `      - ${episode.claim} (supporting memos: ${supportingMemoCount})`;
+                      })
+                      .join('\n')
+                  : '      None';
 
               return `  【${project.title}】(ID: ${project.id}, ${projectType})
     Period: ${period}
@@ -43,29 +61,17 @@ export async function handleGetSkillSheet(
     Scale: ${project.scale}
     Description: ${project.description}
     Technologies: ${techNames || 'None'}
-    Memos: ${memoNames || 'None'}`;
+    Memos: ${memoNames || 'None'}
+    Achievements:
+${achievements}
+    Episodes:
+${episodes}`;
             })
             .join('\n\n')
         : '  None';
 
     const genderText =
       GENDER[skillSheet.gender as keyof typeof GENDER] || `Other`;
-
-    const strengthLabelsText =
-      skillSheet.strength_labels && skillSheet.strength_labels.length > 0
-        ? skillSheet.strength_labels
-            .map((sl) => {
-              const parts = [`  - ${sl.label}`];
-              if (sl.description) {
-                parts.push(`    ${sl.description}`);
-              }
-              if (sl.category_names && sl.category_names.length > 0) {
-                parts.push(`    Categories: ${sl.category_names.join(', ')}`);
-              }
-              return parts.join('\n');
-            })
-            .join('\n')
-        : '  None';
 
     const content = `Skill sheet:
 ID: ${skillSheet.id}
@@ -76,14 +82,6 @@ Years of experience: ${skillSheet.years_of_experience} year(s)
 
 Self PR:
 ${skillSheet.self_pr || 'Not set'}
-
-Public Profile:
-Headline: ${skillSheet.headline || 'Not set'}
-Profile Summary:
-${skillSheet.profile_summary || 'Not set'}
-
-Strength Labels:
-${strengthLabelsText}
 
 Skills:
 ${skillsText}

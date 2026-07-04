@@ -5,10 +5,9 @@ import {
   deleteSkillSheetSkill,
   getSkillSheet,
   getSkillSheetProjects,
-  getPublicProfileContext,
   searchSkillSheetProjects,
   updateSkillSheetBasicInfo,
-  updateSkillSheetProjectAiSummary,
+  updateSkillSheetProjectEpisodes,
   updateSkillSheetSkills,
 } from './skill-sheet.js';
 
@@ -123,25 +122,24 @@ describe('skill sheet API service', () => {
       );
     });
 
-    it('puts the AI summary for a specific project', async () => {
+    it('puts episodes for a specific project', async () => {
       const client = createMockClient();
+      const episodes = [
+        {
+          claim: 'Chose incremental replacement over a full rewrite',
+          situation: 'The legacy flow was still serving active users.',
+          decision: 'Replaced the risky boundary first.',
+          reason: 'It reduced release risk while preserving delivery speed.',
+          supporting_memo_ids: [10, 11],
+        },
+      ];
 
-      await updateSkillSheetProjectAiSummary(client, 5, 'Summary');
+      await updateSkillSheetProjectEpisodes(client, 5, episodes);
 
       expect(client.put).toHaveBeenCalledWith(
-        '/api/v1/mcp/skill-sheet/project/5/ai-summary',
-        { ai_summary: 'Summary' },
+        '/api/v1/mcp/skill-sheet/projects/5/episodes',
+        { episodes },
       );
     });
-  });
-
-  it('gets the public profile context', async () => {
-    const client = createMockClient();
-
-    await getPublicProfileContext(client);
-
-    expect(client.get).toHaveBeenCalledWith(
-      '/api/v1/mcp/skill-sheet/public-profile-context',
-    );
   });
 });

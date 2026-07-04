@@ -30,7 +30,7 @@ export const savePendingCandidateTool: ToolHandler = {
             enum: ['knowledge', 'decision', 'operation', 'principle'],
           },
           description:
-            'Memo type classification keys override when saving (a memo can have multiple). decision/operation/principle are the primary material for the public AI summary.',
+            'Memo type classification keys override when saving (a memo can have multiple). decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
         },
         projects: {
           type: 'array',

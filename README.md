@@ -142,8 +142,8 @@ Generated skills:
 - `paput-analyze-discard-policy` - Analyze discarded candidates and save a capture policy used by future captures.
 - `paput-dashboard-analysis` - Analyze PaPut dashboard context and optionally save the generated dashboard analysis.
 - `paput-project-document` - Save a project-specific design decision or repeatable procedure as a PaPut project document.
-- `paput-project-summary` - Generate and optionally save an AI summary for a skill sheet project.
-- `paput-public-profile-summary` - Generate and save the public profile summary shown on the AI Summary tab.
+- `paput-project-episodes` - Draft and optionally save design-and-judgment episodes for a skill sheet project.
+- `paput-self-pr-draft` - Draft the skill sheet self PR and save it only after explicit approval.
 
 For Claude Desktop, export skill ZIP files and upload them from
 `Customize > Skills`:
@@ -229,13 +229,11 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 - `paput_get_skill_sheet` - Get the full skill sheet.
 - `paput_update_skill_sheet_basic_info` - Update basic profile fields.
 - `paput_update_skill_sheet_self_pr` - Update the self PR section.
-- `paput_update_skill_sheet_public_profile` - Save the AI-generated public profile (headline, summary, strength labels, and project highlights) shown on the AI Summary tab.
 - `paput_set_skill_sheet_skills` - Replace the full skill list with the provided final state.
-- `paput_upsert_skill_sheet_project` - Add or update a skill sheet project.
+- `paput_upsert_skill_sheet_project` - Add or update a skill sheet project, including optional achievement bullets.
 - `paput_delete_skill_sheet_project` - Delete a skill sheet project.
-- `paput_get_skill_sheet_project_summary_context` - Get project information and related memo bodies so the MCP client AI model can generate a project summary.
-- `paput_update_skill_sheet_project_ai_summary` - Save an AI-generated project summary.
-- `paput_get_public_profile_context` - Get public materials so the MCP client AI model can generate a public profile summary.
+- `paput_get_skill_sheet_project_episodes_context` - Get project information and public linked memo bodies so the MCP client AI model can draft design-and-judgment episodes.
+- `paput_update_skill_sheet_project_episodes` - Full-replace the generated project episodes after explicit user approval.
 
 ### Goal Management
 
@@ -294,6 +292,7 @@ Write and destructive tools should be used only when the user intent is clear. I
 
 - `paput_save_pending_candidate` requires explicit user approval to save a pending candidate to PaPut.
 - `paput_delete_skill_sheet_project` should be used only when the user intends to delete a project.
+- `paput_update_skill_sheet_project_episodes` should be used only after the MCP client AI model has drafted project episodes and the user intends to save them.
 - `paput_delete_goal` should be used only when the user intends to delete a goal.
 - `paput_set_skill_sheet_skills` replaces the full skill list and should be used only when the desired final list is known.
 - `paput_update_dashboard_analysis` should be used only after the MCP client AI model has generated an analysis and the user intends to save it.
