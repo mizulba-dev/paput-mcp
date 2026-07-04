@@ -16,7 +16,7 @@ Draft project episodes for the skill sheet project detail page. Episodes explain
 2. Call `paput_get_skill_sheet_project_episodes_context` with `project_id`.
 3. Read `structuredContent.public_memos` and cluster the public linked memos by decision or operating-practice theme.
 4. Draft 2-3 episodes when the material supports them. Generate fewer, or none, when the public memos are thin.
-5. Present the draft in the user's language and tone. Explain that each episode will become the project's "design and judgment" section.
+5. Present the draft in the user's language and tone, together with the achievements draft (see "Achievements Draft" below). Explain that each episode will become the project's "design and judgment" section.
 6. Do not save unless the user explicitly asks to save, update, or apply the episodes.
 7. If the user asks to save, call `paput_update_skill_sheet_project_episodes` with the approved `project_id` and `episodes`.
 8. Report any `dropped_ids` from the save response. If a saved episode has no resolved public supporting memos, tell the user it may be hidden on the public profile.
@@ -43,12 +43,12 @@ Each episode has:
 - If public linked memos do not support a claim, drop the claim.
 - If the material is thin, say what is missing and suggest capturing or publishing better project-linked decision/operation memos.
 
-## Achievements Option
+## Achievements Draft (always propose)
 
-You may also propose `achievements` bullets when the user asks for them or when the project detail would clearly benefit from them.
+Always propose an `achievements` draft alongside the episodes draft: 3-5 factual bullets (max 100 characters each, max 10 total) describing what was built and is running, grounded in the project description and public linked memos.
 
-- Achievements are user-owned source material, not generated evidence. Present them as a draft for the user to edit and approve.
-- Use `paput_upsert_skill_sheet_project` to save achievements only after explicit approval.
+- Achievements are user-owned source material, not generated evidence. Present them as a draft for the user to edit and approve, and keep them factual: no judgment narrative (that belongs to episodes) and no invented metrics.
+- Use `paput_upsert_skill_sheet_project` to save achievements only after explicit approval. Saving episodes and saving achievements are separate tool calls; the user may approve one and not the other.
 - Omit `achievements` when calling `paput_upsert_skill_sheet_project` if the user wants to keep existing bullets. Pass `achievements: []` only when the user explicitly wants to clear them.
 
 ## Rules
