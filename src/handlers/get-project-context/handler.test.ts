@@ -56,4 +56,58 @@ describe('handleGetProjectContext', () => {
     });
     expect(client.get).not.toHaveBeenCalled();
   });
+
+  it('resolves the project lazily from the configured alias', async () => {
+    const client = createMockClient();
+
+    await handleGetProjectContext({}, client, {
+      projectAlias: 'paput',
+      resolveProject: vi.fn().mockResolvedValue({
+        projectId: 107,
+        projectTitle: 'PaPut',
+        projectAlias: 'paput',
+      }),
+    });
+
+    expect(client.get).toHaveBeenCalledWith(
+      '/api/v1/mcp/project-context?project_id=107',
+    );
+  });
+
+  it('returns a clear error when the configured alias is not found', async () => {
+    const client = createMockClient();
+
+    const result = await handleGetProjectContext({}, client, {
+      projectAlias: 'unknownalias',
+      resolveProject: vi.fn().mockResolvedValue(null),
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content).toEqual([
+      {
+        type: 'text',
+        text: expect.stringContaining(
+          'project_alias "unknownalias" was not found',
+        ),
+      },
+    ]);
+    expect(client.get).not.toHaveBeenCalled();
+  });
+
+  it('returns a tool error when alias resolution fails', async () => {
+    const client = createMockClient();
+
+    const result = await handleGetProjectContext({}, client, {
+      projectAlias: 'paput',
+      resolveProject: vi.fn().mockRejectedValue(new Error('unauthorized')),
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content).toEqual([
+      {
+        type: 'text',
+        text: 'Failed to get project context: unauthorized',
+      },
+    ]);
+  });
 });

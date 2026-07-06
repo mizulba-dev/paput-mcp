@@ -213,6 +213,59 @@ describe('HTTP MCP server security handling', () => {
     expect(metadata.resource).toBe('https://mcp.example.test/mcp');
   });
 
+  it('completes the handshake with project_alias without calling the API', async () => {
+    // apiUrl は到達不能ホスト。handshake で alias 解決の API を呼ぶと失敗するので、
+    // 200 が返ること自体が「解決がツール呼び出し時まで遅延されている」ことの検証になる。
+    const port = await startTestServer();
+
+    const response = await fetch(
+      `http://127.0.0.1:${port}/mcp?project_alias=paput`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          authorization: 'Bearer some-token',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: '2025-03-26',
+            capabilities: {},
+            clientInfo: { name: 'test', version: '1.0' },
+          },
+        }),
+      },
+    );
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(body).toContain('"serverInfo"');
+  });
+
+  it('rejects a malformed project_alias with a validation error', async () => {
+    const port = await startTestServer();
+
+    const response = await fetch(
+      `http://127.0.0.1:${port}/mcp?project_alias=Bad Alias`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          authorization: 'Bearer some-token',
+        },
+        body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
+      },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe(-32602);
+  });
+
   it('falls back to localhost when the Host header is malformed', async () => {
     const port = await startTestServer();
 

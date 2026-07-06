@@ -70,7 +70,10 @@ export function setupTool(
   registeredToolsOptions: RegisteredToolsOptions = {},
 ): void {
   const apiClient = createApiClient(apiUrl, accessToken);
-  const projectContextConfigured = Boolean(context.projectId);
+  // alias は未解決のまま渡る（実在確認はツール呼び出し時）ので、設定の有無だけで判定する。
+  const projectContextConfigured = Boolean(
+    context.projectId ?? context.projectAlias,
+  );
   const tools = getRegisteredTools({
     ...registeredToolsOptions,
     projectContextConfigured,

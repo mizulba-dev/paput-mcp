@@ -13,6 +13,7 @@ import {
   createApiClient,
   getSkillSheetProjectByAlias,
 } from './services/api/index.js';
+import type { ResolvedProjectContext } from './types/index.js';
 
 export interface HttpMcpServerOptions extends MCPServerOptions {
   allowedOrigins?: string[];
@@ -179,22 +180,15 @@ export async function startHttpMcpServer(
       return;
     }
 
-    const projectContext = await resolveProjectContext(
-      apiUrl,
-      accessToken,
-      projectAlias,
-    );
-    if (projectContext === false) {
-      sendJsonRpcError(res, 404, -32000, 'project_alias was not found.');
-      return;
-    }
-
+    // alias の実在確認は handshake で行わない。ここで API を呼ぶと、
+    // トークン失効時に 401 challenge を返せず client の OAuth 回復が壊れる。
     const mcpServer = createMcpServer({
       ...options,
       accessToken,
-      projectId: projectContext?.projectId ?? options.projectId,
-      projectTitle: projectContext?.projectTitle ?? options.projectTitle,
-      projectAlias: projectContext?.projectAlias ?? options.projectAlias,
+      projectAlias: projectAlias ?? options.projectAlias,
+      resolveProject: projectAlias
+        ? createProjectResolver(apiUrl, accessToken, projectAlias)
+        : options.resolveProject,
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
@@ -257,29 +251,27 @@ export function normalizeProjectAlias(
   return alias;
 }
 
-async function resolveProjectContext(
+function createProjectResolver(
   apiUrl: string,
   accessToken: string,
-  projectAlias: string | null,
-): Promise<
-  | {
-      projectId: number;
-      projectTitle: string;
-      projectAlias: string;
-    }
-  | null
-  | false
-> {
-  if (!projectAlias) return null;
-
-  const apiClient = createApiClient(apiUrl, accessToken);
-  const project = await getSkillSheetProjectByAlias(apiClient, projectAlias);
-  if (!project) return false;
-
-  return {
-    projectId: project.id,
-    projectTitle: project.title,
-    projectAlias,
+  projectAlias: string,
+): () => Promise<ResolvedProjectContext | null> {
+  let cached: Promise<ResolvedProjectContext | null> | undefined;
+  return () => {
+    cached ??= (async () => {
+      const apiClient = createApiClient(apiUrl, accessToken);
+      const project = await getSkillSheetProjectByAlias(
+        apiClient,
+        projectAlias,
+      );
+      if (!project) return null;
+      return {
+        projectId: project.id,
+        projectTitle: project.title,
+        projectAlias,
+      };
+    })();
+    return cached;
   };
 }
 

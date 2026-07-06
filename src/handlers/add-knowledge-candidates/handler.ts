@@ -114,9 +114,7 @@ async function addRemoteCandidates(
   source: SessionSource,
   candidates: KnowledgeCandidateInput[],
 ) {
-  const contextProjects = context.projectId
-    ? [{ id: context.projectId, title: context.projectTitle }]
-    : [];
+  const contextProjects = await getContextProjects(context);
 
   const semanticDuplicates: Array<{
     title: string;
@@ -203,6 +201,26 @@ async function addRemoteCandidates(
       },
     ],
   };
+}
+
+async function getContextProjects(
+  context: ToolContext,
+): Promise<Array<{ id: number; title?: string }>> {
+  if (context.projectId) {
+    return [{ id: context.projectId, title: context.projectTitle }];
+  }
+
+  if (!context.resolveProject) return [];
+
+  // alias が解決できなくても候補追加自体は続行する（project 紐付けだけ落とす）。
+  try {
+    const resolved = await context.resolveProject();
+    if (!resolved) return [];
+    return [{ id: resolved.projectId, title: resolved.projectTitle }];
+  } catch (error) {
+    console.error('Failed to resolve project_alias for candidates:', error);
+    return [];
+  }
 }
 
 async function findSimilarMemosForCandidate(

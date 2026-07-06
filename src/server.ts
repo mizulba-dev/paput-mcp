@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { setupTool } from './tool.js';
 import { setupErrorHandling } from './utils/error-handler.js';
+import type { ResolvedProjectContext } from './types/index.js';
 
 const require = createRequire(import.meta.url);
 const packageJson = require('../package.json') as { version: string };
@@ -12,6 +13,7 @@ export interface MCPServerOptions {
   projectId?: number;
   projectTitle?: string;
   projectAlias?: string;
+  resolveProject?: () => Promise<ResolvedProjectContext | null>;
 }
 
 export function createMcpServer(options: MCPServerOptions = {}): Server {
@@ -54,6 +56,7 @@ export function createMcpServer(options: MCPServerOptions = {}): Server {
       projectId: options.projectId,
       projectTitle: options.projectTitle,
       projectAlias: options.projectAlias,
+      resolveProject: options.resolveProject,
     },
   );
   setupErrorHandling(server);

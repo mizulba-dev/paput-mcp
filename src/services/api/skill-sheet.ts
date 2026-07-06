@@ -75,7 +75,10 @@ export async function searchSkillSheetProjects(
   search: string,
 ): Promise<SkillSheetProjectReference[]> {
   const endpoint = `/api/v1/mcp/skill-sheet/projects?search=${encodeURIComponent(search)}`;
-  return client.get<SkillSheetProjectReference[]>(endpoint);
+  const projects = await client.get<SkillSheetProjectReference[] | null>(
+    endpoint,
+  );
+  return projects ?? [];
 }
 
 export async function getSkillSheetProjectByAlias(
@@ -83,8 +86,11 @@ export async function getSkillSheetProjectByAlias(
   alias: string,
 ): Promise<SkillSheetProjectReference | undefined> {
   const endpoint = `/api/v1/mcp/skill-sheet/projects?mcp_alias=${encodeURIComponent(alias)}`;
-  const projects = await client.get<SkillSheetProjectReference[]>(endpoint);
-  return projects[0];
+  // API は該当なしを JSON null で返すことがある。
+  const projects = await client.get<SkillSheetProjectReference[] | null>(
+    endpoint,
+  );
+  return projects?.[0];
 }
 
 export async function createSkillSheet(

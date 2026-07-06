@@ -10,20 +10,20 @@ export async function handleGetProjectContext(
   apiClient: ApiClient,
   context?: ToolContext,
 ) {
-  const project = getProjectSelector(args, context);
-  if (!project) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'project is required when no MCP project_alias is configured.',
-        },
-      ],
-      isError: true,
-    };
-  }
-
   try {
+    const project = await getProjectSelector(args, context);
+    if (!project) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: 'project is required when no MCP project_alias is configured.',
+          },
+        ],
+        isError: true,
+      };
+    }
+
     const result = await getProjectContext(apiClient, project);
 
     return {
@@ -51,12 +51,22 @@ export async function handleGetProjectContext(
   }
 }
 
-function getProjectSelector(
+async function getProjectSelector(
   args: Record<string, unknown> | undefined,
   context?: ToolContext,
-): string | { project_id: number } | undefined {
+): Promise<string | { project_id: number } | undefined> {
   if (context?.projectId) {
     return { project_id: context.projectId };
+  }
+
+  if (context?.resolveProject) {
+    const resolved = await context.resolveProject();
+    if (!resolved) {
+      throw new Error(
+        `project_alias "${context.projectAlias ?? ''}" was not found. Check the alias in the MCP URL or set it on the skill sheet project.`,
+      );
+    }
+    return { project_id: resolved.projectId };
   }
 
   const explicit =
