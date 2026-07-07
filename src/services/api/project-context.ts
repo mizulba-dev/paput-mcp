@@ -13,10 +13,16 @@ export interface ProjectDocumentIndexItem {
   created_at: string;
 }
 
+export interface ProjectDocumentCounts {
+  design_doc: number;
+  procedure: number;
+  skill_candidate: number;
+}
+
 export interface ProjectContextResponse {
   project: ProjectSummary;
   instructions: string | null;
-  documents: ProjectDocumentIndexItem[];
+  document_counts: ProjectDocumentCounts;
   proposals: ProjectDocumentIndexItem[];
   matched_projects?: ProjectSummary[];
 }
@@ -43,6 +49,26 @@ export interface SimilarProjectDocumentItem {
   score: number;
 }
 
+export interface ProjectDocumentSearchParams {
+  query: string;
+  limit?: number;
+  include_archived?: boolean;
+}
+
+export interface ProjectDocumentSearchResult {
+  id: number;
+  kind: string;
+  status: 'active' | 'archived';
+  title: string;
+  summary: string;
+  score: number;
+  created_at: string;
+}
+
+export interface ProjectDocumentSearchResponse {
+  documents: ProjectDocumentSearchResult[];
+}
+
 export interface AddProjectDocumentParams {
   skill_sheet_project_id: number;
   kind: string;
@@ -65,6 +91,7 @@ export interface UpdateProjectDocumentParams {
   title: string;
   summary?: string;
   body: string;
+  status?: 'active' | 'archived';
 }
 
 export interface ProjectInstructionsResponse {
@@ -95,6 +122,24 @@ export async function getProjectDocument(
 ): Promise<ProjectDocumentDetail> {
   return client.get<ProjectDocumentDetail>(
     `/api/v1/mcp/project-document/${id}`,
+  );
+}
+
+export async function searchProjectDocuments(
+  client: ApiClient,
+  params: ProjectDocumentSearchParams,
+): Promise<ProjectDocumentSearchResponse> {
+  const queryParams = new URLSearchParams();
+  queryParams.append('query', params.query);
+  if (params.limit !== undefined) {
+    queryParams.append('limit', String(params.limit));
+  }
+  if (params.include_archived !== undefined) {
+    queryParams.append('include_archived', String(params.include_archived));
+  }
+
+  return client.get<ProjectDocumentSearchResponse>(
+    `/api/v1/mcp/project-documents/search?${queryParams.toString()}`,
   );
 }
 

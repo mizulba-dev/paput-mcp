@@ -255,10 +255,11 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 Project document state is private, project-scoped, API-backed, and available
 through Remote HTTP MCP.
 
-- `paput_get_project_context` - Get a project's always-applied instructions and document index. Call at session start.
+- `paput_get_project_context` - Get a project's always-applied instructions, pending skill proposals, and document counts by kind. Call at session start.
 - `paput_get_project_document` - Read the full body of a project document by ID.
+- `paput_search_project_documents` - Find project documents semantically similar to a query (vector search). Use before drafting a design decision or plan to check past decisions and rejected alternatives.
 - `paput_add_project_document` - Save a design decision, procedure, or skill candidate linked to a project.
-- `paput_update_project_document` - Replace a project document's title, summary, and body.
+- `paput_update_project_document` - Replace a project document's title, summary, and body. Optionally set status to active or archived.
 - `paput_update_project_instructions` - Overwrite a project's always-applied instructions. Requires explicit user approval.
 - `paput_discard_project_proposal` - Record that the user rejected a skill proposal.
 - `paput_promote_project_documents` - Mark a skill proposal and related procedure documents as promoted after a skill is created.

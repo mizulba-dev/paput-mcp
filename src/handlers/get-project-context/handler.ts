@@ -98,19 +98,16 @@ function buildContextText(result: ProjectContextResponse): string {
   }
 
   lines.push('');
-  lines.push('## Document index');
-  if (result.documents.length === 0) {
-    lines.push('(no documents yet)');
-  } else {
-    for (const doc of result.documents) {
-      const summary = doc.summary ? ` — ${doc.summary}` : '';
-      lines.push(`- [${doc.id}] (${doc.kind}) ${doc.title}${summary}`);
-    }
-    lines.push('');
+  lines.push('## Project documents');
+  const counts = result.document_counts;
+  if (counts) {
     lines.push(
-      'Fetch a document body on demand with paput_get_project_document.',
+      `Active documents: ${counts.design_doc} design decisions, ${counts.procedure} procedures, ${counts.skill_candidate} skill candidates.`,
     );
   }
+  lines.push(
+    'Search past design decisions and rejected alternatives with paput_search_project_documents before drafting a new one.',
+  );
 
   if (result.proposals.length > 0) {
     lines.push('');

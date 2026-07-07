@@ -258,6 +258,26 @@ const toolInputSchemas = {
       .describe('Maximum number of memos to return (default 10, max 50)')
       .optional(),
   }),
+  paput_search_project_documents: z.object({
+    query: z
+      .string()
+      .min(1)
+      .describe(
+        'Natural-language query describing the design decision, procedure, or topic to find',
+      ),
+    limit: z
+      .number()
+      .min(1)
+      .max(20)
+      .describe('Maximum number of documents to return (default 5, max 20)')
+      .optional(),
+    include_archived: z
+      .boolean()
+      .describe(
+        'Include archived (settled/superseded) documents in the results. Defaults to false.',
+      )
+      .optional(),
+  }),
   paput_backfill_memo_embeddings: emptySchema,
   paput_get_memo: z.object({
     id: z.number().describe('Memo ID'),
@@ -415,7 +435,7 @@ const toolInputSchemas = {
     summary: z
       .string()
       .max(500)
-      .describe('One-line summary shown in the document index (keep it short)')
+      .describe('One-line summary shown in search results (keep it short)')
       .optional(),
     body: z
       .string()
@@ -435,7 +455,7 @@ const toolInputSchemas = {
       .string()
       .max(500)
       .describe(
-        'One-line summary shown in the document index (keep it short). Omitting it clears the summary.',
+        'One-line summary shown in search results (keep it short). Omitting it clears the summary.',
       )
       .optional(),
     body: z
@@ -444,6 +464,12 @@ const toolInputSchemas = {
       .describe(
         'Markdown body. For design decisions include the decision, reasons, and rejected alternatives.',
       ),
+    status: z
+      .enum(['active', 'archived'])
+      .describe(
+        'Optional status change. Archive settled or superseded documents to exclude them from default search results.',
+      )
+      .optional(),
   }),
   paput_update_project_instructions: z.object({
     skill_sheet_project_id: z

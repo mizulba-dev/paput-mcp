@@ -5,7 +5,7 @@ export const getProjectDocumentTool: ToolHandler = {
   definition: {
     name: 'paput_get_project_document',
     description:
-      'Get the full body of a private project document by ID. Use the document index returned by paput_get_project_context to find the ID.',
+      'Get the full body of a private project document by ID. Find the ID with paput_search_project_documents.',
     inputSchema: {
       type: 'object',
       properties: {

@@ -18,6 +18,7 @@ export async function handleUpdateProjectDocument(
       title: input.title as string,
       summary: typeof input.summary === 'string' ? input.summary : undefined,
       body: input.body as string,
+      status: input.status as 'active' | 'archived' | undefined,
     });
 
     const decided = document.decided_at
@@ -64,6 +65,22 @@ function validateArgs(args: Record<string, unknown> | undefined) {
         {
           type: 'text',
           text: 'id, title, and body are required.',
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  if (
+    args.status !== undefined &&
+    args.status !== 'active' &&
+    args.status !== 'archived'
+  ) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'status must be "active" or "archived" when provided.',
         },
       ],
       isError: true,

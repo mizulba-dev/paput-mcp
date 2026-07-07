@@ -12,7 +12,7 @@ describe('handleGetProjectContext', () => {
       get: vi.fn().mockResolvedValue({
         project: { id: 1, title: 'PaPut' },
         instructions: null,
-        documents: [],
+        document_counts: { design_doc: 0, procedure: 0, skill_candidate: 0 },
         proposals: [],
       }),
     } as unknown as ApiClient;

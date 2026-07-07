@@ -22,7 +22,7 @@ The connector exposes the following tools. All tools carry annotations
 - **Goals:** list, create, update, delete
 - **Dashboard analysis:** get and update the user's dashboard analysis
 - **Knowledge capture:** add, list, update, save, discard pending candidates; manage processed session markers and capture policy
-- **Project documents:** get project context, read/add/update private project documents, manage project instructions and proposal promotion status
+- **Project documents:** get project context, search/read/add/update private project documents, manage project instructions and proposal promotion status
 
 ## Test account
 

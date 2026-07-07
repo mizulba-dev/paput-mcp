@@ -27,6 +27,7 @@ export * from './update-dashboard-analysis/index.js';
 export * from './get-dashboard-analysis-context/index.js';
 export * from './get-project-context/index.js';
 export * from './get-project-document/index.js';
+export * from './search-project-documents/index.js';
 export * from './add-project-document/index.js';
 export * from './update-project-document/index.js';
 export * from './update-project-instructions/index.js';

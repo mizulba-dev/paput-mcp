@@ -134,29 +134,35 @@ repeatable procedures. They are API-backed and available through Remote HTTP
 MCP. Project context and documents are private and are never exposed
 publicly.
 
-| Tool                                | Safety            | Use case                                                                                                   |
-| ----------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------- |
-| `paput_get_project_context`         | Read-only         | Get a project's always-applied instructions and document index by fuzzy name match. Call at session start. |
-| `paput_get_project_document`        | Read-only         | Read the full body of a project document by ID, using the index from `paput_get_project_context`.          |
-| `paput_add_project_document`        | Write             | Save a design decision, procedure, or skill candidate linked to a project, with same-kind dedup.           |
-| `paput_update_project_document`     | Destructive/write | Replace a document's title, summary, and body by ID. Fetch the current document first for partial edits.   |
-| `paput_update_project_instructions` | Destructive/write | Overwrite a project's always-applied instructions (max 8000 chars). Requires explicit user approval.       |
-| `paput_discard_project_proposal`    | Destructive       | Record that the user rejected a skill proposal so it is not raised again.                                  |
-| `paput_promote_project_documents`   | Destructive       | Mark a skill proposal and its procedure documents as promoted after a skill is created.                    |
+| Tool                                | Safety            | Use case                                                                                                                                      |
+| ----------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paput_get_project_context`         | Read-only         | Get a project's always-applied instructions, pending skill proposals, and document counts by kind by fuzzy name match. Call at session start. |
+| `paput_get_project_document`        | Read-only         | Read the full body of a project document by ID, found via `paput_search_project_documents`.                                                   |
+| `paput_search_project_documents`    | Read-only         | Semantic search over private project documents (vector search). Use before drafting a decision or plan.                                       |
+| `paput_add_project_document`        | Write             | Save a design decision, procedure, or skill candidate linked to a project, with same-kind dedup.                                              |
+| `paput_update_project_document`     | Destructive/write | Replace a document's title, summary, and body by ID; optionally set status to active or archived.                                             |
+| `paput_update_project_instructions` | Destructive/write | Overwrite a project's always-applied instructions (max 8000 chars). Requires explicit user approval.                                          |
+| `paput_discard_project_proposal`    | Destructive       | Record that the user rejected a skill proposal so it is not raised again.                                                                     |
+| `paput_promote_project_documents`   | Destructive       | Mark a skill proposal and its procedure documents as promoted after a skill is created.                                                       |
 
 When `project_alias` is present in the MCP URL, `paput_get_project_context` is
 called with no arguments and the `project` argument is not exposed. Without a
 URL project context, provide `project` per call.
 
-`paput_get_project_context` returns the document index only (no bodies); fetch
-bodies on demand with `paput_get_project_document`. Save settled design
-decisions and repeatable procedures with `paput_add_project_document`; when
-similar procedure records repeat, the server may suggest turning them into a
-skill. After the user approves a skill proposal and the skill is created, call
+`paput_get_project_context` returns instructions, pending proposals, and
+document counts only (no document list or bodies). Before drafting a design
+decision, implementation plan, or refactor, search past decisions and rejected
+alternatives with `paput_search_project_documents`, then fetch bodies on demand
+with `paput_get_project_document`. Save settled design decisions and repeatable
+procedures with `paput_add_project_document`; when similar procedure records
+repeat, the server may suggest turning them into a skill. After the user
+approves a skill proposal and the skill is created, call
 `paput_promote_project_documents` with the proposal and related procedure IDs; if
 the user rejects it, call `paput_discard_project_proposal` with the reason.
 Because instructions are loaded in full at session start, change them only with
-`paput_update_project_instructions` after explicit user approval.
+`paput_update_project_instructions` after explicit user approval. Archive
+settled or superseded documents with `paput_update_project_document`'s
+`status` argument to exclude them from default search results.
 
 ## Knowledge Capture Tools
 

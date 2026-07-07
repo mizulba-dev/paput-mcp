@@ -27,7 +27,7 @@ export const addProjectDocumentTool: ToolHandler = {
         summary: {
           type: 'string',
           description:
-            'One-line summary shown in the document index (keep it short)',
+            'One-line summary shown in search results (keep it short)',
         },
         body: {
           type: 'string',
