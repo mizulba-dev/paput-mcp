@@ -1,8 +1,10 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
+  ErrorCode,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
+  McpError,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { createApiClient } from './services/api/index.js';
@@ -88,15 +90,11 @@ export function setupTool(
     const tool = tools.find((t) => t.definition.name === request.params.name);
 
     if (!tool) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Unknown tool: ${request.params.name}`,
-          },
-        ],
-        isError: true,
-      };
+      // 未知ツールは仕様上 JSON-RPC の -32602 プロトコルエラーで返す。
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Unknown tool: ${request.params.name}`,
+      );
     }
 
     // 引数を zod スキーマで実行時検証し不正型を handler に渡さない。

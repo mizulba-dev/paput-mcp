@@ -2,6 +2,7 @@ import { type AddressInfo } from 'node:net';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { afterEach, describe, expect, it } from 'vitest';
 import { startHttpMcpServer } from './http.js';
 import { createMcpServer } from './server.js';
@@ -85,6 +86,29 @@ describe('MCP transports', () => {
         });
       });
     }
+  });
+
+  it('returns a JSON-RPC protocol error for an unknown tool', async () => {
+    const mcpServer = createMcpServer(testServerOptions);
+    const client = createTestClient();
+    clients.push(client);
+
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+
+    await Promise.all([
+      mcpServer.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+
+    await expect(
+      client.callTool({ name: 'paput_unknown_tool', arguments: {} }),
+    ).rejects.toMatchObject({
+      code: ErrorCode.InvalidParams,
+      message: expect.stringContaining('Unknown tool: paput_unknown_tool'),
+    });
+
+    await mcpServer.close();
   });
 
   it('returns an explicit error when a tool needs authentication but none is configured', async () => {
