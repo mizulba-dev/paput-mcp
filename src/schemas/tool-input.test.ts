@@ -84,6 +84,42 @@ describe('getGeneratedInputSchema', () => {
   });
 });
 
+describe('paput_upsert_skill_sheet_project schema', () => {
+  const schema = getToolInputZodSchema('paput_upsert_skill_sheet_project')!;
+
+  it('describes type 3 as a private project option', () => {
+    const generated = getGeneratedInputSchema(
+      'paput_upsert_skill_sheet_project',
+    );
+
+    expect(generated?.properties.type).toMatchObject({
+      type: 'number',
+      description:
+        'Project type: 1 business, 2 personal, 3 private (hidden from public profile)',
+    });
+  });
+
+  const base = {
+    title: 'Project title',
+    start_period: '2026-01',
+    description: 'Description',
+    role: 'Role',
+    scale: 'Scale',
+    technologies: [],
+    processes: [],
+    memos: [],
+  };
+
+  it('accepts type 3 (private)', () => {
+    expect(schema.safeParse({ ...base, type: 3 }).success).toBe(true);
+  });
+
+  it('still accepts type 1 (business) and 2 (personal)', () => {
+    expect(schema.safeParse({ ...base, type: 1 }).success).toBe(true);
+    expect(schema.safeParse({ ...base, type: 2 }).success).toBe(true);
+  });
+});
+
 describe('paput_search_project_documents schema', () => {
   const schema = getToolInputZodSchema('paput_search_project_documents')!;
 

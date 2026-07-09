@@ -16,7 +16,8 @@ export const upsertSkillSheetProjectTool: ToolHandler = {
         },
         type: {
           type: 'number',
-          description: 'Project type: 1 business, 2 personal',
+          description:
+            'Project type: 1 business, 2 personal, 3 private (hidden from public profile)',
         },
         title: {
           type: 'string',

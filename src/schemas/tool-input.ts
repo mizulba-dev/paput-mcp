@@ -51,7 +51,11 @@ const skillSheetProjectSchema = z.object({
     .number()
     .describe('Project ID to update. Omit when creating a new project.')
     .optional(),
-  type: z.number().describe('Project type: 1 business, 2 personal'),
+  type: z
+    .number()
+    .describe(
+      'Project type: 1 business, 2 personal, 3 private (hidden from public profile)',
+    ),
   title: z.string().describe('Project title'),
   mcp_alias: z
     .string()
