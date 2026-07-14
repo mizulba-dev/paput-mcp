@@ -5,7 +5,7 @@ export const deleteSkillSheetProjectTool: ToolHandler = {
   definition: {
     name: 'paput_delete_skill_sheet_project',
     description:
-      'Delete a project from the PaPut skill sheet by project ID. Use only when the user intends to remove that skill sheet project.',
+      'Delete a project from the PaPut skill sheet by project ID, including its public-profile display when applicable. Use only when the user intends to remove that skill sheet project.',
     inputSchema: {
       type: 'object',
       properties: {

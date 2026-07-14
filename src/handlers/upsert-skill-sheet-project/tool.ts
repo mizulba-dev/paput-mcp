@@ -5,7 +5,7 @@ export const upsertSkillSheetProjectTool: ToolHandler = {
   definition: {
     name: 'paput_upsert_skill_sheet_project',
     description:
-      'Add or update a PaPut skill sheet project. If an ID is provided, update that project; otherwise update an exact title match or create a new project.',
+      'Add or update a PaPut skill sheet project. Project types 1 and 2 may appear on the public profile; type 3 is private. If an ID is provided, update that project; otherwise update an exact title match or create a new project.',
     inputSchema: {
       type: 'object',
       properties: {

@@ -35,8 +35,8 @@ const memoInputSchema = {
         type: 'string',
         enum: ['knowledge', 'decision', 'operation', 'principle'],
       },
-              description:
-                'Memo type classification keys (a memo can have multiple). knowledge: technical know-how (commodity); decision: reusable judgment criteria; operation: observability/eval/test/review practices; principle: explicitly stated principles. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
+      description:
+        'Memo type classification keys (a memo can have multiple). knowledge: technical know-how (commodity); decision: reusable judgment criteria; operation: observability/eval/test/review practices; principle: explicitly stated principles. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
     },
     projects: {
       type: 'array',
@@ -63,7 +63,7 @@ export const createMemosTool: ToolHandler = {
   definition: {
     name: 'paput_create_memos',
     description:
-      'Create multiple PaPut memos in one tool call and return created memo IDs. Use this when the user explicitly wants to save multiple memos directly.',
+      'Create multiple private or public PaPut memos in one tool call and return created memo IDs. A memo is published only when its is_public input is true. Use this when the user explicitly wants to save multiple memos directly.',
     inputSchema: {
       type: 'object',
       properties: {

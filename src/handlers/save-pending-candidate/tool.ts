@@ -5,7 +5,7 @@ export const savePendingCandidateTool: ToolHandler = {
   definition: {
     name: 'paput_save_pending_candidate',
     description:
-      'Save an approved pending knowledge candidate as a PaPut memo. Use only when the user explicitly approves saving a pending candidate.',
+      'Save an approved pending knowledge candidate as a private or public PaPut memo and mark the candidate as saved. The memo is published only when is_public is true on the input or candidate. Use only when the user explicitly approves saving a pending candidate.',
     inputSchema: {
       type: 'object',
       properties: {

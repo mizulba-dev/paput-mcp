@@ -343,11 +343,21 @@ const toolInputSchemas = {
   }),
   paput_get_skill_sheet: emptySchema,
   paput_update_skill_sheet_basic_info: z.object({
-    nearest_station: z.string().describe('Nearest station').optional(),
-    gender: z.number().describe('Gender: 1 male, 2 female').optional(),
+    nearest_station: z
+      .string()
+      .describe(
+        'Nearest station stored in the skill sheet profile; this is personal location information',
+      )
+      .optional(),
+    gender: z
+      .number()
+      .describe('Gender stored in the skill sheet profile: 1 male, 2 female')
+      .optional(),
     birth_date: z
       .string()
-      .describe('Birth date in YYYY-MM-DD format')
+      .describe(
+        'Birth date stored in the skill sheet profile in YYYY-MM-DD format',
+      )
       .optional(),
     years_of_experience: z.number().describe('Years of experience').optional(),
   }),

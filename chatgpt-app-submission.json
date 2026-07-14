@@ -1,0 +1,620 @@
+{
+  "$schema": "https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json",
+  "schema_version": 1,
+  "app_info": {
+    "display_name": "PaPut",
+    "subtitle": "Manage your PaPut knowledge",
+    "description": "PaPut helps users search, create, and organize their memos and notes, maintain goals and a skill sheet that can include personal profile fields, and review reusable knowledge through ChatGPT. OAuth limits access to the user's PaPut account, and publish-capable tools act only on explicit public visibility or profile updates.",
+    "category": "PRODUCTIVITY"
+  },
+  "tools": {
+    "paput_create_memos": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Creates one or more PaPut memo records and therefore changes the user's data.",
+        "open_world_justification": "Each new memo can be published publicly when the user selects public visibility.",
+        "destructive_justification": "Creates new memos without deleting or overwriting existing records."
+      }
+    },
+    "paput_search_memo": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves memos matching the supplied filters without modifying PaPut data.",
+        "open_world_justification": "Only reads the user's PaPut data and does not change public or third-party state.",
+        "destructive_justification": "Does not delete, overwrite, or otherwise alter any record."
+      }
+    },
+    "paput_find_similar_memos": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Runs a semantic lookup and returns similar memos without changing stored data.",
+        "open_world_justification": "Only searches the user's PaPut memos and does not affect public or third-party systems.",
+        "destructive_justification": "Does not delete, replace, or mutate any memo."
+      }
+    },
+    "paput_backfill_memo_embeddings": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Generates and stores missing embedding metadata for up to 100 existing memos.",
+        "open_world_justification": "Changes only internal PaPut search metadata and does not publish or contact third-party systems.",
+        "destructive_justification": "Adds missing embeddings without deleting or overwriting the user's memo content."
+      }
+    },
+    "paput_get_memo": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves the selected memo and its metadata without modifying it.",
+        "open_world_justification": "Only reads a PaPut record and does not change public or third-party state.",
+        "destructive_justification": "Does not delete, overwrite, or alter the selected memo."
+      }
+    },
+    "paput_update_memo": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Replaces fields on an existing PaPut memo, including its content, categories, links, and visibility.",
+        "open_world_justification": "Can publish a memo publicly or remove an existing public memo from public view.",
+        "destructive_justification": "Overwrites the selected memo's existing fields with the provided final state."
+      }
+    },
+    "paput_get_categories": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists available PaPut categories without creating or updating them.",
+        "open_world_justification": "Only retrieves private account data and does not change public or third-party state.",
+        "destructive_justification": "Does not remove, replace, or modify categories."
+      }
+    },
+    "paput_create_note": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Creates a new PaPut note that groups the supplied memo IDs.",
+        "open_world_justification": "Can publish the newly created note publicly when public visibility is selected.",
+        "destructive_justification": "Creates a new note without deleting or overwriting existing notes."
+      }
+    },
+    "paput_search_notes": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves notes matching keyword, visibility, and pagination filters without modifying them.",
+        "open_world_justification": "Only searches the user's PaPut notes and does not change public or third-party state.",
+        "destructive_justification": "Does not delete, overwrite, or mutate any note."
+      }
+    },
+    "paput_get_note": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves a note and its attached memos without modifying PaPut data.",
+        "open_world_justification": "Only reads an existing PaPut note and does not change external state.",
+        "destructive_justification": "Does not remove, replace, or alter the note or its memos."
+      }
+    },
+    "paput_update_note": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes an existing note's title, visibility, or attached memo list.",
+        "open_world_justification": "Can publish the note publicly or remove it from public view by changing visibility.",
+        "destructive_justification": "Overwrites the supplied fields and can replace the note's attached memo list."
+      }
+    },
+    "paput_get_skill_sheet": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves the user's skill sheet profile, skills, FAQ, and projects without modifying them.",
+        "open_world_justification": "Only reads the user's PaPut skill sheet and does not change public state.",
+        "destructive_justification": "Does not delete, replace, or alter skill sheet content."
+      }
+    },
+    "paput_update_skill_sheet_basic_info": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Updates basic profile fields such as nearest station, gender, birth date, and experience.",
+        "open_world_justification": "Changes profile information that may be displayed on the user's public skill sheet.",
+        "destructive_justification": "Overwrites the supplied profile fields on the existing skill sheet."
+      }
+    },
+    "paput_update_skill_sheet_self_pr": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Updates the self PR text stored on the user's PaPut skill sheet.",
+        "open_world_justification": "Changes self PR content that may be visible on the user's public skill sheet.",
+        "destructive_justification": "Overwrites the existing self PR section with the supplied text."
+      }
+    },
+    "paput_set_skill_sheet_skills": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Replaces the user's complete skill list with the supplied final state.",
+        "open_world_justification": "Changes skills that may be displayed on the user's public skill sheet.",
+        "destructive_justification": "Full-replaces the existing skill list, removing entries omitted from the new state."
+      }
+    },
+    "paput_upsert_skill_sheet_project": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Creates a skill sheet project or updates an existing ID or exact title match.",
+        "open_world_justification": "Can create or change a non-private project displayed on the user's public profile.",
+        "destructive_justification": "Can overwrite an existing matched project's details, links, and achievements."
+      }
+    },
+    "paput_delete_skill_sheet_project": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Deletes the selected project from the user's PaPut skill sheet.",
+        "open_world_justification": "Can remove a project that is currently displayed on the user's public profile.",
+        "destructive_justification": "Permanently deletes the selected skill sheet project by ID."
+      }
+    },
+    "paput_get_skill_sheet_project_episodes_context": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves project information, public linked memo bodies, and a private memo count for drafting.",
+        "open_world_justification": "Only reads existing PaPut content and does not publish or modify it.",
+        "destructive_justification": "Does not delete, overwrite, or change project or memo data."
+      }
+    },
+    "paput_update_skill_sheet_project_episodes": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Stores a replacement set of design-and-judgment episodes for a skill sheet project.",
+        "open_world_justification": "Changes project episodes that may be displayed on the user's public profile.",
+        "destructive_justification": "Full-replaces all existing episodes and can clear them with an empty list."
+      }
+    },
+    "paput_update_skill_sheet_faq": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Stores a replacement FAQ section on the user's PaPut skill sheet.",
+        "open_world_justification": "Changes FAQ content that may be displayed on the user's public skill sheet.",
+        "destructive_justification": "Full-replaces all FAQ items and can clear the section with an empty list."
+      }
+    },
+    "paput_list_goals": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists the user's active and archived PaPut goals without modifying them.",
+        "open_world_justification": "Only reads private goal data and does not change public or third-party state.",
+        "destructive_justification": "Does not delete, overwrite, or alter any goal."
+      }
+    },
+    "paput_create_goal": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Creates a new goal in the user's PaPut account.",
+        "open_world_justification": "Creates only a private PaPut goal and does not publish or contact third-party systems.",
+        "destructive_justification": "Adds a new goal without deleting or overwriting existing goals."
+      }
+    },
+    "paput_update_goal": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Updates the selected goal's content, category, status, priority, or target date.",
+        "open_world_justification": "Changes only private PaPut goal data and does not affect public or third-party systems.",
+        "destructive_justification": "Overwrites the existing goal fields with the supplied state."
+      }
+    },
+    "paput_delete_goal": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Deletes a goal from the user's PaPut account by ID.",
+        "open_world_justification": "Removes only private PaPut goal data and does not change public or third-party state.",
+        "destructive_justification": "Permanently deletes the selected goal."
+      }
+    },
+    "paput_get_dashboard_analysis": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves the saved dashboard analysis without modifying it.",
+        "open_world_justification": "Only reads private PaPut analysis data and does not affect external state.",
+        "destructive_justification": "Does not delete, replace, or alter the saved analysis."
+      }
+    },
+    "paput_update_dashboard_analysis": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Saves a dashboard analysis generated by the client model to PaPut.",
+        "open_world_justification": "Changes only the user's private PaPut analysis and does not publish it externally.",
+        "destructive_justification": "Overwrites the previously saved dashboard analysis with the supplied result."
+      }
+    },
+    "paput_get_dashboard_analysis_context": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves dashboard, goal, skill sheet, memo, note, and category context without changing it.",
+        "open_world_justification": "Only reads the user's PaPut data and does not publish or transmit changes to third parties.",
+        "destructive_justification": "Does not delete, replace, or mutate any source data."
+      }
+    },
+    "paput_get_project_context": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves private project instructions, proposal summaries, and document counts without modifying them.",
+        "open_world_justification": "Only reads private project-scoped PaPut data and does not change external state.",
+        "destructive_justification": "Does not delete, overwrite, or alter project context."
+      }
+    },
+    "paput_get_project_document": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves a private project document by ID without modifying it.",
+        "open_world_justification": "Only reads private project documentation and does not affect public or third-party systems.",
+        "destructive_justification": "Does not delete, replace, or alter the project document."
+      }
+    },
+    "paput_search_project_documents": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Runs semantic search over private project documents without changing stored data.",
+        "open_world_justification": "Only searches private PaPut project records and does not affect external state.",
+        "destructive_justification": "Does not delete, overwrite, archive, or otherwise modify documents."
+      }
+    },
+    "paput_add_project_document": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Creates a private project document and may create a private skill proposal after deduplication.",
+        "open_world_justification": "Stores documents only in private project context and never exposes them publicly.",
+        "destructive_justification": "Adds a new document without deleting or overwriting existing documents."
+      }
+    },
+    "paput_update_project_document": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Replaces fields and optionally changes the status of an existing private project document.",
+        "open_world_justification": "Changes only private project documentation and does not affect public or third-party systems.",
+        "destructive_justification": "Full-replaces the title, summary, and body and can archive the document."
+      }
+    },
+    "paput_update_project_instructions": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Updates the always-applied instructions for a private PaPut project.",
+        "open_world_justification": "Changes only private project configuration and does not publish to external systems.",
+        "destructive_justification": "Overwrites the complete existing instruction text after explicit user approval."
+      }
+    },
+    "paput_discard_project_proposal": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Records a proposal rejection and changes whether the private proposal is raised again.",
+        "open_world_justification": "Changes only private project proposal state and does not affect public or third-party systems.",
+        "destructive_justification": "Discards the proposal from the active flow and records the rejection reason."
+      }
+    },
+    "paput_promote_project_documents": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Marks a private skill proposal and related procedures as promoted after a skill is created.",
+        "open_world_justification": "Changes only private PaPut project-document status and does not publish the skill itself.",
+        "destructive_justification": "Retires the promoted documents from the active index and records the promotion target."
+      }
+    },
+    "paput_add_knowledge_candidates": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Creates reusable knowledge candidates in the user's private pending queue.",
+        "open_world_justification": "Stores candidates privately and does not publish them as memos or to third-party systems.",
+        "destructive_justification": "Adds pending candidates without deleting or overwriting existing saved knowledge."
+      }
+    },
+    "paput_list_processed_sessions": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists session markers already recorded for knowledge capture without changing them.",
+        "open_world_justification": "Only reads private processing metadata and does not affect external state.",
+        "destructive_justification": "Does not remove, replace, or alter processed-session markers."
+      }
+    },
+    "paput_mark_processed_session": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Creates a processed-session marker that changes future knowledge-capture behavior.",
+        "open_world_justification": "Changes only private PaPut processing metadata and does not affect public or third-party systems.",
+        "destructive_justification": "Marks the session as processed with no exposed operation for undoing that marker."
+      }
+    },
+    "paput_list_pending_candidates": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists private pending knowledge candidates without changing their contents or status.",
+        "open_world_justification": "Only reads the user's private pending queue and does not change external state.",
+        "destructive_justification": "Does not save, discard, overwrite, or delete any candidate."
+      }
+    },
+    "paput_update_pending_candidate": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes supplied fields on an existing candidate in the private pending queue.",
+        "open_world_justification": "Updates only private pending data and does not publish the candidate as a memo.",
+        "destructive_justification": "Overwrites the supplied candidate fields before the candidate is saved."
+      }
+    },
+    "paput_save_pending_candidate": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Creates a PaPut memo from an approved candidate and marks that candidate as saved.",
+        "open_world_justification": "Can publish the created memo publicly when public visibility is selected or stored on the candidate.",
+        "destructive_justification": "Creates a memo and advances candidate status without deleting or overwriting an existing memo."
+      }
+    },
+    "paput_discard_pending_candidate": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes a pending candidate to discarded status and records an optional reason.",
+        "open_world_justification": "Changes only the user's private candidate workflow and does not affect public systems.",
+        "destructive_justification": "Removes the candidate from the save flow, preventing it from being saved while discarded."
+      }
+    },
+    "paput_get_capture_policy": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves the saved private capture policy without modifying it.",
+        "open_world_justification": "Only reads private PaPut policy data and does not affect external state.",
+        "destructive_justification": "Does not delete, overwrite, or alter the capture policy."
+      }
+    },
+    "paput_get_discard_policy_context": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves discarded candidates and the current capture policy for analysis without changing them.",
+        "open_world_justification": "Only reads private PaPut workflow data and does not affect public or third-party systems.",
+        "destructive_justification": "Does not delete, restore, overwrite, or otherwise modify candidates or policy."
+      }
+    },
+    "paput_update_capture_policy": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Saves a new client-generated capture policy in the user's PaPut account.",
+        "open_world_justification": "Changes only private capture-policy data and does not publish it externally.",
+        "destructive_justification": "Overwrites the previously saved capture policy with the supplied Markdown."
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "description": "Find semantically related memos even when the wording differs.",
+      "user_prompt": "Use PaPut to find memos related to choosing an OAuth design, even if they do not contain the exact word OAuth.",
+      "file_attachment_urls": null,
+      "tools_triggered": "paput_find_similar_memos",
+      "expected_output": "Returns relevant PaPut memos with similarity information and enough detail to review the matches.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Create multiple private memos from explicit user-provided content.",
+      "user_prompt": "Save these as two private PaPut memos: one about the deployment decision and one about the rollback procedure.",
+      "file_attachment_urls": null,
+      "tools_triggered": "paput_create_memos",
+      "expected_output": "Creates two private memos and returns their created IDs without publishing them.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Organize existing memos into a public note after explicit publication intent.",
+      "user_prompt": "Create a public PaPut note named OAuth implementation notes using memo IDs 101 and 102.",
+      "file_attachment_urls": null,
+      "tools_triggered": "paput_create_note",
+      "expected_output": "Creates the public note with the specified title and attached memo IDs and returns its ID.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Replace an approved skill sheet self PR.",
+      "user_prompt": "I approve replacing my PaPut skill sheet self PR with: I turn ambiguous requirements into testable product decisions.",
+      "file_attachment_urls": null,
+      "tools_triggered": "paput_update_skill_sheet_self_pr",
+      "expected_output": "Updates the self PR with the approved text and confirms the saved profile change.",
+      "expected_output_url": null
+    },
+    {
+      "description": "List pending reusable knowledge for review without saving it.",
+      "user_prompt": "Show me my pending PaPut knowledge candidates so I can decide which ones to save.",
+      "file_attachment_urls": null,
+      "tools_triggered": "paput_list_pending_candidates",
+      "expected_output": "Returns the pending candidates with enough detail for the user to review them without changing their status.",
+      "expected_output_url": null
+    }
+  ],
+  "negative_test_cases": [
+    {
+      "description": "Do not trigger for unrelated calendar requests.",
+      "user_prompt": "What meetings do I have tomorrow?",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because PaPut does not provide calendar access.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger for general web research.",
+      "user_prompt": "Search the web for today's artificial intelligence news.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because PaPut does not browse the web or provide news search.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger for direct access to local AI session files.",
+      "user_prompt": "Open my local Codex session files and summarize yesterday's conversations.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because the MCP server cannot read local session files.",
+      "expected_output_url": null
+    }
+  ]
+}

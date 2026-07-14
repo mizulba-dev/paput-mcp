@@ -5,7 +5,7 @@ export const setSkillSheetSkillsTool: ToolHandler = {
   definition: {
     name: 'paput_set_skill_sheet_skills',
     description:
-      'Replace the full skill list on the PaPut skill sheet with the provided final state. Use this when the complete desired skill list is known.',
+      'Replace the full skill list on the PaPut skill sheet with the provided final state. The list may appear on the public skill sheet. Use this when the complete desired skill list is known.',
     inputSchema: {
       type: 'object',
       properties: {

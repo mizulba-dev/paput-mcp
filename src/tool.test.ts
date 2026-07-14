@@ -54,6 +54,7 @@ const expectedToolNames = [
 
 const readOnlyToolNames = [
   'paput_search_memo',
+  'paput_find_similar_memos',
   'paput_get_memo',
   'paput_get_categories',
   'paput_search_notes',
@@ -93,6 +94,21 @@ const destructiveToolNames = [
   'paput_update_pending_candidate',
   'paput_discard_pending_candidate',
   'paput_update_capture_policy',
+];
+
+const openWorldToolNames = [
+  'paput_create_memos',
+  'paput_update_memo',
+  'paput_create_note',
+  'paput_update_note',
+  'paput_update_skill_sheet_basic_info',
+  'paput_update_skill_sheet_self_pr',
+  'paput_set_skill_sheet_skills',
+  'paput_upsert_skill_sheet_project',
+  'paput_delete_skill_sheet_project',
+  'paput_update_skill_sheet_project_episodes',
+  'paput_update_skill_sheet_faq',
+  'paput_save_pending_candidate',
 ];
 
 describe('registered tools', () => {
@@ -135,6 +151,18 @@ describe('registered tools', () => {
         ),
       );
       expect(tool.definition.inputSchema.type).toBe('object');
+    }
+  });
+
+  it('sets a non-empty output schema for every registered tool', () => {
+    for (const tool of getRegisteredTools()) {
+      expect(tool.definition.outputSchema).toMatchObject({
+        type: 'object',
+        properties: expect.any(Object),
+      });
+      expect(
+        Object.keys(tool.definition.outputSchema?.properties ?? {}),
+      ).not.toHaveLength(0);
     }
   });
 
@@ -206,7 +234,7 @@ describe('registered tools', () => {
           readOnlyToolNames.includes(name) ||
           name.startsWith('paput_update_') ||
           name === 'paput_set_skill_sheet_skills',
-        openWorldHint: false,
+        openWorldHint: openWorldToolNames.includes(name),
       });
     }
   });

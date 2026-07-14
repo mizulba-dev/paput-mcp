@@ -12,6 +12,7 @@ import {
   getGeneratedInputSchema,
   getToolInputZodSchema,
 } from './schemas/tool-input.js';
+import { getToolOutputSchema } from './schemas/tool-output.js';
 import {
   createMemosTool,
   searchMemoTool,
@@ -148,6 +149,7 @@ export function setupTool(
       description: tool.definition.description,
       annotations: tool.definition.annotations,
       inputSchema: tool.definition.inputSchema,
+      outputSchema: tool.definition.outputSchema,
     }));
 
     return {
@@ -251,10 +253,15 @@ function withToolAnnotations(tool: ToolHandler): ToolHandler {
   const name = tool.definition.name;
   const readOnly = isReadOnlyTool(name);
   const destructive = isDestructiveTool(name);
+  const openWorld = isOpenWorldTool(name);
   const generatedInputSchema = getGeneratedInputSchema(name);
+  const outputSchema = getToolOutputSchema(name);
 
   if (!generatedInputSchema) {
     throw new Error(`inputSchema is not defined for tool: ${name}`);
+  }
+  if (!outputSchema) {
+    throw new Error(`outputSchema is not defined for tool: ${name}`);
   }
 
   const inputSchema = mergeToolInputSchema(
@@ -268,13 +275,14 @@ function withToolAnnotations(tool: ToolHandler): ToolHandler {
       ...tool.definition,
       title: getToolTitle(name),
       inputSchema,
+      outputSchema,
       annotations: {
         ...tool.definition.annotations,
         title: tool.definition.annotations?.title ?? getToolTitle(name),
         readOnlyHint: readOnly,
         destructiveHint: readOnly ? false : destructive,
         idempotentHint: isIdempotentTool(name),
-        openWorldHint: false,
+        openWorldHint: openWorld,
       },
     },
   };
@@ -378,6 +386,7 @@ function isReadOnlyTool(name: string): boolean {
     name.includes('_get_') ||
     name.includes('_search_') ||
     name.includes('_list_') ||
+    name === 'paput_find_similar_memos' ||
     name === 'paput_get_categories' ||
     name === 'paput_get_capture_policy' ||
     name === 'paput_get_discard_policy_context' ||
@@ -396,6 +405,23 @@ function isDestructiveTool(name: string): boolean {
     name === 'paput_set_skill_sheet_skills' ||
     name === 'paput_upsert_skill_sheet_project' ||
     name.startsWith('paput_update_')
+  );
+}
+
+function isOpenWorldTool(name: string): boolean {
+  return (
+    name === 'paput_create_memos' ||
+    name === 'paput_update_memo' ||
+    name === 'paput_create_note' ||
+    name === 'paput_update_note' ||
+    name === 'paput_update_skill_sheet_basic_info' ||
+    name === 'paput_update_skill_sheet_self_pr' ||
+    name === 'paput_set_skill_sheet_skills' ||
+    name === 'paput_upsert_skill_sheet_project' ||
+    name === 'paput_delete_skill_sheet_project' ||
+    name === 'paput_update_skill_sheet_project_episodes' ||
+    name === 'paput_update_skill_sheet_faq' ||
+    name === 'paput_save_pending_candidate'
   );
 }
 

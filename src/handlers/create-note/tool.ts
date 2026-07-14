@@ -5,7 +5,7 @@ export const createNoteTool: ToolHandler = {
   definition: {
     name: 'paput_create_note',
     description:
-      'Create a PaPut note that groups existing memos. Use this to organize related memo IDs into a named note.',
+      'Create a private or public PaPut note that groups existing memos. The note is published only when is_public is true. Use this to organize related memo IDs into a named note.',
     inputSchema: {
       type: 'object',
       properties: {

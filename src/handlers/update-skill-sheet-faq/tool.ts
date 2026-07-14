@@ -5,7 +5,7 @@ export const updateSkillSheetFaqTool: ToolHandler = {
   definition: {
     name: 'paput_update_skill_sheet_faq',
     description:
-      "Full-replace the Q&A (FAQ) section of the PaPut skill sheet. Question and answer are user-authored originals, not AI-generated. Pass an empty array to clear all items. related_memo_ids are optional evidence, filtered server-side to the user's own public memos.",
+      "Full-replace the Q&A (FAQ) section of the PaPut skill sheet, which may appear on the public profile. Question and answer are user-authored originals, not AI-generated. Pass an empty array to clear all items. related_memo_ids are optional evidence, filtered server-side to the user's own public memos.",
     inputSchema: {
       type: 'object',
       properties: {

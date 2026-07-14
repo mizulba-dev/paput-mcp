@@ -5,7 +5,7 @@ export const updateSkillSheetProjectEpisodesTool: ToolHandler = {
   definition: {
     name: 'paput_update_skill_sheet_project_episodes',
     description:
-      'Full-replace the AI-generated design-and-judgment episodes for a PaPut skill sheet project. Use only after the user explicitly approves the episode draft.',
+      'Full-replace the AI-generated design-and-judgment episodes for a PaPut skill sheet project. Episodes may appear on the public profile when backed by public memos. Use only after the user explicitly approves the episode draft.',
     inputSchema: {
       type: 'object',
       properties: {

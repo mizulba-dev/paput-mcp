@@ -8,7 +8,9 @@ PaPut MCP Server connects AI assistants and MCP clients to PaPut through the Mod
 
 Depending on the tools you use, the server may process:
 
-- PaPut memos, notes, categories, skill sheet data, and related project metadata.
+- PaPut memos, notes, categories, and related project metadata.
+- Skill sheet data, including nearest station, gender, birth date, years of
+  experience, self PR, skills, FAQ, and project history.
 - OAuth access tokens used to authenticate requests to PaPut.
 - MCP request and response metadata needed to execute tool calls.
 - Pending knowledge candidates, discarded candidate metadata, processed AI
@@ -56,6 +58,12 @@ needed for reliability, troubleshooting, abuse prevention, and security.
 ## Sharing
 
 PaPut MCP does not sell personal data. Data may be processed by PaPut infrastructure providers only as needed to operate the service. Data may also be disclosed if required by law or to protect the security and integrity of PaPut, users, or the service.
+
+Memos and notes are private by default but can be published when a user
+explicitly selects public visibility. Skill sheet profile fields, skills, FAQ,
+and non-private projects may also appear on the user's public PaPut profile.
+Users should provide profile information and approve publish-capable tool calls
+only when they intend that information to be stored or displayed by PaPut.
 
 ## User Control
 
