@@ -3,8 +3,8 @@
   "schema_version": 1,
   "app_info": {
     "display_name": "PaPut",
-    "subtitle": "Manage your PaPut knowledge",
-    "description": "PaPut helps users search, create, and organize their memos and notes, maintain goals and a skill sheet that can include personal profile fields, and review reusable knowledge through ChatGPT. OAuth limits access to the user's PaPut account, and publish-capable tools act only on explicit public visibility or profile updates.",
+    "subtitle": "Record decisions and practices",
+    "description": "PaPut helps developers turn the decisions, trade-offs, and working practices behind their work into a durable, evidence-backed portfolio. Capture and organize reusable insights from AI-assisted work, search past decisions, preserve project context, maintain goals, and build a skill sheet backed by work you actually did. PaPut accesses only the account you authorize through OAuth. Publishing or profile changes occur only when you explicitly request them.",
     "category": "PRODUCTIVITY"
   },
   "tools": {
