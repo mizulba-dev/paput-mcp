@@ -1,4 +1,5 @@
 ---
+name: paput-project-episodes
 description: Use this to draft and optionally save design-and-judgment episodes for a PaPut skill sheet project from the project's public linked memos. Trigger when the user asks to generate, refresh, or save project episodes, project judgment episodes, or the "design and judgment" section for a skill sheet project.
 ---
 

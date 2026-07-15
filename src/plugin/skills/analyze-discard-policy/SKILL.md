@@ -1,4 +1,5 @@
 ---
+name: paput-analyze-discard-policy
 description: Use this to analyze discarded PaPut knowledge candidates, derive reusable capture rejection criteria, and save the resulting capture policy document.
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: paput-interview-qa
 description: Use this to source, draft, and optionally save the PaPut skill sheet Q&A (FAQ) section from interview questions, public and private memo clusters, and general technical-interview FAQ research. Trigger when the user asks to build, refresh, or add to their FAQ, interview Q&A, or "frequently asked questions" section.
 ---
 

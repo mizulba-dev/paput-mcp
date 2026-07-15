@@ -1,4 +1,5 @@
 ---
+name: paput-harvest
 description: Use this to harvest reusable knowledge from past local Claude/Codex sessions when the AI client can read local files. Safe to run repeatedly — it skips already-processed sessions and only reviews new ones — so use it both for first-time onboarding and for periodic catch-up. Pay special attention to AI-collaboration practices and postures (operation / principle), the scarce, durable axis.
 ---
 

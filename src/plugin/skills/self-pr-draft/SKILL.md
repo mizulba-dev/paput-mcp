@@ -1,4 +1,5 @@
 ---
+name: paput-self-pr-draft
 description: Use this to draft a first-person self PR for the PaPut skill sheet from existing profile, skills, projects, project episodes, achievements, and public decision/operation/principle memos. It presents a draft first and saves only when the user explicitly asks.
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: paput-capture
 description: Use this to extract reusable knowledge candidates from the current conversation or a specified topic and add them to pending.
 ---
 

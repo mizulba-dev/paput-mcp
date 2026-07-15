@@ -1,4 +1,5 @@
 ---
+name: paput-dashboard-analysis
 description: Use this to analyze the user's PaPut dashboard, goals, skill sheet, memos, notes, and categories. Read the user through the judgment axis — the thickness of their decision / operation / principle memos — not raw volume or category counts; identify current position, strengths, thin axes, what to learn next, and career-history phrasing; optionally save the generated dashboard analysis when the user asks to save it.
 ---
 
