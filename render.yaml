@@ -3,7 +3,7 @@ services:
     name: paput-mcp
     runtime: node
     region: singapore
-    plan: starter
+    plan: free
     domains:
       - mcp.paput.io
     buildCommand: npm ci && npm run build
