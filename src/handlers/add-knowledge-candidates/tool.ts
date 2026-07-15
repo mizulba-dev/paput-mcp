@@ -36,9 +36,15 @@ export const addKnowledgeCandidatesTool: ToolHandler = {
                   enum: ['knowledge', 'decision', 'operation', 'principle'],
                 },
                 description:
-                  'Memo type classification keys (a memo can have multiple). decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
+                  'Array of memo type classification keys (each one of: knowledge, decision, operation, principle) for this candidate. A memo can have multiple keys at once. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
               },
-              confidence: { type: 'number' },
+              confidence: {
+                type: 'number',
+                minimum: 0,
+                maximum: 1,
+                description:
+                  'Confidence score from 0 (low) to 1 (high) that this candidate is reusable and worth saving.',
+              },
               is_public: { type: 'boolean', default: false },
             },
             required: ['title', 'body'],

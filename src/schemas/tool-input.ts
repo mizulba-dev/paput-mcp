@@ -144,9 +144,21 @@ const knowledgeCandidateSchema = z.object({
   title: z.string(),
   body: z.string(),
   categories: z.array(z.string()).optional(),
-  memo_type_keys: z.array(z.string()).optional(),
+  memo_type_keys: z
+    .array(z.string())
+    .describe(
+      'Array of memo type classification keys (each one of: knowledge, decision, operation, principle). A memo can have multiple keys at once.',
+    )
+    .optional(),
   projects: z.array(projectReferenceSchema).optional(),
-  confidence: z.number().optional(),
+  confidence: z
+    .number()
+    .min(0)
+    .max(1)
+    .describe(
+      'Confidence score from 0 (low) to 1 (high) that this candidate is reusable and worth saving.',
+    )
+    .optional(),
   is_public: z.boolean().default(false).optional(),
 });
 
@@ -156,19 +168,22 @@ const createMemoInputSchema = z.object({
   is_public: z.boolean().default(false).describe('Whether to publish the memo'),
   created_at: z
     .string()
+    .datetime({ offset: true })
     .describe(
-      'Memo creation timestamp in ISO 8601 format, for example 2026-05-30T12:34:56Z',
+      'Memo creation timestamp in ISO 8601 date-time format, for example 2026-05-30T12:34:56Z',
     )
     .optional(),
   categories: z.array(z.string()).describe('Memo categories').optional(),
   projects: z
     .array(projectReferenceSchema)
-    .describe('Projects to link when creating the memo')
+    .describe(
+      'Explicit project references to link (each needs an existing project id). If provided, project_match is ignored.',
+    )
     .optional(),
   project_match: z
     .string()
     .describe(
-      'Project title fragment to search and link when projects are not provided',
+      'Project title fragment to search and link, used only when projects is not provided. Ignored if projects is provided.',
     )
     .optional(),
 });
@@ -194,6 +209,7 @@ const goalInputSchema = z.object({
     .describe('Goal priority. Lower numbers are higher priority.'),
   target_date: z
     .string()
+    .date()
     .describe('Target date in YYYY-MM-DD format')
     .nullable()
     .optional(),
@@ -294,12 +310,14 @@ const toolInputSchemas = {
     categories: z.array(memoCategorySchema).describe('Categories').optional(),
     projects: z
       .array(projectReferenceSchema)
-      .describe('Projects to link when updating the memo')
+      .describe(
+        'Explicit project references to link (each needs an existing project id). If provided, project_match is ignored.',
+      )
       .optional(),
     project_match: z
       .string()
       .describe(
-        'Project title fragment to search and link when projects are not provided',
+        'Project title fragment to search and link, used only when projects is not provided. Ignored if projects is provided.',
       )
       .optional(),
   }),
@@ -574,10 +592,17 @@ const toolInputSchemas = {
     memo_type_keys: z
       .array(z.enum(['knowledge', 'decision', 'operation', 'principle']))
       .describe(
-        'Memo type classification keys (a memo can have multiple). decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
+        'Array of memo type classification keys (each one of: knowledge, decision, operation, principle). A memo can have multiple keys at once. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
       )
       .optional(),
-    confidence: z.number().describe('Confidence score').optional(),
+    confidence: z
+      .number()
+      .min(0)
+      .max(1)
+      .describe(
+        'Confidence score from 0 (low) to 1 (high) that this candidate is reusable and worth saving.',
+      )
+      .optional(),
     is_public: z
       .boolean()
       .describe('Whether the saved memo will be public')
@@ -599,8 +624,9 @@ const toolInputSchemas = {
     body: z.string().describe('Body override when saving').optional(),
     created_at: z
       .string()
+      .datetime({ offset: true })
       .describe(
-        'Creation timestamp to use for the PaPut memo. Defaults to the source session updated timestamp, then the pending candidate created timestamp.',
+        'Creation timestamp to use for the PaPut memo, in ISO 8601 date-time format. Defaults to the source session updated timestamp, then the pending candidate created timestamp.',
       )
       .optional(),
     categories: z.array(z.string()).optional(),
@@ -644,5 +670,37 @@ export function getGeneratedInputSchema(
   });
 
   delete jsonSchema.$schema;
-  return jsonSchema as ToolDefinition['inputSchema'];
+  return normalizeNullableTypeArrays(
+    jsonSchema,
+  ) as ToolDefinition['inputSchema'];
+}
+
+// zod-to-json-schema が nullable フィールドを `type: [X, "null"]` の配列型で出力すると、
+// 型情報を持たない `any` として扱う JSON Schema コンシューマがある。既存の outputSchema と
+// 同じ `anyOf` 表現に正規化して、型を明示的に保つ。
+function normalizeNullableTypeArrays(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(normalizeNullableTypeArrays);
+  }
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  const normalizedEntries = Object.entries(value).map(
+    ([key, entry]) => [key, normalizeNullableTypeArrays(entry)] as const,
+  );
+  const normalized = Object.fromEntries(normalizedEntries) as Record<
+    string,
+    unknown
+  >;
+
+  if (Array.isArray(normalized.type)) {
+    const { type, ...rest } = normalized;
+    return {
+      anyOf: (type as string[]).map((t) => ({ type: t })),
+      ...rest,
+    };
+  }
+
+  return normalized;
 }

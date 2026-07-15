@@ -272,7 +272,7 @@ function memoTypeSchemaMatcher() {
         'principle',
       ]),
     },
-    description: expect.stringContaining('Memo type'),
+    description: expect.stringMatching(/memo type/i),
   };
 }
 

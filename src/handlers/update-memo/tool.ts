@@ -50,7 +50,7 @@ export const updateMemoTool: ToolHandler = {
             enum: ['knowledge', 'decision', 'operation', 'principle'],
           },
           description:
-            'Memo type classification keys (a memo can have multiple). This replaces the full set on update, so pass the complete list to keep existing types; omitting it clears them. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
+            'Array of memo type classification keys (each one of: knowledge, decision, operation, principle). A memo can have multiple keys at once. This replaces the full set on update, so pass the complete list to keep existing types; omitting it clears them. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
         },
       },
       required: ['id', 'title', 'body', 'is_public'],

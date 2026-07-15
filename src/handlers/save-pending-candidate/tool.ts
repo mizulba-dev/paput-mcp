@@ -19,8 +19,9 @@ export const savePendingCandidateTool: ToolHandler = {
         body: { type: 'string', description: 'Body override when saving' },
         created_at: {
           type: 'string',
+          format: 'date-time',
           description:
-            'Creation timestamp to use for the PaPut memo. Defaults to the source session updated timestamp, then the pending candidate created timestamp.',
+            'Creation timestamp to use for the PaPut memo, in ISO 8601 date-time format. Defaults to the source session updated timestamp, then the pending candidate created timestamp.',
         },
         categories: { type: 'array', items: { type: 'string' } },
         memo_type_keys: {
@@ -30,7 +31,7 @@ export const savePendingCandidateTool: ToolHandler = {
             enum: ['knowledge', 'decision', 'operation', 'principle'],
           },
           description:
-            'Memo type classification keys override when saving (a memo can have multiple). decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
+            'Array of memo type classification keys to override when saving (each one of: knowledge, decision, operation, principle). A memo can have multiple keys at once. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
         },
         projects: {
           type: 'array',

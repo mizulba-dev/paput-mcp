@@ -19,8 +19,9 @@ const memoInputSchema = {
     },
     created_at: {
       type: 'string',
+      format: 'date-time',
       description:
-        'Memo creation timestamp in ISO 8601 format, for example 2026-05-30T12:34:56Z',
+        'Memo creation timestamp in ISO 8601 date-time format, for example 2026-05-30T12:34:56Z',
     },
     categories: {
       type: 'array',
@@ -36,7 +37,7 @@ const memoInputSchema = {
         enum: ['knowledge', 'decision', 'operation', 'principle'],
       },
       description:
-        'Memo type classification keys (a memo can have multiple). knowledge: technical know-how (commodity); decision: reusable judgment criteria; operation: observability/eval/test/review practices; principle: explicitly stated principles. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
+        'Array of memo type classification keys (each one of: knowledge, decision, operation, principle). A memo can have multiple keys at once. knowledge: technical know-how (commodity); decision: reusable judgment criteria; operation: observability/eval/test/review practices; principle: explicitly stated principles. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
     },
     projects: {
       type: 'array',
@@ -48,12 +49,13 @@ const memoInputSchema = {
         },
         required: ['id'],
       },
-      description: 'Projects to link when creating the memo',
+      description:
+        'Explicit project references to link (each needs an existing project id). If provided, project_match is ignored.',
     },
     project_match: {
       type: 'string',
       description:
-        'Project title fragment to search and link when projects are not provided',
+        'Project title fragment to search and link, used only when projects is not provided. Ignored if projects is provided.',
     },
   },
   required: ['title', 'body'],
