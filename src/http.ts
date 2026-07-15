@@ -86,6 +86,17 @@ export async function startHttpMcpServer(
       return;
     }
 
+    if (requestUrl.pathname === '/.well-known/openai-apps-challenge') {
+      const token = process.env.OPENAI_APPS_DOMAIN_VERIFICATION_TOKEN;
+      if (!token) {
+        sendJsonRpcError(res, 404, -32000, 'Not found');
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });
+      res.end(token);
+      return;
+    }
+
     const iconPath = ICON_SOURCES[requestUrl.pathname];
     if (iconPath) {
       await serveIcon(res, `${FRONT_ORIGIN}${iconPath}`);

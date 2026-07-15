@@ -19,3 +19,5 @@ services:
         value: https://api.paput.io
       - key: PAPUT_PUBLIC_ORIGIN
         value: https://mcp.paput.io
+      - key: OPENAI_APPS_DOMAIN_VERIFICATION_TOKEN
+        value: n2dPo2k4zJHNW_1q8-yr1Ui3TpgkC4c5BtvdEMYfT3A
