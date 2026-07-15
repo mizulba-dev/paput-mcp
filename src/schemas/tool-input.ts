@@ -524,8 +524,17 @@ const toolInputSchemas = {
       ),
   }),
   paput_add_knowledge_candidates: z.object({
-    session_id: z.string().describe('Source session ID'),
-    source: z.enum(['claude', 'codex']).describe('Source session provider'),
+    session_id: z
+      .string()
+      .describe(
+        'Source session ID. Required when source is claude or codex; omit for conversation clients without a local session file.',
+      )
+      .optional(),
+    source: z
+      .enum(['claude', 'codex', 'claude-ai', 'chatgpt'])
+      .describe(
+        'Source client. claude = Claude Code CLI, codex = Codex CLI (local sessions), claude-ai = Claude web/desktop/mobile, chatgpt = ChatGPT clients.',
+      ),
     source_session_updated_at: z
       .string()
       .describe('Source session updated timestamp in ISO 8601 format')

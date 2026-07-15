@@ -1,5 +1,6 @@
 import { ApiClient } from './client.js';
 import type {
+  CandidateSource,
   CapturePolicy,
   KnowledgeCandidateInput,
   PendingKnowledgeCandidate,
@@ -8,8 +9,8 @@ import type {
 } from '../../types/knowledge.js';
 
 export interface AddKnowledgeCandidatesRemoteParams {
-  source: SessionSource;
-  session_id: string;
+  source: CandidateSource;
+  session_id?: string;
   source_session_updated_at?: string;
   candidates: Array<
     KnowledgeCandidateInput & {

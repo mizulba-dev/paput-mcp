@@ -2,8 +2,8 @@ import { ApiClient } from '../../services/api/client.js';
 import { addRemoteKnowledgeCandidates } from '../../services/api/knowledge-candidate.js';
 import { findSimilarMemos } from '../../services/api/memo.js';
 import {
+  CandidateSource,
   KnowledgeCandidateInput,
-  SessionSource,
   SimilarMemo,
 } from '../../types/knowledge.js';
 import type { ToolContext } from '../../types/index.js';
@@ -12,24 +12,50 @@ import type { ToolContext } from '../../types/index.js';
 const NEAR_DUPLICATE_SCORE = 0.9;
 const SIMILAR_MEMO_LIMIT = 5;
 
+const CANDIDATE_SOURCES: readonly CandidateSource[] = [
+  'claude',
+  'codex',
+  'claude-ai',
+  'chatgpt',
+];
+// harvest の再処理防止台帳に載せるのはローカルセッションのみ
+const LOCAL_SESSION_SOURCES: readonly CandidateSource[] = ['claude', 'codex'];
+
 export async function handleAddKnowledgeCandidates(
   args: Record<string, unknown> | undefined,
   apiClient: ApiClient,
   context?: ToolContext,
 ) {
-  if (!args || typeof args.session_id !== 'string') {
-    return {
-      content: [{ type: 'text', text: 'session_id is required' }],
-      isError: true,
-    };
-  }
-
-  if (args.source !== 'claude' && args.source !== 'codex') {
+  const source = args?.source;
+  if (
+    !args ||
+    typeof source !== 'string' ||
+    !CANDIDATE_SOURCES.includes(source as CandidateSource)
+  ) {
     return {
       content: [
         {
           type: 'text',
-          text: 'source must be claude or codex',
+          text: `source must be one of ${CANDIDATE_SOURCES.join(', ')}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  const sessionId =
+    typeof args.session_id === 'string' && args.session_id !== ''
+      ? args.session_id
+      : undefined;
+  if (
+    LOCAL_SESSION_SOURCES.includes(source as CandidateSource) &&
+    sessionId === undefined
+  ) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'session_id is required when source is claude or codex',
         },
       ],
       isError: true,
@@ -97,12 +123,12 @@ export async function handleAddKnowledgeCandidates(
     },
   );
 
-  const source = args.source as SessionSource;
   return await addRemoteCandidates(
     args,
     apiClient,
     context,
-    source,
+    source as CandidateSource,
+    sessionId,
     candidates,
   );
 }
@@ -111,7 +137,8 @@ async function addRemoteCandidates(
   args: Record<string, unknown>,
   apiClient: ApiClient,
   context: ToolContext = {},
-  source: SessionSource,
+  source: CandidateSource,
+  sessionId: string | undefined,
   candidates: KnowledgeCandidateInput[],
 ) {
   const contextProjects = await getContextProjects(context);
@@ -173,7 +200,7 @@ async function addRemoteCandidates(
 
   const result = await addRemoteKnowledgeCandidates(apiClient, {
     source,
-    session_id: args.session_id as string,
+    session_id: sessionId,
     source_session_updated_at:
       typeof args.source_session_updated_at === 'string'
         ? args.source_session_updated_at

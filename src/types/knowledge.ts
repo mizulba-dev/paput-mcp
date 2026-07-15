@@ -1,5 +1,8 @@
 export type SessionSource = 'claude' | 'codex';
 
+// claude/codex はローカルセッション（harvest 対象）、claude-ai/chatgpt は会話クライアント
+export type CandidateSource = SessionSource | 'claude-ai' | 'chatgpt';
+
 export interface KnowledgeCandidateInput {
   title: string;
   body: string;
@@ -13,7 +16,7 @@ export interface KnowledgeCandidateInput {
 export interface PendingKnowledgeCandidate extends KnowledgeCandidateInput {
   id: string;
   session_id: string;
-  source: SessionSource;
+  source: CandidateSource;
   source_session_updated_at?: string;
   status: 'pending' | 'saved' | 'discarded';
   fingerprint: string;

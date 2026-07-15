@@ -57,8 +57,8 @@ describe('handleAddKnowledgeCandidates', () => {
   it('rejects invalid arguments', async () => {
     const client = createMockClient({});
 
-    const noSession = await handleAddKnowledgeCandidates(undefined, client);
-    expect(noSession.isError).toBe(true);
+    const noArgs = await handleAddKnowledgeCandidates(undefined, client);
+    expect(noArgs.isError).toBe(true);
 
     const badSource = await handleAddKnowledgeCandidates(
       { session_id: 's', source: 'cursor', candidates: [] },
@@ -71,6 +71,47 @@ describe('handleAddKnowledgeCandidates', () => {
       client,
     );
     expect(badCandidates.isError).toBe(true);
+  });
+
+  it('requires session_id only for local session sources', async () => {
+    const client = createMockClient({});
+
+    for (const source of ['claude', 'codex']) {
+      const missing = await handleAddKnowledgeCandidates(
+        { source, candidates: [{ title: 'Knowledge', body: 'Body' }] },
+        client,
+      );
+      expect(missing.isError).toBe(true);
+    }
+
+    const emptySession = await handleAddKnowledgeCandidates(
+      {
+        source: 'claude',
+        session_id: '',
+        candidates: [{ title: 'Knowledge', body: 'Body' }],
+      },
+      client,
+    );
+    expect(emptySession.isError).toBe(true);
+  });
+
+  it('adds candidates from conversation clients without a session_id', async () => {
+    const client = createMockClient({});
+
+    for (const source of ['claude-ai', 'chatgpt']) {
+      const result = await handleAddKnowledgeCandidates(
+        { source, candidates: [{ title: `From ${source}`, body: 'Body' }] },
+        client,
+      );
+
+      expect(result.isError).toBeUndefined();
+      expect(result.structuredContent).toMatchObject({ added: 1 });
+    }
+
+    const lastBody = (client.post as ReturnType<typeof vi.fn>).mock
+      .calls[1][1] as Record<string, unknown>;
+    expect(lastBody.source).toBe('chatgpt');
+    expect(lastBody.session_id).toBeUndefined();
   });
 
   it('adds candidates with similar memos and an explicit source timestamp', async () => {

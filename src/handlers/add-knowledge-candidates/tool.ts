@@ -5,15 +5,20 @@ export const addKnowledgeCandidatesTool: ToolHandler = {
   definition: {
     name: 'paput_add_knowledge_candidates',
     description:
-      'Add reusable knowledge candidates extracted from a Claude or Codex session to the pending queue. Use this before saving knowledge to PaPut when candidates still need review or deduplication.',
+      'Add reusable knowledge candidates extracted from an AI session or conversation to the pending queue. Use this before saving knowledge to PaPut when candidates still need review or deduplication.',
     inputSchema: {
       type: 'object',
       properties: {
-        session_id: { type: 'string', description: 'Source session ID' },
+        session_id: {
+          type: 'string',
+          description:
+            'Source session ID. Required when source is claude or codex (local sessions tracked for harvest); omit for conversation clients without a local session file.',
+        },
         source: {
           type: 'string',
-          enum: ['claude', 'codex'],
-          description: 'Source session provider',
+          enum: ['claude', 'codex', 'claude-ai', 'chatgpt'],
+          description:
+            'Source client. Use claude (Claude Code CLI) or codex (Codex CLI) for local sessions; use claude-ai for Claude web/desktop/mobile; use chatgpt for ChatGPT clients.',
         },
         candidates: {
           type: 'array',
@@ -40,7 +45,7 @@ export const addKnowledgeCandidatesTool: ToolHandler = {
           },
         },
       },
-      required: ['session_id', 'source', 'candidates'],
+      required: ['source', 'candidates'],
     },
   },
   handler: handleAddKnowledgeCandidates,
