@@ -8,3 +8,4 @@ export * from './dashboard.js';
 export * from './dashboard-analysis.js';
 export * from './project-context.js';
 export * from './knowledge-candidate.js';
+export * from './onboarding.js';

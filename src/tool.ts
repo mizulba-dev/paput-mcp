@@ -62,6 +62,17 @@ import {
 } from './handlers/index.js';
 import type { ToolContext, ToolHandler } from './types/index.js';
 
+const ONBOARDING_STATUS_INVALIDATING_TOOLS = new Set([
+  'paput_create_memos',
+  'paput_save_pending_candidate',
+  'paput_update_skill_sheet_basic_info',
+  'paput_set_skill_sheet_skills',
+  'paput_upsert_skill_sheet_project',
+]);
+
+const ONBOARDING_SKILL_HINT =
+  ' I can guide you through initial setup; in Claude Code, use the /paput:onboarding skill.';
+
 interface RegisteredToolsOptions {
   projectContextConfigured?: boolean;
 }
@@ -117,7 +128,13 @@ export function setupTool(
       }
     }
 
-    return await tool.handler(request.params.arguments, apiClient, context);
+    const result = await tool.handler(
+      request.params.arguments,
+      apiClient,
+      context,
+    );
+
+    return await processToolResult(request.params.name, result, context);
   });
 
   server.setRequestHandler(ListResourcesRequestSchema, async () => ({
@@ -162,6 +179,91 @@ export function setupTool(
       ],
     };
   });
+}
+
+export async function processToolResult(
+  toolName: string,
+  result: Record<string, unknown>,
+  context: ToolContext,
+): Promise<Record<string, unknown>> {
+  const invalidated = shouldInvalidateOnboardingStatus(toolName, result);
+  if (invalidated) {
+    context.onboarding?.invalidateStatus();
+  }
+
+  if (invalidated || result.isError === true) return result;
+
+  return await appendOnboardingNudge(result, context);
+}
+
+function shouldInvalidateOnboardingStatus(
+  toolName: string,
+  result: Record<string, unknown>,
+): boolean {
+  if (!ONBOARDING_STATUS_INVALIDATING_TOOLS.has(toolName)) return false;
+  if (result.isError !== true) return true;
+
+  const structuredContent = result.structuredContent;
+  if (toolName === 'paput_save_pending_candidate') {
+    return (
+      typeof structuredContent === 'object' &&
+      structuredContent !== null &&
+      'action' in structuredContent &&
+      structuredContent.action === 'save_candidate_failed_after_memo_created'
+    );
+  }
+  if (toolName !== 'paput_create_memos') return false;
+
+  return (
+    typeof structuredContent === 'object' &&
+    structuredContent !== null &&
+    'created_count' in structuredContent &&
+    typeof structuredContent.created_count === 'number' &&
+    structuredContent.created_count > 0
+  );
+}
+
+export async function appendOnboardingNudge(
+  result: Record<string, unknown>,
+  context: ToolContext,
+): Promise<Record<string, unknown>> {
+  if (
+    result.isError === true ||
+    !context.onboarding ||
+    !Array.isArray(result.content)
+  ) {
+    return result;
+  }
+
+  try {
+    const status = await context.onboarding.getStatus();
+    const text = getOnboardingNudge(status);
+    if (!text || !context.onboarding.claimNudge()) return result;
+
+    return {
+      ...result,
+      content: [...result.content, { type: 'text', text }],
+    };
+  } catch {
+    // オンボーディング判定の失敗で本来のツール応答を壊さない。
+    return result;
+  }
+}
+
+function getOnboardingNudge(status: {
+  memo_count: number;
+  has_skill_sheet: boolean;
+}): string | undefined {
+  if (status.memo_count === 0 && !status.has_skill_sheet) {
+    return `Your PaPut account is empty.${ONBOARDING_SKILL_HINT}`;
+  }
+  if (!status.has_skill_sheet) {
+    return `Your PaPut skill sheet has not been set up yet.${ONBOARDING_SKILL_HINT}`;
+  }
+  if (status.memo_count === 0) {
+    return `Your PaPut account has no memos yet.${ONBOARDING_SKILL_HINT}`;
+  }
+  return undefined;
 }
 
 export function getRegisteredTools(

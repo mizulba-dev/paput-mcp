@@ -11,9 +11,14 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createMcpServer, type MCPServerOptions } from './server.js';
 import {
   createApiClient,
+  getOnboardingStatus,
   getSkillSheetProjectByAlias,
 } from './services/api/index.js';
-import type { ResolvedProjectContext } from './types/index.js';
+import type {
+  OnboardingContext,
+  OnboardingStatus,
+  ResolvedProjectContext,
+} from './types/index.js';
 
 export interface HttpMcpServerOptions extends MCPServerOptions {
   allowedOrigins?: string[];
@@ -25,6 +30,14 @@ export interface HttpMcpServerOptions extends MCPServerOptions {
 const OAUTH_SCOPES = ['paput.read', 'paput.write'] as const;
 const MAX_REQUEST_BODY_BYTES = 5 * 1024 * 1024;
 const FRONT_ORIGIN = 'https://paput.io';
+const ONBOARDING_INCOMPLETE_TTL_MS = 10 * 60 * 1000;
+const ONBOARDING_COMPLETE_TTL_MS = 24 * 60 * 60 * 1000;
+const ONBOARDING_NUDGE_COOLDOWN_MS = 30 * 60 * 1000;
+const onboardingStatusCache = new Map<
+  string,
+  { status: OnboardingStatus; expiresAt: number }
+>();
+const onboardingNudgeTimestamps = new Map<string, number>();
 const ICON_SOURCES: Record<string, string> = {
   '/apple-touch-icon.png': '/icons/apple-touch-icon.png',
   '/favicon.ico': '/favicon.ico',
@@ -200,6 +213,7 @@ export async function startHttpMcpServer(
       resolveProject: projectAlias
         ? createProjectResolver(apiUrl, accessToken, projectAlias)
         : options.resolveProject,
+      onboarding: createOnboardingContext(apiUrl, accessToken),
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
@@ -238,6 +252,72 @@ export async function startHttpMcpServer(
   });
 
   return httpServer;
+}
+
+export function createOnboardingContext(
+  apiUrl: string,
+  accessToken: string,
+): OnboardingContext {
+  pruneExpiredOnboardingCacheEntries();
+
+  return {
+    async getStatus() {
+      const now = Date.now();
+      const cached = onboardingStatusCache.get(accessToken);
+      if (cached && cached.expiresAt > now) return cached.status;
+
+      const status = await getOnboardingStatus(
+        createApiClient(apiUrl, accessToken),
+      );
+      const isComplete = status.memo_count > 0 && status.has_skill_sheet;
+      onboardingStatusCache.set(accessToken, {
+        status,
+        expiresAt:
+          now +
+          (isComplete
+            ? ONBOARDING_COMPLETE_TTL_MS
+            : ONBOARDING_INCOMPLETE_TTL_MS),
+      });
+      return status;
+    },
+    invalidateStatus() {
+      onboardingStatusCache.delete(accessToken);
+    },
+    claimNudge() {
+      const now = Date.now();
+      const previous = onboardingNudgeTimestamps.get(accessToken);
+      if (
+        previous !== undefined &&
+        now - previous < ONBOARDING_NUDGE_COOLDOWN_MS
+      ) {
+        return false;
+      }
+      onboardingNudgeTimestamps.set(accessToken, now);
+      return true;
+    },
+  };
+}
+
+export function pruneExpiredOnboardingCacheEntries(now = Date.now()): {
+  statuses: number;
+  cooldowns: number;
+} {
+  let statuses = 0;
+  let cooldowns = 0;
+
+  for (const [accessToken, cached] of onboardingStatusCache) {
+    if (cached.expiresAt > now) continue;
+    onboardingStatusCache.delete(accessToken);
+    statuses += 1;
+  }
+
+  for (const [accessToken, nudgedAt] of onboardingNudgeTimestamps) {
+    if (now - nudgedAt < ONBOARDING_NUDGE_COOLDOWN_MS) continue;
+    onboardingNudgeTimestamps.delete(accessToken);
+    cooldowns += 1;
+  }
+
+  return { statuses, cooldowns };
 }
 
 function normalizeEndpoint(endpoint: string): string {

@@ -43,6 +43,9 @@ describe('MCP transports', () => {
     expect(
       result.tools.every((tool) => tool.outputSchema?.type === 'object'),
     ).toBe(true);
+    expect(client.getInstructions()).toContain(
+      'When a tool response includes an onboarding notice',
+    );
 
     await mcpServer.close();
   });

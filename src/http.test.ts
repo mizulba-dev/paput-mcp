@@ -1,7 +1,12 @@
 import { request, type IncomingHttpHeaders } from 'node:http';
 import { type AddressInfo, type Server as HttpServer } from 'node:net';
-import { afterEach, describe, expect, it } from 'vitest';
-import { normalizeProjectAlias, startHttpMcpServer } from './http.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  createOnboardingContext,
+  normalizeProjectAlias,
+  pruneExpiredOnboardingCacheEntries,
+  startHttpMcpServer,
+} from './http.js';
 
 const testServerOptions = {
   apiUrl: 'https://api.example.test',
@@ -336,3 +341,170 @@ describe('normalizeProjectAlias', () => {
     expect(normalizeProjectAlias('ab')).toBe(false);
   });
 });
+
+describe('onboarding status cache', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('caches an incomplete status for 10 minutes', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-16T00:00:00Z'));
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () =>
+        onboardingResponse({ memo_count: 0, has_skill_sheet: false }),
+      );
+    const context = createOnboardingContext(
+      'https://api.example.test',
+      'incomplete-status-token',
+    );
+
+    await context.getStatus();
+    vi.advanceTimersByTime(9 * 60 * 1000);
+    await context.getStatus();
+    expect(fetchMock).toHaveBeenCalledOnce();
+
+    vi.advanceTimersByTime(60 * 1000);
+    await context.getStatus();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('caches a completed status for 24 hours', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-16T00:00:00Z'));
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () =>
+        onboardingResponse({ memo_count: 1, has_skill_sheet: true }),
+      );
+    const context = createOnboardingContext(
+      'https://api.example.test',
+      'completed-status-token',
+    );
+
+    await context.getStatus();
+    vi.advanceTimersByTime(23 * 60 * 60 * 1000);
+    await context.getStatus();
+    expect(fetchMock).toHaveBeenCalledOnce();
+
+    vi.advanceTimersByTime(60 * 60 * 1000);
+    await context.getStatus();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('invalidates only the current access token status', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () =>
+        onboardingResponse({ memo_count: 1, has_skill_sheet: true }),
+      );
+    const first = createOnboardingContext(
+      'https://api.example.test',
+      'invalidate-first-token',
+    );
+    const second = createOnboardingContext(
+      'https://api.example.test',
+      'invalidate-second-token',
+    );
+
+    await first.getStatus();
+    await second.getStatus();
+    first.invalidateStatus();
+    await first.getStatus();
+    await second.getStatus();
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('allows one nudge per access token every 30 minutes', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-16T00:00:00Z'));
+    const first = createOnboardingContext(
+      'https://api.example.test',
+      'cooldown-first-token',
+    );
+    const sameUser = createOnboardingContext(
+      'https://api.example.test',
+      'cooldown-first-token',
+    );
+    const otherUser = createOnboardingContext(
+      'https://api.example.test',
+      'cooldown-second-token',
+    );
+
+    expect(first.claimNudge()).toBe(true);
+    first.invalidateStatus();
+    expect(sameUser.claimNudge()).toBe(false);
+    expect(otherUser.claimNudge()).toBe(true);
+
+    vi.advanceTimersByTime(30 * 60 * 1000);
+    expect(sameUser.claimNudge()).toBe(true);
+  });
+
+  it('reports physically removed status and cooldown entries', async () => {
+    pruneExpiredOnboardingCacheEntries(Number.MAX_SAFE_INTEGER);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-16T00:00:00Z'));
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+      onboardingResponse({ memo_count: 0, has_skill_sheet: false }),
+    );
+    const expired = createOnboardingContext(
+      'https://api.example.test',
+      'expired-onboarding-token',
+    );
+    await expired.getStatus();
+    expect(expired.claimNudge()).toBe(true);
+
+    vi.advanceTimersByTime(29 * 60 * 1000);
+    expect(pruneExpiredOnboardingCacheEntries()).toEqual({
+      statuses: 1,
+      cooldowns: 0,
+    });
+    vi.advanceTimersByTime(60 * 1000);
+    expect(pruneExpiredOnboardingCacheEntries()).toEqual({
+      statuses: 0,
+      cooldowns: 1,
+    });
+  });
+
+  it('prunes expired entries when a new onboarding context is created', async () => {
+    pruneExpiredOnboardingCacheEntries(Number.MAX_SAFE_INTEGER);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-16T00:00:00Z'));
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+      onboardingResponse({ memo_count: 0, has_skill_sheet: false }),
+    );
+    const expired = createOnboardingContext(
+      'https://api.example.test',
+      'implicit-cleanup-token',
+    );
+    await expired.getStatus();
+    expect(expired.claimNudge()).toBe(true);
+
+    vi.advanceTimersByTime(29 * 60 * 1000);
+    createOnboardingContext('https://api.example.test', 'status-trigger-token');
+    expect(pruneExpiredOnboardingCacheEntries()).toEqual({
+      statuses: 0,
+      cooldowns: 0,
+    });
+    vi.advanceTimersByTime(60 * 1000);
+    createOnboardingContext(
+      'https://api.example.test',
+      'cooldown-trigger-token',
+    );
+
+    expect(pruneExpiredOnboardingCacheEntries()).toEqual({
+      statuses: 0,
+      cooldowns: 0,
+    });
+  });
+});
+
+function onboardingResponse(status: {
+  memo_count: number;
+  has_skill_sheet: boolean;
+}): Response {
+  return new Response(JSON.stringify(status), { status: 200 });
+}

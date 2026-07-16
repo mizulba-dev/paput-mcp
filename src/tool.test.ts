@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { getGeneratedInputSchema } from './schemas/tool-input.js';
-import { getRegisteredTools } from './tool.js';
+import { getRegisteredTools, processToolResult } from './tool.js';
+import type { OnboardingContext } from './types/index.js';
 
 const expectedToolNames = [
   'paput_create_memos',
@@ -243,6 +244,300 @@ describe('registered tools', () => {
     expect(readHandlerToolNames()).toEqual(expectedToolNames);
   });
 });
+
+describe('onboarding nudges', () => {
+  const originalResult = {
+    structuredContent: { value: 1 },
+    content: [{ type: 'text', text: 'Original response' }],
+  };
+
+  it.each([
+    [{ memo_count: 0, has_skill_sheet: false }, 'Your PaPut account is empty.'],
+    [
+      { memo_count: 2, has_skill_sheet: false },
+      'Your PaPut skill sheet has not been set up yet.',
+    ],
+    [
+      { memo_count: 0, has_skill_sheet: true },
+      'Your PaPut account has no memos yet.',
+    ],
+  ])(
+    'appends the matching neutral notice for status %o',
+    async (status, text) => {
+      const onboarding = createOnboardingContext(status);
+
+      const result = await processToolResult(
+        'paput_search_memo',
+        originalResult,
+        { onboarding },
+      );
+
+      expect(result.content).toEqual([
+        ...originalResult.content,
+        expect.objectContaining({
+          type: 'text',
+          text: expect.stringContaining(text),
+        }),
+      ]);
+      expect(JSON.stringify(result.content)).toContain(
+        'in Claude Code, use the /paput:onboarding skill',
+      );
+      expect(result.structuredContent).toBe(originalResult.structuredContent);
+      expect(onboarding.claimNudge).toHaveBeenCalledOnce();
+    },
+  );
+
+  it('does not append a notice for a completed account', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 1,
+      has_skill_sheet: true,
+    });
+
+    const result = await processToolResult(
+      'paput_search_memo',
+      originalResult,
+      { onboarding },
+    );
+
+    expect(result).toBe(originalResult);
+    expect(onboarding.claimNudge).not.toHaveBeenCalled();
+  });
+
+  it('does not inspect or modify error responses', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 0,
+      has_skill_sheet: false,
+    });
+    const errorResult = {
+      content: [{ type: 'text', text: 'Failed' }],
+      isError: true,
+    };
+
+    const result = await processToolResult('paput_create_memos', errorResult, {
+      onboarding,
+    });
+
+    expect(result).toBe(errorResult);
+    expect(onboarding.getStatus).not.toHaveBeenCalled();
+    expect(onboarding.invalidateStatus).not.toHaveBeenCalled();
+  });
+
+  it('invalidates status without adding a nudge after a partial memo creation', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 0,
+      has_skill_sheet: false,
+    });
+    const partialResult = {
+      structuredContent: {
+        success: false,
+        created_count: 1,
+        failed_count: 1,
+        created: [{ index: 0, id: 10, title: 'Created memo' }],
+        failed: [{ index: 1, title: 'Failed memo', error: 'failed' }],
+      },
+      content: [{ type: 'text', text: 'Partially created' }],
+      isError: true,
+    };
+
+    const result = await processToolResult(
+      'paput_create_memos',
+      partialResult,
+      { onboarding },
+    );
+
+    expect(result).toBe(partialResult);
+    expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
+    expect(onboarding.getStatus).not.toHaveBeenCalled();
+    expect(onboarding.claimNudge).not.toHaveBeenCalled();
+  });
+
+  it('invalidates status without adding a nudge when candidate saving fails after memo creation', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 0,
+      has_skill_sheet: false,
+    });
+    const partialResult = {
+      structuredContent: {
+        success: false,
+        action: 'save_candidate_failed_after_memo_created',
+        candidate_id: 'candidate-1',
+        memo_id: 123,
+        retry_args: {
+          candidate_id: 'candidate-1',
+          saved_memo_id: 123,
+        },
+      },
+      content: [{ type: 'text', text: 'Candidate saving failed' }],
+      isError: true,
+    };
+
+    const result = await processToolResult(
+      'paput_save_pending_candidate',
+      partialResult,
+      { onboarding },
+    );
+
+    expect(result).toBe(partialResult);
+    expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
+    expect(onboarding.getStatus).not.toHaveBeenCalled();
+    expect(onboarding.claimNudge).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])(
+    'invalidates status after a successful candidate save (used existing memo: %s)',
+    async (usedExistingMemo) => {
+      const onboarding = createOnboardingContext({
+        memo_count: 0,
+        has_skill_sheet: false,
+      });
+      const successResult = {
+        structuredContent: {
+          success: true,
+          action: 'saved',
+          candidate_id: 'candidate-1',
+          memo_id: 123,
+          used_existing_memo: usedExistingMemo,
+        },
+        content: [{ type: 'text', text: 'Candidate saved' }],
+      };
+
+      const result = await processToolResult(
+        'paput_save_pending_candidate',
+        successResult,
+        { onboarding },
+      );
+
+      expect(result).toBe(successResult);
+      expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
+      expect(onboarding.getStatus).not.toHaveBeenCalled();
+      expect(onboarding.claimNudge).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    [
+      'input validation failure',
+      {
+        content: [{ type: 'text', text: 'candidate_id is required' }],
+        isError: true,
+      },
+    ],
+    [
+      'memo creation failure',
+      {
+        content: [{ type: 'text', text: 'Failed to save knowledge candidate' }],
+        isError: true,
+      },
+    ],
+    [
+      'another structured failure',
+      {
+        structuredContent: { action: 'another_failure' },
+        content: [{ type: 'text', text: 'Failed' }],
+        isError: true,
+      },
+    ],
+  ])(
+    'does not invalidate status for candidate %s',
+    async (_label, errorResult) => {
+      const onboarding = createOnboardingContext({
+        memo_count: 0,
+        has_skill_sheet: false,
+      });
+
+      const result = await processToolResult(
+        'paput_save_pending_candidate',
+        errorResult,
+        { onboarding },
+      );
+
+      expect(result).toBe(errorResult);
+      expect(onboarding.invalidateStatus).not.toHaveBeenCalled();
+      expect(onboarding.getStatus).not.toHaveBeenCalled();
+      expect(onboarding.claimNudge).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    'paput_create_memos',
+    'paput_update_skill_sheet_basic_info',
+    'paput_set_skill_sheet_skills',
+    'paput_upsert_skill_sheet_project',
+  ])('invalidates status after a successful %s write', async (toolName) => {
+    const onboarding = createOnboardingContext({
+      memo_count: 1,
+      has_skill_sheet: true,
+    });
+
+    await processToolResult(toolName, originalResult, { onboarding });
+
+    expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
+    expect(onboarding.getStatus).not.toHaveBeenCalled();
+    expect(onboarding.claimNudge).not.toHaveBeenCalled();
+  });
+
+  it('fetches fresh status on the next regular tool call after a write', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 1,
+      has_skill_sheet: true,
+    });
+
+    await processToolResult('paput_create_memos', originalResult, {
+      onboarding,
+    });
+    await processToolResult('paput_search_memo', originalResult, {
+      onboarding,
+    });
+
+    expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
+    expect(onboarding.getStatus).toHaveBeenCalledOnce();
+  });
+
+  it('fails open when the onboarding status API is aborted', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 0,
+      has_skill_sheet: false,
+    });
+    vi.mocked(onboarding.getStatus).mockRejectedValue(
+      new DOMException('The operation was aborted', 'AbortError'),
+    );
+
+    const result = await processToolResult(
+      'paput_search_memo',
+      originalResult,
+      { onboarding },
+    );
+
+    expect(result).toBe(originalResult);
+  });
+
+  it('respects the per-user nudge cooldown claim', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 0,
+      has_skill_sheet: false,
+    });
+    vi.mocked(onboarding.claimNudge).mockReturnValue(false);
+
+    const result = await processToolResult(
+      'paput_search_memo',
+      originalResult,
+      { onboarding },
+    );
+
+    expect(result).toBe(originalResult);
+  });
+});
+
+function createOnboardingContext(status: {
+  memo_count: number;
+  has_skill_sheet: boolean;
+}): OnboardingContext {
+  return {
+    getStatus: vi.fn().mockResolvedValue(status),
+    invalidateStatus: vi.fn(),
+    claimNudge: vi.fn().mockReturnValue(true),
+  };
+}
 
 function readHandlerToolNames(): string[] {
   const handlerDir = join(import.meta.dirname, 'handlers');

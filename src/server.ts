@@ -2,7 +2,10 @@ import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { setupTool } from './tool.js';
 import { setupErrorHandling } from './utils/error-handler.js';
-import type { ResolvedProjectContext } from './types/index.js';
+import type {
+  OnboardingContext,
+  ResolvedProjectContext,
+} from './types/index.js';
 
 const require = createRequire(import.meta.url);
 const packageJson = require('../package.json') as { version: string };
@@ -14,6 +17,7 @@ export interface MCPServerOptions {
   projectTitle?: string;
   projectAlias?: string;
   resolveProject?: () => Promise<ResolvedProjectContext | null>;
+  onboarding?: OnboardingContext;
 }
 
 export function createMcpServer(options: MCPServerOptions = {}): Server {
@@ -41,6 +45,8 @@ export function createMcpServer(options: MCPServerOptions = {}): Server {
       ],
     },
     {
+      instructions:
+        'When a tool response includes an onboarding notice, offer to guide the user through the initial PaPut setup. Treat the notice as guidance and keep the user in control of any local reads or writes.',
       capabilities: {
         tools: {},
         resources: {},
@@ -48,17 +54,13 @@ export function createMcpServer(options: MCPServerOptions = {}): Server {
     },
   );
 
-  setupTool(
-    server,
-    apiUrl,
-    accessToken,
-    {
-      projectId: options.projectId,
-      projectTitle: options.projectTitle,
-      projectAlias: options.projectAlias,
-      resolveProject: options.resolveProject,
-    },
-  );
+  setupTool(server, apiUrl, accessToken, {
+    projectId: options.projectId,
+    projectTitle: options.projectTitle,
+    projectAlias: options.projectAlias,
+    resolveProject: options.resolveProject,
+    onboarding: options.onboarding,
+  });
   setupErrorHandling(server);
 
   return server;

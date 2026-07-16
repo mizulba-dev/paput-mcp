@@ -34,11 +34,16 @@ interface ApiConfig {
   accessToken?: string;
 }
 
+interface ApiRequestOptions {
+  signal?: AbortSignal;
+}
+
 export async function apiRequest<T = unknown>(
   config: ApiConfig,
   endpoint: string,
   method: HttpMethod,
   body?: unknown,
+  requestOptions: ApiRequestOptions = {},
 ): Promise<T> {
   const accessToken = config.accessToken;
 
@@ -53,6 +58,7 @@ export async function apiRequest<T = unknown>(
 
   const options: RequestInit = {
     method,
+    signal: requestOptions.signal,
     headers: {
       Authorization: `Bearer ${accessToken}`,
       ...(method !== 'GET' && method !== 'DELETE'
@@ -95,8 +101,8 @@ export function createApiClient(apiUrl: string, accessToken?: string) {
   const config: ApiConfig = { apiUrl, accessToken };
 
   return {
-    get: <T = unknown>(endpoint: string) =>
-      apiRequest<T>(config, endpoint, 'GET'),
+    get: <T = unknown>(endpoint: string, requestOptions?: ApiRequestOptions) =>
+      apiRequest<T>(config, endpoint, 'GET', undefined, requestOptions),
 
     post: <T = unknown>(endpoint: string, body?: unknown) =>
       apiRequest<T>(config, endpoint, 'POST', body),

@@ -8,12 +8,24 @@ export interface ResolvedProjectContext {
   projectAlias: string;
 }
 
+export interface OnboardingStatus {
+  memo_count: number;
+  has_skill_sheet: boolean;
+}
+
+export interface OnboardingContext {
+  getStatus: () => Promise<OnboardingStatus>;
+  invalidateStatus: () => void;
+  claimNudge: () => boolean;
+}
+
 export interface ToolContext {
   projectId?: number;
   projectTitle?: string;
   projectAlias?: string;
   // project_alias は handshake でなくツール呼び出し時に解決する契約。
   resolveProject?: () => Promise<ResolvedProjectContext | null>;
+  onboarding?: OnboardingContext;
 }
 
 export interface ToolDefinition {
