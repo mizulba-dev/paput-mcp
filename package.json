@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc && node scripts/copy-cli-assets.mjs",
     "test": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests",
     "start": "node dist/http.js",
     "start:http": "node dist/http.js",
     "dev": "HOST=127.0.0.1 ts-node --esm src/http.ts",
