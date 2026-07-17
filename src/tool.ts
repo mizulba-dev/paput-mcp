@@ -69,7 +69,7 @@ const ONBOARDING_STATUS_INVALIDATING_TOOLS = new Set([
 ]);
 
 const ONBOARDING_SKILL_HINT =
-  ' I can guide you through initial setup; in Claude Code, use the /paput:onboarding skill.';
+  ' I can guide you through initial setup; if a PaPut onboarding skill is available in your client, use it.';
 
 interface RegisteredToolsOptions {
   projectContextConfigured?: boolean;

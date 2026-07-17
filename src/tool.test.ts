@@ -277,7 +277,7 @@ describe('onboarding nudges', () => {
         }),
       ]);
       expect(JSON.stringify(result.content)).toContain(
-        'in Claude Code, use the /paput:onboarding skill',
+        'if a PaPut onboarding skill is available in your client, use it',
       );
       expect(result.structuredContent).toBe(originalResult.structuredContent);
       expect(onboarding.claimNudge).toHaveBeenCalledOnce();
