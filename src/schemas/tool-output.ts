@@ -31,6 +31,10 @@ const stringArraySchema = {
   type: 'array',
   items: stringSchema,
 } as const;
+const searchModeSchema = {
+  type: 'string',
+  enum: ['filter', 'hybrid', 'keyword'],
+} as const;
 
 function outputSchema(
   properties: Record<string, PropertySchema>,
@@ -77,14 +81,7 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
   paput_search_memo: outputSchema({
     total: numberSchema,
     memos: objectArraySchema,
-  }),
-  paput_find_similar_memos: outputSchema({
-    memos: objectArraySchema,
-  }),
-  paput_backfill_memo_embeddings: outputSchema({
-    processed: numberSchema,
-    failed: numberSchema,
-    has_more: booleanSchema,
+    search_mode: searchModeSchema,
   }),
   paput_get_memo: outputSchema({
     memo: objectSchema,

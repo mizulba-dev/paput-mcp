@@ -27,33 +27,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves memos matching the supplied filters without modifying PaPut data.",
+        "read_only_justification": "Runs a hybrid keyword-and-semantic search over memos matching the supplied filters without modifying PaPut data.",
         "open_world_justification": "Only reads the user's PaPut data and does not change public or third-party state.",
         "destructive_justification": "Does not delete, overwrite, or otherwise alter any record."
-      }
-    },
-    "paput_find_similar_memos": {
-      "annotations": {
-        "readOnlyHint": true,
-        "openWorldHint": false,
-        "destructiveHint": false
-      },
-      "justifications": {
-        "read_only_justification": "Runs a semantic lookup and returns similar memos without changing stored data.",
-        "open_world_justification": "Only searches the user's PaPut memos and does not affect public or third-party systems.",
-        "destructive_justification": "Does not delete, replace, or mutate any memo."
-      }
-    },
-    "paput_backfill_memo_embeddings": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": false
-      },
-      "justifications": {
-        "read_only_justification": "Generates and stores missing embedding metadata for up to 100 existing memos.",
-        "open_world_justification": "Changes only internal PaPut search metadata and does not publish or contact third-party systems.",
-        "destructive_justification": "Adds missing embeddings without deleting or overwriting the user's memo content."
       }
     },
     "paput_get_memo": {
@@ -554,8 +530,8 @@
       "description": "Find semantically related memos even when the wording differs.",
       "user_prompt": "Use PaPut to find memos related to choosing an OAuth design, even if they do not contain the exact word OAuth.",
       "file_attachment_urls": null,
-      "tools_triggered": "paput_find_similar_memos",
-      "expected_output": "Returns relevant PaPut memos with similarity information and enough detail to review the matches.",
+      "tools_triggered": "paput_search_memo",
+      "expected_output": "Returns relevant PaPut memos ranked by combined keyword and semantic relevance, with similarity information and enough detail to review the matches.",
       "expected_output_url": null
     },
     {

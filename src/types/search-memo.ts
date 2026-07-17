@@ -1,5 +1,5 @@
 export interface SearchMemoParams {
-  word?: string;
+  query?: string;
   category_id?: number;
   memo_type?: string;
   ids?: number[];
@@ -20,6 +20,8 @@ export interface MemoType {
   key: string;
 }
 
+export type SearchMode = 'filter' | 'hybrid' | 'keyword';
+
 export interface Memo {
   id: number;
   title: string;
@@ -29,11 +31,13 @@ export interface Memo {
   updated_at: string;
   categories: MemoCategory[];
   memo_types: MemoType[];
+  score?: number;
 }
 
 export interface SearchMemoResponse {
   success: boolean;
   memos?: Memo[];
   total?: number;
+  search_mode?: SearchMode;
   error?: string;
 }

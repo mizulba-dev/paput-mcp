@@ -9,8 +9,8 @@ export async function handleSearchMemo(
   const params: SearchMemoParams = {};
 
   if (args) {
-    if (typeof args.word === 'string') {
-      params.word = args.word;
+    if (typeof args.query === 'string') {
+      params.query = args.query;
     }
     if (typeof args.category_id === 'number') {
       params.category_id = args.category_id;
@@ -52,11 +52,14 @@ export async function handleSearchMemo(
       };
     }
 
+    const searchMode = result.search_mode ?? 'filter';
+
     if (!result.memos || result.memos.length === 0) {
       return {
         structuredContent: {
           total: result.total || 0,
           memos: [],
+          search_mode: searchMode,
         },
         content: [
           {
@@ -67,6 +70,7 @@ export async function handleSearchMemo(
       };
     }
 
+    const showMatchInfo = searchMode !== 'filter';
     const memoList = result.memos
       .map((memo) => {
         const categories =
@@ -78,8 +82,13 @@ export async function handleSearchMemo(
             ? `Types: ${memo.memo_types.map((t) => t.key).join(', ')}`
             : '';
         const visibility = memo.is_public ? 'Public' : 'Private';
+        const match = showMatchInfo
+          ? typeof memo.score === 'number'
+            ? `, Score: ${memo.score.toFixed(3)}`
+            : ', keyword match'
+          : '';
 
-        return `【${memo.title}】(ID: ${memo.id}, ${visibility})
+        return `【${memo.title}】(ID: ${memo.id}, ${visibility}${match})
 ${categories}
 ${memoTypes}
 ${memo.body}
@@ -91,11 +100,12 @@ ${memo.body}
       structuredContent: {
         total: result.total,
         memos: result.memos,
+        search_mode: searchMode,
       },
       content: [
         {
           type: 'text',
-          text: `${result.total} of ${result.memos.length} memos found:\n\n${memoList}`,
+          text: `${result.total} of ${result.memos.length} memos found (search_mode: ${searchMode}):\n\n${memoList}`,
         },
       ],
     };

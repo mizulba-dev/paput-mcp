@@ -13,7 +13,7 @@ describe('handleAddKnowledgeCandidates', () => {
   }) {
     return {
       get: vi.fn().mockImplementation(async (endpoint: string) => {
-        if (endpoint.startsWith('/api/v1/mcp/memos/similar')) {
+        if (endpoint.startsWith('/api/v1/mcp/memos?')) {
           const value = (handlers.similar ?? (() => ({ memos: [] })))();
           if (value instanceof Error) throw value;
           return value;
@@ -173,6 +173,84 @@ describe('handleAddKnowledgeCandidates', () => {
       reason: 'Semantically near-duplicate of an existing memo',
     });
     expect(client.post).not.toHaveBeenCalled();
+  });
+
+  it('filters unscored results, sorts by score, and flags a near-duplicate from mixed non-descending results', async () => {
+    const client = createMockClient({
+      similar: () => ({
+        memos: [
+          { id: 1, title: 'Keyword only hit' },
+          { id: 2, title: 'Low score hit', score: 0.4 },
+          { id: 3, title: 'High score hit', score: 0.95 },
+        ],
+      }),
+    });
+
+    const result = await handleAddKnowledgeCandidates(
+      {
+        session_id: 'sess-1',
+        source: 'claude',
+        candidates: [{ title: 'Duplicate candidate', body: 'Body' }],
+      },
+      client,
+    );
+
+    expect(result.structuredContent).toMatchObject({
+      added: 0,
+      duplicates: 1,
+    });
+    expect(
+      result.structuredContent?.duplicate_details[0].similar_memos,
+    ).toEqual([
+      { id: 3, title: 'High score hit', score: 0.95 },
+      { id: 2, title: 'Low score hit', score: 0.4 },
+    ]);
+    expect(client.post).not.toHaveBeenCalled();
+  });
+
+  it('adds normally when mixed results top out below the near-duplicate threshold', async () => {
+    const client = createMockClient({
+      similar: () => ({
+        memos: [
+          { id: 1, title: 'Keyword only hit' },
+          { id: 2, title: 'Low score hit', score: 0.4 },
+        ],
+      }),
+    });
+
+    const result = await handleAddKnowledgeCandidates(
+      {
+        session_id: 'sess-1',
+        source: 'claude',
+        candidates: [{ title: 'New candidate', body: 'Body' }],
+      },
+      client,
+    );
+
+    expect(result.structuredContent).toMatchObject({
+      added: 1,
+      duplicates: 0,
+    });
+    expect(result.structuredContent?.candidates[0].similar_memos).toEqual([
+      { id: 2, title: 'Low score hit', score: 0.4 },
+    ]);
+  });
+
+  it('requests up to 50 candidates for the near-duplicate check', async () => {
+    const client = createMockClient({});
+
+    await handleAddKnowledgeCandidates(
+      {
+        session_id: 'sess-1',
+        source: 'claude',
+        candidates: [{ title: 'Knowledge', body: 'Body' }],
+      },
+      client,
+    );
+
+    const calledEndpoint = (client.get as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
+    expect(calledEndpoint).toContain('limit=50');
   });
 
   it('still adds candidates when the similarity search fails', async () => {

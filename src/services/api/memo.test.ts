@@ -1,10 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from './client.js';
 import {
-  backfillMemoEmbeddings,
   createMemo,
   createMemos,
-  findSimilarMemos,
   getMemo,
   searchMemos,
   updateMemo,
@@ -26,7 +24,7 @@ describe('memo API service', () => {
       const client = createMockClient();
 
       await searchMemos(client, {
-        word: 'Go context',
+        query: 'Go context',
         category_id: 2,
         ids: [1, 2],
         is_public: true,
@@ -36,7 +34,7 @@ describe('memo API service', () => {
       });
 
       expect(client.get).toHaveBeenCalledWith(
-        '/api/v1/mcp/memos?word=Go+context&category_id=2&ids%5B%5D=1&ids%5B%5D=2&is_public=true&project_id=3&page=2&limit=10',
+        '/api/v1/mcp/memos?query=Go+context&category_id=2&ids%5B%5D=1&ids%5B%5D=2&is_public=true&project_id=3&page=2&limit=10',
       );
     });
 
@@ -58,37 +56,31 @@ describe('memo API service', () => {
       expect(client.get).toHaveBeenCalledWith('/api/v1/mcp/memos');
     });
 
+    it('returns the search_mode reported by the API', async () => {
+      const client = createMockClient({
+        get: vi.fn().mockResolvedValue({
+          memos: [{ id: 1, score: 0.8 }],
+          total: 1,
+          search_mode: 'hybrid',
+        }),
+      });
+
+      await expect(
+        searchMemos(client, { query: 'atomic write' }),
+      ).resolves.toEqual({
+        success: true,
+        memos: [{ id: 1, score: 0.8 }],
+        total: 1,
+        search_mode: 'hybrid',
+      });
+    });
+
     it('returns a failure result when the API call throws', async () => {
       const client = createMockClient({
         get: vi.fn().mockRejectedValue(new Error('boom')),
       });
 
       await expect(searchMemos(client, {})).resolves.toEqual({
-        success: false,
-        error: 'boom',
-      });
-    });
-  });
-
-  describe('findSimilarMemos', () => {
-    it('encodes the query and limit', async () => {
-      const client = createMockClient({
-        get: vi.fn().mockResolvedValue({ memos: [] }),
-      });
-
-      await findSimilarMemos(client, { query: 'atomic write', limit: 5 });
-
-      expect(client.get).toHaveBeenCalledWith(
-        '/api/v1/mcp/memos/similar?query=atomic+write&limit=5',
-      );
-    });
-
-    it('returns a failure result when the API call throws', async () => {
-      const client = createMockClient({
-        get: vi.fn().mockRejectedValue(new Error('boom')),
-      });
-
-      await expect(findSimilarMemos(client, { query: 'q' })).resolves.toEqual({
         success: false,
         error: 'boom',
       });
@@ -205,38 +197,6 @@ describe('memo API service', () => {
           categories: [],
         }),
       ).resolves.toEqual({ success: false, error: 'forbidden' });
-    });
-  });
-
-  describe('backfillMemoEmbeddings', () => {
-    it('maps the API response fields', async () => {
-      const client = createMockClient({
-        post: vi
-          .fn()
-          .mockResolvedValue({ processed: 3, failed: 1, has_more: true }),
-      });
-
-      await expect(backfillMemoEmbeddings(client)).resolves.toEqual({
-        success: true,
-        processed: 3,
-        failed: 1,
-        has_more: true,
-      });
-      expect(client.post).toHaveBeenCalledWith(
-        '/api/v1/mcp/memos/embeddings/backfill',
-        {},
-      );
-    });
-
-    it('returns a failure result when the API call throws', async () => {
-      const client = createMockClient({
-        post: vi.fn().mockRejectedValue(new Error('boom')),
-      });
-
-      await expect(backfillMemoEmbeddings(client)).resolves.toEqual({
-        success: false,
-        error: 'boom',
-      });
     });
   });
 });

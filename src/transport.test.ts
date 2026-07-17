@@ -39,7 +39,7 @@ describe('MCP transports', () => {
     expect(result.tools.map((tool) => tool.name)).toContain(
       'paput_create_memos',
     );
-    expect(result.tools).toHaveLength(45);
+    expect(result.tools).toHaveLength(43);
     expect(
       result.tools.every((tool) => tool.outputSchema?.type === 'object'),
     ).toBe(true);

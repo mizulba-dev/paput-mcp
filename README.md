@@ -211,9 +211,7 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 ### Memo Management
 
 - `paput_create_memos` - Create multiple PaPut memos in one call and return created memo IDs.
-- `paput_search_memo` - Search PaPut memos by keyword, category, IDs, date, visibility, or pagination.
-- `paput_find_similar_memos` - Find memos semantically similar to a natural-language query (vector search). Finds related memos even when the wording differs.
-- `paput_backfill_memo_embeddings` - Generate embeddings for existing memos so they appear in similarity results. Needed once after semantic search is enabled; new and updated memos are embedded automatically.
+- `paput_search_memo` - Hybrid search over PaPut memos (keyword + semantic). Finds related memos even when the wording differs, with filters for category, memo type, IDs, date, and visibility.
 - `paput_get_memo` - Get full details for a memo.
 - `paput_update_memo` - Update an existing memo.
 - `paput_get_categories` - List available categories.

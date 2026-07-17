@@ -192,18 +192,14 @@ Find my PaPut memos related to database schema migration tooling, even if they u
 
 Expected tool flow:
 
-1. `paput_find_similar_memos` with a natural-language query
+1. `paput_search_memo` with a natural-language `query`
 2. `paput_get_memo` when the user wants the full body of a result
-3. `paput_search_memo` as a fallback for exact words, IDs, or identifiers
 
 Use case: discover related knowledge or near-duplicate memos when the saved
 memos use different wording than the query (for example, "DB 移行" vs
-"マイグレーション"). Results include a similarity score per memo.
-
-If older memos never appear in similarity results, run
-`paput_backfill_memo_embeddings` and repeat while the response reports
-`has_more: true`. This is a one-time setup step; new and updated memos are
-embedded automatically.
+"マイグレーション"). Semantic matches include a `score`; keyword-only matches
+do not. New and updated memos get embeddings automatically, so semantic
+matching is available immediately.
 
 ## 12. Source And Save Interview Q&A (FAQ)
 

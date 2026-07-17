@@ -16,8 +16,6 @@ import { getToolOutputSchema } from './schemas/tool-output.js';
 import {
   createMemosTool,
   searchMemoTool,
-  findSimilarMemosTool,
-  backfillMemoEmbeddingsTool,
   getMemoTool,
   updateMemoTool,
   getCategoriesTool,
@@ -273,8 +271,6 @@ export function getRegisteredTools(
   const tools = [
     createMemosTool,
     searchMemoTool,
-    findSimilarMemosTool,
-    backfillMemoEmbeddingsTool,
     getMemoTool,
     updateMemoTool,
     getCategoriesTool,
@@ -488,7 +484,6 @@ function isReadOnlyTool(name: string): boolean {
     name.includes('_get_') ||
     name.includes('_search_') ||
     name.includes('_list_') ||
-    name === 'paput_find_similar_memos' ||
     name === 'paput_get_categories' ||
     name === 'paput_get_capture_policy' ||
     name === 'paput_get_discard_policy_context' ||

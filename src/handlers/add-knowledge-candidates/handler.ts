@@ -1,6 +1,6 @@
 import { ApiClient } from '../../services/api/client.js';
 import { addRemoteKnowledgeCandidates } from '../../services/api/knowledge-candidate.js';
-import { findSimilarMemos } from '../../services/api/memo.js';
+import { searchMemos } from '../../services/api/memo.js';
 import {
   CandidateSource,
   KnowledgeCandidateInput,
@@ -10,7 +10,8 @@ import type { ToolContext } from '../../types/index.js';
 
 // 重複とみなす類似スコア閾値（この値以上は自動除外）
 const NEAR_DUPLICATE_SCORE = 0.9;
-const SIMILAR_MEMO_LIMIT = 5;
+// RRF 融合順の window からベクトル近傍が漏れないよう契約上限まで取る。
+const SIMILAR_MEMO_LIMIT = 50;
 
 const CANDIDATE_SOURCES: readonly CandidateSource[] = [
   'claude',
@@ -257,17 +258,23 @@ async function findSimilarMemosForCandidate(
 ): Promise<SimilarMemo[]> {
   const query = `${title}\n${body.slice(0, 200)}`;
   try {
-    const result = await findSimilarMemos(apiClient, {
+    const result = await searchMemos(apiClient, {
       query,
       limit: SIMILAR_MEMO_LIMIT,
     });
     if (!result.success || !result.memos) return [];
 
-    return result.memos.map((memo) => ({
-      id: memo.id,
-      title: memo.title,
-      score: memo.score,
-    }));
+    return result.memos
+      .filter(
+        (memo): memo is typeof memo & { score: number } =>
+          typeof memo.score === 'number',
+      )
+      .map((memo) => ({
+        id: memo.id,
+        title: memo.title,
+        score: memo.score,
+      }))
+      .sort((a, b) => b.score - a.score);
   } catch (error) {
     console.error('Failed to find similar memos for candidate:', error);
     return [];

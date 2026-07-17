@@ -29,7 +29,7 @@ Use this when the user wants to thicken their `principle` memos, distill recurri
    - Compare every pair of your own draft candidates. If two share most of their source memos, or their statements overlap, they are not distinct — MERGE them into one sharper principle, or re-scope so each owns a disjoint slice and each memo anchors only one of them.
    - Merging is only for OVERLAPPING themes. It must NOT shrink the number of distinct themes you cover. "Fewer per theme" (no duplicates within a theme) is not "fewer themes" — never drop a genuine distinct cross-cutting stance just to keep the count small. Then re-check against the enumeration in step 3: if a distinct theme you found is not represented by any candidate, add it.
 6. De-dup against existing memos before adding:
-   - For each candidate, call `paput_find_similar_memos` (it searches all of the user's memos, public and private). Treat a top score of ~0.85 or higher against an existing memo as a near-duplicate and skip it.
+   - For each candidate, call `paput_search_memo` with the candidate title or a one-line gist as the query (it searches all of the user's memos, public and private, and returns a `score` on semantic matches). Treat a top score of ~0.85 or higher against an existing memo as a near-duplicate and skip it.
    - Also compare against the existing public `principle` entries returned by `paput_search_memo`, and check `paput_list_pending_candidates` so you do not duplicate a pending candidate.
 7. Add only the non-duplicate, mutually-distinct, generalized, project-independent candidates with `paput_add_knowledge_candidates` (memo_type_keys=['principle']). Add to pending only.
 8. Report each added candidate: title, categories, memo type, candidate id, and the source memos it was synthesized from.
@@ -45,7 +45,7 @@ Use this when the user wants to thicken their `principle` memos, distill recurri
 - Example — overlap (avoid): one principle about "separating retrieval routes by purpose" and another about "AI judgments as soft signals" both leaning on the same memos. Keep route-separation in the first and move all AI-judgment material to the second so neither bleeds.
 - Generalize. Remove project-specific specifications, screen names, code, identifiers, and secrets. The body must be reusable in another project from its title and text alone.
 - `knowledge`-type memos are commodity. Do not build principles from them; the material is `decision` / `operation` and design-doc decisions.
-- Do not duplicate existing material. Skip anything that semantically matches an existing `principle` memo (find_similar ~0.85+) or an existing pending candidate.
+- Do not duplicate existing material. Skip anything that semantically matches an existing `principle` memo (`paput_search_memo` score ~0.85+) or an existing pending candidate.
 - Do not leak private design-doc specifics into a candidate. Default `is_public: false`; the user decides visibility at review time.
 - The save API sits behind a WAF that inspects the body. Write command, SQL, and markup examples as prose or pseudo-notation, not raw executable strings.
 

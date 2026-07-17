@@ -5,13 +5,14 @@ export const searchMemoTool: ToolHandler = {
   definition: {
     name: 'paput_search_memo',
     description:
-      'Search PaPut memos by keyword, category, memo type, IDs, date, visibility, or pagination. Use this to find existing knowledge before creating or saving a memo, or to gather typed public memos (decision/operation/principle) for judgment summaries.',
+      'Hybrid search for PaPut memos: finds memos by meaning even when the wording differs, in addition to exact keyword, category, memo type, IDs, date, visibility, and pagination filters. Use this to find existing knowledge before creating or saving a memo, to check for near-duplicate memos beforehand, or to gather typed public memos (decision/operation/principle) for judgment summaries. When query is set, results are ranked by combined relevance and page is ignored; omit query to page through a plain filtered list ordered by most recently updated.',
     inputSchema: {
       type: 'object',
       properties: {
-        word: {
+        query: {
           type: 'string',
-          description: 'Search keyword',
+          description:
+            'Natural-language or keyword query. Finds memos by meaning as well as exact wording. When set, page is ignored, limit defaults to 10 (max 50), and each matched memo may include a semantic-similarity score; results without a score are keyword-only matches.',
         },
         category_id: {
           type: 'number',
@@ -40,7 +41,7 @@ export const searchMemoTool: ToolHandler = {
         },
         page: {
           type: 'number',
-          description: 'Page number',
+          description: 'Page number. Ignored when query is set.',
         },
         limit: {
           type: 'number',

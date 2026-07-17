@@ -19,7 +19,7 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 1. Read the capture policy with `paput_get_capture_policy`.
 2. Check existing pending candidates with `paput_list_pending_candidates`.
 3. Extract only reusable knowledge from the current conversation or the user-specified topic.
-4. For each candidate, check semantically similar existing memos with `paput_find_similar_memos`, using the candidate title or a one-line gist as the query. Treat results with a score around 0.85 or higher as near-duplicates, and results around 0.7 to 0.85 as overlap that needs comparison against the candidate body. Use `paput_search_memo` in addition when the candidate centers on an exact name or identifier.
+4. For each candidate, check semantically similar existing memos with `paput_search_memo`, using the candidate title or a one-line gist as the query. Treat results with a score around 0.85 or higher as near-duplicates, and results around 0.7 to 0.85 as overlap that needs comparison against the candidate body. Only results with a `score` are semantic near-matches; results without one are keyword-only hits, which already cover the case where the candidate centers on an exact name or identifier.
 5. Apply the capture policy when deciding whether to add, reject, or ask about candidates. If no policy exists yet, use the Candidate Rules and Rejected Candidates sections below.
 6. Keep each candidate focused on one reusable idea. Draft the title and Markdown body first, structured to fit the content itself — do not shape the body around memo types. Classify the finalized body afterwards (see the Memo Type section), and set categories and visibility.
 7. Self-review the candidate against the Quality Bar below. If the body is only a short summary or conclusion, enrich it before adding.
@@ -135,5 +135,5 @@ Do not add these to pending:
 - Add safe candidates to pending without waiting for user approval. If a candidate may be duplicate, sensitive, project-specific, too narrow, or ambiguous, present the concern and ask before adding it.
 - Candidates created from past sessions use the source session updated timestamp as the PaPut memo creation timestamp when saved.
 - If there are no candidates, say that no reusable knowledge was found.
-- If `paput_find_similar_memos` is unavailable or fails, fall back to `paput_search_memo` instead of skipping the duplicate check.
+- If `paput_search_memo` fails, do not silently skip the duplicate check — retry once, and if it still fails, disclose that duplicate checking could not run for the affected candidates.
 - `paput_add_knowledge_candidates` also runs a semantic near-duplicate check internally and rejects candidates whose top match score is 0.9 or higher, so review its `duplicate_details` in the result.

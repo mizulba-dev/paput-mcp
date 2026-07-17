@@ -4,6 +4,7 @@ import {
   CreateMemoResponse,
   SearchMemoParams,
   SearchMemoResponse,
+  SearchMode,
   GetMemoParams,
   GetMemoResponse,
   UpdateMemoParams,
@@ -11,15 +12,12 @@ import {
   Memo,
   CreateMemosParams,
   CreateMemosResponse,
-  FindSimilarMemosParams,
-  FindSimilarMemosResponse,
-  SimilarMemoResult,
-  BackfillMemoEmbeddingsResponse,
 } from '../../types/index.js';
 
 interface SearchMemosApiResponse {
   memos: Memo[];
   total: number;
+  search_mode: SearchMode;
 }
 
 export async function createMemo(
@@ -79,7 +77,7 @@ export async function searchMemos(
   try {
     const queryParams = new URLSearchParams();
 
-    if (params.word) queryParams.append('word', params.word);
+    if (params.query) queryParams.append('query', params.query);
     if (params.category_id !== undefined)
       queryParams.append('category_id', params.category_id.toString());
     if (params.memo_type) queryParams.append('memo_type', params.memo_type);
@@ -103,56 +101,7 @@ export async function searchMemos(
       success: true,
       memos: data.memos,
       total: data.total,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
-
-export async function findSimilarMemos(
-  client: ApiClient,
-  params: FindSimilarMemosParams,
-): Promise<FindSimilarMemosResponse> {
-  try {
-    const queryParams = new URLSearchParams();
-    queryParams.append('query', params.query);
-    if (params.limit !== undefined)
-      queryParams.append('limit', params.limit.toString());
-
-    const data = await client.get<{ memos: SimilarMemoResult[] }>(
-      `/api/v1/mcp/memos/similar?${queryParams.toString()}`,
-    );
-
-    return {
-      success: true,
-      memos: data.memos,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
-
-export async function backfillMemoEmbeddings(
-  client: ApiClient,
-): Promise<BackfillMemoEmbeddingsResponse> {
-  try {
-    const data = await client.post<{
-      processed: number;
-      failed: number;
-      has_more: boolean;
-    }>('/api/v1/mcp/memos/embeddings/backfill', {});
-
-    return {
-      success: true,
-      processed: data.processed,
-      failed: data.failed,
-      has_more: data.has_more,
+      search_mode: data.search_mode,
     };
   } catch (error) {
     return {

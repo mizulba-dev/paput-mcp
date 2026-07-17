@@ -8,8 +8,6 @@ import type { OnboardingContext } from './types/index.js';
 const expectedToolNames = [
   'paput_create_memos',
   'paput_search_memo',
-  'paput_find_similar_memos',
-  'paput_backfill_memo_embeddings',
   'paput_get_memo',
   'paput_update_memo',
   'paput_get_categories',
@@ -55,7 +53,6 @@ const expectedToolNames = [
 
 const readOnlyToolNames = [
   'paput_search_memo',
-  'paput_find_similar_memos',
   'paput_get_memo',
   'paput_get_categories',
   'paput_search_notes',
