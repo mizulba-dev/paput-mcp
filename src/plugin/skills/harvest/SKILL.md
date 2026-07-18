@@ -67,8 +67,10 @@ periodic catch-up. There is no separate "init" step.
 
 When a run delegates session reading to subagents (batch processing), follow
 Delegated Batch Reading below — every duty in these steps travels with the
-reader, not with the coordinator. When the backlog is large, triage sessions
-first (see Session Triage) to spend reading effort where the yield is.
+reader, not with the coordinator. When the backlog is large — delegated or
+not — triage sessions first (see Session Triage) to spend reading effort where
+the yield is, and run the scope decision through the user (see Large-Backlog
+Funnel) instead of choosing a strategy yourself.
 
 ## Session Triage
 
@@ -113,7 +115,12 @@ skipped:
 - **Capture signal.** Whether the session already called
   `paput_add_knowledge_candidates` itself. Detect actual tool calls (tool_use /
   function_call entries), not string mentions — tool definitions and
-  instruction files mention the tool name in nearly every session.
+  instruction files mention the tool name in nearly every session. On Codex
+  transcripts the tool name also appears inside tools-listing execution
+  metadata, so a plain string match over the file still false-positives:
+  match the call entry shape itself (a `function_call` payload carrying the
+  tool name), and confirm the signal on a spot-check before acting on it at
+  scale (see Large-Backlog Funnel).
 
 Then read in priority order:
 
@@ -125,7 +132,9 @@ Then read in priority order:
    the residual value is usually side topics the in-session capture skipped.
    (Such sessions still appear in the backlog when their capture ran with a
    session id that does not match the file basename — common before id
-   normalization — so the processed marker never matched the file.)
+   normalization — so the processed marker never matched the file.) On a large
+   backlog, the user may direct these to be marked processed without reading
+   (see Large-Backlog Funnel) — that is the user's call, never the agent's.
 3. **Agent-driven sessions** — their user messages were authored by the
    delegating agent, NOT the human user: never treat them as user-prompt-axis
    evidence. This applies to the backfill sweep too: never count an
@@ -138,6 +147,53 @@ Then read in priority order:
    fully, skimming the rest for deltas. Once a group shape's yield has proven
    near-zero across batches, skimming down to mark-only is acceptable for that
    shape — never for interactive sessions.
+
+## Large-Backlog Funnel (ask, don't decide)
+
+When the unprocessed backlog is large (roughly 50+ sessions), the scope
+decision belongs to the user, not the agent. Do the cheap analysis first, then
+ask — with evidence attached — instead of picking a strategy yourself. Reading
+everything overspends; marking sessions processed without reading on your own
+judgment overreaches. Neither default is yours to take.
+
+1. **Prepare the evidence before asking.** Without reading full transcripts:
+   build a project × month × capture-signal breakdown of the backlog; run the
+   Session Triage signals and spot-check the newest 1-2 sessions against the
+   transcript to confirm the signals hold (one spot-check catches a
+   miscalibrated capture signal before it discards real backlog); then extract
+   the first real user message of each session without a capture signal (skip
+   injected instruction files, environment blocks, and command echoes) and
+   bucket the sessions by request type. Typical buckets and their observed
+   yield:
+   - implementation / fix / design-consultation requests — highest yield; user
+     judgment and corrections concentrate here
+   - review-request one-shots — yield starts high but saturates once a
+     feature's lessons are memoized; sample one per feature group
+   - mechanical work (rebase and conflict resolution, branch pulls, commit
+     runs, doc generation, skill invocations) — near-zero yield
+   - error/log investigations and short Q&A — low yield
+   - empty / greeting-only — zero yield
+2. **Ask the user in one round.** Present the breakdown, the bucket table with
+   counts and a few example first-messages per bucket, and the spot-check
+   findings, then ask at bucket level: whether capture-verified sessions may
+   be marked processed without reading (their learnings were extracted
+   in-session; the residual is usually side topics); which first-message
+   buckets to read and which to mark processed without reading; and how far
+   back this run should go. Batch these into a single question round — do not
+   interrogate stage by stage. Record in the report which buckets were marked
+   processed without reading at the user's direction.
+3. **Execute the user's split.** Bulk-mark the excluded buckets with cheap
+   parallel marker subagents; send only the approved buckets to Delegated
+   Batch Reading, grouped by feature/repo.
+4. **Close with the reconciliation audit** defined in Delegated Batch Reading.
+   It closes every run that delegated writes, funnel or not.
+5. **Headless fallback.** If no user is available to answer (scheduled or
+   unattended runs), do not mark anything processed without reading: fall back
+   to the standard priority order and process only as much as the run's budget
+   allows, leaving the rest for the next run. A scheduled or unattended
+   invocation is itself the user's standing consent to read within that
+   budget — it satisfies the Step 6 gate — but it never grants marking
+   sessions processed without reading.
 
 ## Delegated Batch Reading
 
@@ -184,6 +240,16 @@ should not gate:
   starves the repetition counter and skill proposals never fire. Only the
   secrets/customer-data exclusion applies. Surface any skill proposal returned
   by the server to the user.
+- Treat subagent success reports about external writes (registrations, marks)
+  as claims, not facts — a subagent can report success for a call that never
+  took effect, and can rationalize the gap when questioned. Close every run
+  that delegated writes with a reconciliation audit: re-fetch the processed
+  markers and reconcile them against the local file list (match Codex markers
+  by both the rollout basename and the bare UUID — both formats exist in
+  history). Any session still unmatched means a delegated write silently
+  failed despite a success report: re-execute it and verify by reading the
+  record back. The audit is the accounting of record — when it contradicts a
+  report, trust the ledger. Completion is declared only at zero gaps.
 
 ## Backfill: repeated-instruction sweep
 
@@ -398,7 +464,7 @@ or service behavior stays `knowledge` even when written as guidance.
 - Do not save directly to PaPut.
 - Add candidates to the API-backed pending queue first.
 - `paput_add_knowledge_candidates` marks the source session as processed when candidates are submitted.
-- Use `paput_mark_processed_session` after reviewing a session that produces no candidates.
+- Use `paput_mark_processed_session` after reviewing a session that produces no candidates — or, on a large backlog, for buckets the user explicitly directed to be marked processed without reading (see Large-Backlog Funnel).
 - Report duplicates or similar memos when found.
 - Prefer high-quality pending candidates over increasing the pending count.
 - Every candidate carries its source project in `projects` (Step 8); a
