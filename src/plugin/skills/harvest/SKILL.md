@@ -24,6 +24,19 @@ periodic catch-up. There is no separate "init" step.
 2. Find local session files the AI client can access:
    - Claude: `~/.claude/projects/**/*.jsonl`
    - Codex: `~/.codex/sessions/**/*.jsonl`
+   Decisively agent-driven transcripts are OUT OF SCOPE at discovery: Claude
+   files whose basename starts with `agent-`, and Codex files whose
+   first-line `session_meta` carries `payload.source` of `exec` or a
+   `{"subagent": ...}` value. Checking the basename or that first metadata
+   line IS the filter and is always allowed; what out-of-scope prohibits is
+   reading the transcript body, counting the file into the backlog, and
+   marking it. Their yield (reviewer/implementer-side practices) has proven
+   to saturate, and the verdict is recomputable from the file itself on every
+   run, so keeping processed markers for them would only add per-run write
+   cost. Files with missing or unrecognized origin metadata stay in scope
+   (safe side). Reading agent-driven transcripts remains possible only as an
+   explicit opt-in — the user names them, or a backfill run is asked to
+   include them.
 3. For each file, derive:
    - `source`: `claude` or `codex`
    - `session_id`: file basename without `.jsonl`
@@ -81,7 +94,11 @@ first — when it yields a decisive verdict the delegation heuristic is
 skipped:
 
 - **Origin metadata (check first).** Session files usually record how the
-  session was launched; read this before any content heuristic. Codex: the
+  session was launched; read this before any content heuristic. (After the
+  Step 2 scope filter, decisive agent-driven verdicts have normally already
+  removed those files from scope — this bullet chiefly serves the filter
+  itself, the pre-check of non-`agent-*` Claude files, and explicit opt-in
+  reads.) Codex: the
   file's first line is a `session_meta` entry whose `payload.source` is `cli`
   (TUI) or `vscode` (IDE extension) for human-driven sessions, and `exec` (a
   `codex exec` one-shot, i.e. a spawned agent) or a `{"subagent": ...}` value
@@ -135,7 +152,10 @@ Then read in priority order:
    normalization — so the processed marker never matched the file.) On a large
    backlog, the user may direct these to be marked processed without reading
    (see Large-Backlog Funnel) — that is the user's call, never the agent's.
-3. **Agent-driven sessions** — their user messages were authored by the
+3. **Agent-driven sessions** — with the Step 2 scope filter, decisively
+   agent-driven transcripts normally never reach this list; this priority
+   applies to sessions judged agent-driven by the delegation heuristic and to
+   explicit opt-in reads. Their user messages were authored by the
    delegating agent, NOT the human user: never treat them as user-prompt-axis
    evidence. This applies to the backfill sweep too: never count an
    agent-driven session's user messages as recurring user instructions —
@@ -246,7 +266,13 @@ should not gate:
   that delegated writes with a reconciliation audit: re-fetch the processed
   markers and reconcile them against the local file list (match Codex markers
   by both the rollout basename and the bare UUID — both formats exist in
-  history). Any session still unmatched means a delegated write silently
+  history). Gap detection runs in the file→marker direction only, over the
+  in-scope sessions this run actually processed — sessions deliberately left
+  for a future run (budget limits, deferred buckets) are not gaps. A
+  processed-but-unmarked file means a silently failed write.
+  Exclude files that are out of harvest scope per Step 2, and ignore
+  historical markers that point at out-of-scope or since-deleted files —
+  orphan markers are not failures and need no action. Any session still unmatched means a delegated write silently
   failed despite a success report: re-execute it and verify by reading the
   record back. The audit is the accounting of record — when it contradicts a
   report, trust the ledger. Completion is declared only at zero gaps.
