@@ -73,14 +73,32 @@ first (see Session Triage) to spend reading effort where the yield is.
 ## Session Triage
 
 When the unprocessed backlog is too large to read in one pass, rank sessions
-with two cheap machine signals before reading. Both are computable by scanning
-each JSONL once, without reading the full transcript:
+with cheap machine signals before reading. All are computable by scanning each
+JSONL once, without reading the full transcript. Check the origin metadata
+first — when it yields a decisive verdict the delegation heuristic is
+skipped:
 
-- **Delegation heuristic.** A session is likely an agent-driven one-shot run (a
-  reviewer or implementer spawned by another agent, not driven by the human —
-  distinct from delegating the harvest reading itself, covered in the next
-  section) when it has at most ~2 real user text messages AND its first user
-  message contains delegation-template markers (review severity vocabulary such
+- **Origin metadata (check first).** Session files usually record how the
+  session was launched; read this before any content heuristic. Codex: the
+  file's first line is a `session_meta` entry whose `payload.source` is `cli`
+  (TUI) or `vscode` (IDE extension) for human-driven sessions, and `exec` (a
+  `codex exec` one-shot, i.e. a spawned agent) or a `{"subagent": ...}` value
+  for in-client subagents. All four are decisive: `exec` / `subagent` mean
+  agent-driven unconditionally — no marker evidence needed — and `cli` /
+  `vscode` record a human launch path. Do not use `payload.originator` as a
+  substitute — it disagrees with `source` on subagent sessions (they can
+  carry `codex-tui`). Claude: `agent-*.jsonl` files are subagent transcripts,
+  decisively agent-driven; but the absence of the prefix is only a prior, not
+  a verdict — headless `claude -p` / SDK spawns write regular `<uuid>.jsonl`
+  files — so non-`agent-*` Claude files, and any session whose metadata is
+  missing or unrecognized (older clients, other formats), still go through
+  the delegation heuristic below.
+- **Delegation heuristic (fallback when origin metadata is inconclusive).** A
+  session is likely an agent-driven one-shot run (a reviewer or implementer
+  spawned by another agent, not driven by the human — distinct from
+  delegating the harvest reading itself, covered in the next section) when it
+  has at most ~2 real user text messages AND its first user message contains
+  delegation-template markers (review severity vocabulary such
   as must-fix/should-fix, static-verification constraints, plan-file
   references) inside a task-prompt-shaped message. Marker evidence is
   required: a long first prompt alone, with no markers, defaults to
