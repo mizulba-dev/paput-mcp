@@ -28,6 +28,10 @@ periodic catch-up. There is no separate "init" step.
    - `source`: `claude` or `codex`
    - `session_id`: file basename without `.jsonl`
    - `source_session_updated_at`: file modified time in ISO 8601 format
+   - the session's project hint: for Claude, the project directory name in the
+     file path (`~/.claude/projects/<project-dir>/...`); for Codex, the `cwd`
+     recorded near the top of the file. Worktree paths resolve to their parent
+     repository.
 4. Skip sessions already returned by `paput_list_processed_sessions`.
 5. Report the count and a short summary of unprocessed sessions to the user.
 6. Only when the user wants it, read the relevant session transcript directly
@@ -47,6 +51,13 @@ periodic catch-up. There is no separate "init" step.
    it around memo types. Then set `memo_type_keys` from the finalized body
    (see Memo Type below); classify AI-collaboration practices as `operation`
    and postures as `principle`.
+   Also set `projects: [{id, title}]` on every candidate from the session's
+   project hint (Step 3): resolve the repository / directory name to a PaPut
+   project with `paput_get_project_context`, once per distinct repository, not
+   per candidate. The link records where the knowledge came from — the body
+   still stays generalized and cross-project. If the hint does not resolve to
+   a project, register with `projects` empty and say so in the report; never
+   guess a project from the candidate's topic.
 9. If the session was reviewed but no candidates should be added, call
    `paput_mark_processed_session` with `source`, `session_id`, and
    `source_session_updated_at`.
@@ -142,8 +153,10 @@ should not gate:
   registration — both sessions that produced no candidates and sessions whose
   candidates were all rejected or absorbed in the cross-check. The coordinator
   distributes the real session identity (the Step 3 fields `source`,
-  `session_id`, `source_session_updated_at`) to each reader up front —
-  reconstructing identifiers from truncated listings is an error source.
+  `session_id`, `source_session_updated_at`) AND the resolved project link
+  (`projects` id and title, resolved centrally once per distinct repository)
+  to each reader up front — reconstructing identifiers from truncated listings
+  is an error source, and per-reader project resolution wastes calls.
 - Project-specific repeated instructions and procedures are NOT subject to
   coordinator approval. Each reader registers every occurrence directly with
   `paput_add_project_document` (kind `procedure`) as it appears, resolving the
@@ -370,3 +383,6 @@ or service behavior stays `knowledge` even when written as guidance.
 - Use `paput_mark_processed_session` after reviewing a session that produces no candidates.
 - Report duplicates or similar memos when found.
 - Prefer high-quality pending candidates over increasing the pending count.
+- Every candidate carries its source project in `projects` (Step 8); a
+  registration wave with all-empty `projects` is a process error, not a
+  normal outcome.

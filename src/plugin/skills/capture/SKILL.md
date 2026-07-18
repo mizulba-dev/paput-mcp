@@ -24,7 +24,7 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 6. Keep each candidate focused on one reusable idea. Draft the title and Markdown body first, structured to fit the content itself — do not shape the body around memo types. Classify the finalized body afterwards (see the Memo Type section), and set categories and visibility.
 7. Self-review the candidate against the Quality Bar below. If the body is only a short summary or conclusion, enrich it before adding.
 8. Do not add candidates that may duplicate existing memos or pending candidates. Suggest reusing or updating the existing memo or candidate instead.
-9. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` (including `memo_type_keys` and the real source-session identity — see Source Session Identity) without waiting for user approval.
+9. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` (including `memo_type_keys`, the real source-session identity — see Source Session Identity — and the source project link — see Project Link) without waiting for user approval.
 10. After adding candidates, briefly report the title, categories, memo type, and candidate ID.
 
 ## Source Session Identity
@@ -38,6 +38,10 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 - Fall back to a short descriptive `session_id` only when no real ID is obtainable — deduplication still works, but harvest cannot match the marker to the local file and will re-read the session. The bare Codex thread ID fallback shares this limitation, since it does not match the rollout basename.
 
 Marking the current session processed while it is still running is intended: the completion checklist keeps running capture on later work turns, so harvest does not need to revisit the session.
+
+## Project Link
+
+Set `projects: [{id, title}]` on every candidate from the project the conversation is working in. Resolve it once per session with `paput_get_project_context` using the current repository / working-directory name (it is often already resolved at session start by the project-context rules). The link records where the knowledge came from — the body still stays generalized and cross-project. If the conversation is not tied to any project (a general consultation with no repository context), leave `projects` empty and say so when reporting. Never guess a project from the candidate's topic.
 
 ## Candidate Rules
 
