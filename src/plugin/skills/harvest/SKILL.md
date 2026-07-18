@@ -1,6 +1,7 @@
 ---
 name: paput-harvest
-description: Use this to harvest reusable knowledge from past local Claude/Codex sessions when the AI client can read local files. Safe to run repeatedly — it skips already-processed sessions and only reviews new ones — so use it both for first-time onboarding and for periodic catch-up. Pay special attention to AI-collaboration practices and postures (operation / principle), the scarce, durable axis. Also covers the explicit backfill sweep for repeated user instructions ("同じ指示を拾い直して", "backfill repeated instructions"), which re-reads already-processed sessions.
+description: Use this to harvest reusable knowledge from past local Claude/Codex sessions when the AI client can read local files. Safe to run repeatedly — it skips already-processed sessions and only reviews new ones — so use it both for first-time onboarding and for periodic catch-up. Pay special attention to AI-collaboration practices and postures (operation / principle), the scarce, durable axis. Also covers the backfill sweep for repeated user instructions (invoke with the `backfill` argument, or ask "同じ指示を拾い直して" / "backfill repeated instructions"), which re-reads already-processed sessions.
+argument-hint: [backfill]
 ---
 
 # PaPut Harvest
@@ -49,15 +50,16 @@ periodic catch-up. There is no separate "init" step.
 9. If the session was reviewed but no candidates should be added, call
    `paput_mark_processed_session` with `source`, `session_id`, and
    `source_session_updated_at`.
-10. Briefly report added candidates, duplicates, rejected candidates, and
-    sessions marked as processed.
+10. Briefly report added candidates, duplicates, rejected candidates,
+    persistent-instruction-file additions proposed, and sessions marked as
+    processed.
 
 ## Backfill: repeated-instruction sweep
 
-Run this mode only when the user explicitly asks for it (for example "backfill
-repeated instructions" or "同じ指示を拾い直して"). Unlike the normal run it
-re-reads sessions that are already marked processed, so it is opt-in, not part
-of the idempotent catch-up.
+Run this mode when the skill is invoked with the `backfill` argument, or when
+the user explicitly asks for it (for example "backfill repeated instructions"
+or "同じ指示を拾い直して"). Unlike the normal run it re-reads sessions that are
+already marked processed, so it is opt-in, not part of the idempotent catch-up.
 
 Why it exists: sessions processed before the user-prompt axis lens was added
 were marked processed and are never re-reviewed, so the repeated instructions
@@ -71,15 +73,28 @@ proposal can fire. This sweep recovers that history.
    report progress per batch, and ask before expanding further back.
 3. Collect recurring same-shape user instructions: declared constraints,
    requested procedures, and corrections that appear across sessions.
-4. Route them by the user-prompt axis rules. Project-specific repeated
-   instructions go to `paput_add_project_document` (kind `procedure`) — register
+4. Separate standing norms from task procedures. A recurring instruction that
+   is a standing behavioral norm — one meant to apply to every turn or session
+   rather than to a triggerable task (respond in a given language, keep
+   comments minimal, always declare X before Y) — does not belong in a
+   procedure document or a skill: a skill would never fire for it. Instead,
+   propose a one-line addition to the client's persistent instruction file
+   (CLAUDE.md / AGENTS.md or the client's equivalent), showing the exact line
+   and where it would go. Pick the target by the norm's scope: a norm tied to
+   one project goes to that project's file, a norm the user restates across
+   projects goes to the user-global file. Propose only — never edit that file
+   without the user's approval. If the norm also generalizes across projects as a stance,
+   it may additionally become a `principle` pending candidate under step 6's
+   session-state rule.
+5. Route task-shaped repeats by the user-prompt axis rules. Project-specific
+   repeated instructions go to `paput_add_project_document` (kind `procedure`) — register
    each recurrence as it appears, without collapsing repeats on the client side;
    the server deduplicates, counts the repetition via duplicate hits, and
    includes a skill proposal in the response once the threshold is reached.
    Surface any returned proposal to the user instead of silently continuing.
    `paput_add_project_document` never touches processed-session markers, so
    this is safe for processed and unprocessed sessions alike.
-5. Handle cross-project practices and postures by session state, because
+6. Handle cross-project practices and postures by session state, because
    `paput_add_knowledge_candidates` marks the source session as processed (see
    Notes) and cannot be separated from that side effect:
    - From already-processed sessions, add them to pending as usual; the
@@ -89,9 +104,10 @@ proposal can fire. This sweep recovers that history.
      session processed now would hide the unreviewed assistant side from the
      normal harvest forever. Note the finding and leave the session to the
      normal harvest flow (or review it fully now if the user asks).
-6. Report what was found: the recurring instruction groups, procedures
-   registered, duplicates counted toward repetition, proposals surfaced, and
-   any unprocessed sessions deferred to the normal flow.
+7. Report what was found: the recurring instruction groups, procedures
+   registered, duplicates counted toward repetition, skill proposals surfaced,
+   persistent-instruction-file additions proposed, and any unprocessed sessions
+   deferred to the normal flow.
 
 All exclusion rules below still apply. Secrets and customer data are excluded
 on every path — procedure documents included; the additional pending-only
@@ -177,7 +193,11 @@ for:
   `principle`.
 - Declared constraint / prohibition: "do not ..." or "always ..." style
   instructions. When the same constraint recurs across projects, treat it as
-  `principle` material.
+  `principle` material. When it is a standing norm the user keeps re-stating
+  in prompts — one meant to apply to every turn, not to a triggerable task —
+  also propose a one-line addition to the client's persistent instruction file
+  (CLAUDE.md / AGENTS.md or equivalent); propose only, never edit that file
+  without approval.
 - Repeated boilerplate instruction: nearly the same request appearing again and
   again. If it is project-specific, try to save it as a `procedure` with
   `paput_add_project_document` so that repeated registrations are counted toward

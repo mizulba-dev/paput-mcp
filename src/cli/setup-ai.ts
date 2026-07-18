@@ -25,6 +25,7 @@ interface SetupOptions {
 interface SkillSpec {
   name: string;
   description: string;
+  argumentHint?: string;
   body: string;
 }
 
@@ -42,7 +43,10 @@ function parseSkill(markdown: string, fallbackName: string): SkillSpec {
     frontmatter.match(/^name:\s*(.*)$/m)?.[1]?.trim() ?? fallbackName;
   const description =
     frontmatter.match(/^description:\s*(.*)$/m)?.[1]?.trim() ?? '';
-  return { name, description, body };
+  const argumentHint = frontmatter
+    .match(/^argument-hint:\s*(.*)$/m)?.[1]
+    ?.trim();
+  return { name, description, argumentHint, body };
 }
 
 function loadSkills(): SkillSpec[] {
@@ -382,9 +386,12 @@ export function findSkill(name: string): SkillSpec | undefined {
 }
 
 export function renderSkill(skill: SkillSpec): string {
+  const argumentHint = skill.argumentHint
+    ? `\nargument-hint: ${skill.argumentHint}`
+    : '';
   return `---
 name: ${skill.name}
-description: ${skill.description}
+description: ${skill.description}${argumentHint}
 ---
 
 ${skill.body}

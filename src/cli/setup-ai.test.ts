@@ -60,6 +60,16 @@ describe('setupAi', () => {
     rmSync(root, { force: true, recursive: true });
   });
 
+  it('preserves argument-hint through renderSkill and omits it when absent', () => {
+    const withHint = findSkill('paput-harvest');
+    expect(withHint?.argumentHint).toBe('[backfill]');
+    expect(renderSkill(withHint!)).toContain('\nargument-hint: [backfill]\n');
+
+    const withoutHint = SKILLS.find((skill) => !skill.argumentHint);
+    expect(withoutHint).toBeDefined();
+    expect(renderSkill(withoutHint!)).not.toContain('argument-hint');
+  });
+
   it('creates canonical skills under PAPUT_HOME/skills', () => {
     setupAi([]);
 
