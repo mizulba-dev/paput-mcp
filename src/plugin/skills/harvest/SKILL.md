@@ -24,19 +24,19 @@ periodic catch-up. There is no separate "init" step.
 2. Find local session files the AI client can access:
    - Claude: `~/.claude/projects/**/*.jsonl`
    - Codex: `~/.codex/sessions/**/*.jsonl`
-   Decisively agent-driven transcripts are OUT OF SCOPE at discovery: Claude
-   files whose basename starts with `agent-`, and Codex files whose
-   first-line `session_meta` carries `payload.source` of `exec` or a
-   `{"subagent": ...}` value. Checking the basename or that first metadata
-   line IS the filter and is always allowed; what out-of-scope prohibits is
-   reading the transcript body, counting the file into the backlog, and
-   marking it. Their yield (reviewer/implementer-side practices) has proven
-   to saturate, and the verdict is recomputable from the file itself on every
-   run, so keeping processed markers for them would only add per-run write
-   cost. Files with missing or unrecognized origin metadata stay in scope
-   (safe side). Reading agent-driven transcripts remains possible only as an
-   explicit opt-in — the user names them, or a backfill run is asked to
-   include them.
+     Decisively agent-driven transcripts are OUT OF SCOPE at discovery: Claude
+     files whose basename starts with `agent-`, and Codex files whose
+     first-line `session_meta` carries `payload.source` of `exec` or a
+     `{"subagent": ...}` value. Checking the basename or that first metadata
+     line IS the filter and is always allowed; what out-of-scope prohibits is
+     reading the transcript body, counting the file into the backlog, and
+     marking it. Their yield (reviewer/implementer-side practices) has proven
+     to saturate, and the verdict is recomputable from the file itself on every
+     run, so keeping processed markers for them would only add per-run write
+     cost. Files with missing or unrecognized origin metadata stay in scope
+     (safe side). Reading agent-driven transcripts remains possible only as an
+     explicit opt-in — the user names them, or a backfill run is asked to
+     include them.
 3. For each file, derive:
    - `source`: `claude` or `codex`
    - `session_id`: file basename without `.jsonl`
