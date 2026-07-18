@@ -24,8 +24,20 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 6. Keep each candidate focused on one reusable idea. Draft the title and Markdown body first, structured to fit the content itself — do not shape the body around memo types. Classify the finalized body afterwards (see the Memo Type section), and set categories and visibility.
 7. Self-review the candidate against the Quality Bar below. If the body is only a short summary or conclusion, enrich it before adding.
 8. Do not add candidates that may duplicate existing memos or pending candidates. Suggest reusing or updating the existing memo or candidate instead.
-9. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` (including `memo_type_keys`) without waiting for user approval.
+9. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` (including `memo_type_keys` and the real source-session identity — see Source Session Identity) without waiting for user approval.
 10. After adding candidates, briefly report the title, categories, memo type, and candidate ID.
+
+## Source Session Identity
+
+`paput_add_knowledge_candidates` marks the source session as processed, and `paput-harvest` later matches those markers against local session files by the file basename without `.jsonl`. Pass the real session identity whenever the client has a local session file, so captured sessions do not resurface as unprocessed in harvest. Resolve it before calling the tool:
+
+- Claude Code: `source` is `claude`. The session ID is the current session's 36-character UUID, visible in session-scoped paths the harness exposes (the scratchpad directory, tool-result paths, or the transcript path). Confirm it by checking that `~/.claude/projects/*/<uuid>.jsonl` exists, and pass the bare UUID — the file basename without `.jsonl` — as `session_id`.
+- Codex CLI: `source` is `codex`. Read the `CODEX_THREAD_ID` environment variable, then normalize it to the rollout basename: locate `~/.codex/sessions/**/rollout-*-<thread-id>.jsonl` and pass the filename without `.jsonl` as `session_id`. If the file cannot be located, pass the bare thread ID.
+- For `claude` / `codex`, set `source_session_updated_at` to the located session file's modified time in ISO 8601; if no file was located, use the current time.
+- Conversation clients without local session files (`claude-ai`, `chatgpt`) omit `session_id`.
+- Fall back to a short descriptive `session_id` only when no real ID is obtainable — deduplication still works, but harvest cannot match the marker to the local file and will re-read the session. The bare Codex thread ID fallback shares this limitation, since it does not match the rollout basename.
+
+Marking the current session processed while it is still running is intended: the completion checklist keeps running capture on later work turns, so harvest does not need to revisit the session.
 
 ## Candidate Rules
 
