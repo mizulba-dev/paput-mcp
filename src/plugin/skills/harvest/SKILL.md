@@ -54,6 +54,54 @@ periodic catch-up. There is no separate "init" step.
     persistent-instruction-file additions proposed, and sessions marked as
     processed.
 
+When a run delegates session reading to subagents (batch processing), follow
+Delegated Batch Reading below — every duty in these steps travels with the
+reader, not with the coordinator.
+
+## Delegated Batch Reading
+
+Large backlogs are best processed by delegating session reading to parallel
+subagents. This applies to the normal steps and equally to a delegated backfill
+sweep. Keep the division of labor explicit — the default failure mode is the
+coordinator absorbing duties it cannot fulfill or suppressing registrations it
+should not gate:
+
+- The flow is two-phase (readers report → coordinator cross-checks → readers
+  register), so readers must be spawned in a resumable form that can receive a
+  second message from the coordinator; a one-shot task that terminates after
+  returning its result cannot execute the registration phase.
+- Every extraction duty of this skill travels with the reader: the extraction
+  criteria, the AI-collaboration and user-prompt axes, exclusion rules, and the
+  project-document routing. Do not reduce readers to text extractors.
+- Readers report candidate titles, memo types, and one-to-two-line gists to the
+  coordinator — not full bodies. The coordinator's role is what only the
+  cross-reader view enables: merging same-shape candidates that different
+  readers extracted from related sessions, and rejecting duplicates of already
+  pending (check with `paput_list_pending_candidates`) or recently added
+  candidates.
+- To merge same-shape candidates, the coordinator designates one reader as the
+  absorbing side and relays the other candidates' key points as text; the
+  absorbing reader folds them into its own draft and registers the merged
+  candidate under its own session. The coordinator never regenerates candidate
+  bodies — that doubles generation cost.
+- After the coordinator's cross-check, each reader registers its approved
+  candidates with `paput_add_knowledge_candidates`, and marks with
+  `paput_mark_processed_session` every reviewed session that ends up with no
+  registration — both sessions that produced no candidates and sessions whose
+  candidates were all rejected or absorbed in the cross-check. The coordinator
+  distributes the real session identity (the Step 3 fields `source`,
+  `session_id`, `source_session_updated_at`) to each reader up front —
+  reconstructing identifiers from truncated listings is an error source.
+- Project-specific repeated instructions and procedures are NOT subject to
+  coordinator approval. Each reader registers every occurrence directly with
+  `paput_add_project_document` (kind `procedure`) as it appears, resolving the
+  project with `paput_get_project_context` when needed. The server deduplicates
+  and counts repetitions via duplicate hits; collapsing or filtering repeats
+  client-side — including "the coordinator decided it was already documented" —
+  starves the repetition counter and skill proposals never fire. Only the
+  secrets/customer-data exclusion applies. Surface any skill proposal returned
+  by the server to the user.
+
 ## Backfill: repeated-instruction sweep
 
 Run this mode when the skill is invoked with the `backfill` argument, or when
