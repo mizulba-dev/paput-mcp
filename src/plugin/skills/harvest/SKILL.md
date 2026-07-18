@@ -56,7 +56,59 @@ periodic catch-up. There is no separate "init" step.
 
 When a run delegates session reading to subagents (batch processing), follow
 Delegated Batch Reading below — every duty in these steps travels with the
-reader, not with the coordinator.
+reader, not with the coordinator. When the backlog is large, triage sessions
+first (see Session Triage) to spend reading effort where the yield is.
+
+## Session Triage
+
+When the unprocessed backlog is too large to read in one pass, rank sessions
+with two cheap machine signals before reading. Both are computable by scanning
+each JSONL once, without reading the full transcript:
+
+- **Delegation heuristic.** A session is likely an agent-driven one-shot run (a
+  reviewer or implementer spawned by another agent, not driven by the human —
+  distinct from delegating the harvest reading itself, covered in the next
+  section) when it has at most ~2 real user text messages AND its first user
+  message contains delegation-template markers (review severity vocabulary such
+  as must-fix/should-fix, static-verification constraints, plan-file
+  references) inside a task-prompt-shaped message. Marker evidence is
+  required: a long first prompt alone, with no markers, defaults to
+  interactive — a human pasting one long request looks exactly the same, and
+  misreading it as agent-driven would discard user-prompt-axis evidence. Count
+  only real user text — skip tool results, command echoes, and injected
+  instruction/environment blocks; on some clients global instruction files
+  leak into user messages, so ignore marker hits inside injected boilerplate.
+  Errors must fall on the safe side: an agent-driven session misread as
+  interactive merely gets a full read; never let an interactive session be
+  misread as agent-driven and downgraded.
+- **Capture signal.** Whether the session already called
+  `paput_add_knowledge_candidates` itself. Detect actual tool calls (tool_use /
+  function_call entries), not string mentions — tool definitions and
+  instruction files mention the tool name in nearly every session.
+
+Then read in priority order:
+
+1. **Interactive sessions with no capture call** — full extraction first. The
+   user-prompt axis applies with full force; this is where unharvested human
+   judgment concentrates.
+2. **Interactive sessions that already captured** — read, but expect most
+   candidates to duplicate what the session captured about itself in real time;
+   the residual value is usually side topics the in-session capture skipped.
+   (Such sessions still appear in the backlog when their capture ran with a
+   session id that does not match the file basename — common before id
+   normalization — so the processed marker never matched the file.)
+3. **Agent-driven sessions** — their user messages were authored by the
+   delegating agent, NOT the human user: never treat them as user-prompt-axis
+   evidence. This applies to the backfill sweep too: never count an
+   agent-driven session's user messages as recurring user instructions —
+   delegation templates repeat verbatim across spawned sessions and would
+   falsely feed the server-side repetition counter and trip skill proposals.
+   Their unique value concentrates in reviewer/implementer-side practices,
+   which saturates after a few batches. Group same-feature rounds (an R1/R2/R3
+   review chain, an implement-then-review pair) and read one representative
+   fully, skimming the rest for deltas. Once a group shape's yield has proven
+   near-zero across batches, skimming down to mark-only is acceptable for that
+   shape — never for interactive sessions.
 
 ## Delegated Batch Reading
 
