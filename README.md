@@ -135,6 +135,8 @@ namespace (e.g. `/paput:capture`).
 
 Generated skills:
 
+- `paput-onboarding` - Guide a new or partially configured account through initial knowledge capture, skill-sheet setup, and continuous-capture rules with explicit approval gates.
+- `paput-skill-sheet-import` - Build or extend the skill sheet from an existing skill-sheet file (Excel / PDF / spreadsheet / text) and/or local repositories, with one review manifest before saving.
 - `paput-harvest` - Harvest reusable knowledge from past local sessions in local-file-capable AI clients. Safe to run repeatedly; skips already-processed sessions.
 - `paput-capture` - Extract reusable knowledge candidates from the current conversation or a specified topic and add them to pending.
 - `paput-save` - Review pending candidates first, then save only candidates explicitly approved by the user.

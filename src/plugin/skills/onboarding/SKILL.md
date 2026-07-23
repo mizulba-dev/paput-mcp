@@ -19,19 +19,31 @@ current state first and skip work that is already complete.
    - projects.
      Continue only with the missing parts. Do not erase or replace existing data
      merely to make onboarding uniform.
-2. **Gate 1 — local-session read consent.** Explain that the AI client, not the
-   PaPut MCP server, would read local Claude or Codex session files. Ask for
-   explicit consent before inspecting any local session file. If the user
-   declines, or the client cannot access local files, skip the quick harvest and
-   build the foundation only from information the user provides in the current
-   conversation.
-3. When the user consents, invoke the `paput-harvest` skill as a quick harvest,
-   restricted to at most the 10 newest unprocessed sessions. Use the same read
-   pass both to produce pending memo candidates and to collect evidence for a
-   draft of the user's basic information, skills, and projects. Do not reproduce
-   the harvest extraction and exclusion rules here; follow that skill. Do not
-   inspect older sessions during onboarding. At completion, offer the regular
-   `paput-harvest` skill for the remainder.
+2. **Gate 1 — local-session read consent.** This gate covers only the quick
+   harvest source in the next step. Explain that the AI client, not the PaPut
+   MCP server, would read local Claude or Codex session files, and ask for
+   explicit consent before inspecting any local session file. You may present
+   this together with the source choice in the next step and ask for consent
+   only when the user wants the quick harvest. If the user declines, or the
+   client cannot access local files, only the quick harvest becomes
+   unavailable — the other sources in the next step remain on offer.
+3. Offer the available foundation sources and let the user pick one or both:
+   - **Quick harvest** (requires Gate 1 consent): invoke the `paput-harvest`
+     skill restricted to at most the 10 newest unprocessed sessions. Use the
+     same read pass both to produce pending memo candidates and to collect
+     evidence for a draft of the user's basic information, skills, and
+     projects. Do not reproduce the harvest extraction and exclusion rules
+     here; follow that skill. Do not inspect older sessions during onboarding.
+     At completion, offer the regular `paput-harvest` skill for the remainder.
+   - **Skill-sheet import**: when the user has an existing skill-sheet file
+     (Excel / PDF / spreadsheet / text) or local repositories to analyze,
+     invoke the `paput-skill-sheet-import` skill for its inventory,
+     extraction, and merge steps, but feed its proposed values into the
+     single Gate 2 manifest below instead of running its own approval gate.
+     This source does not require Gate 1; naming a file or repository there is
+     the consent to read it.
+     When neither source is available or wanted, build the foundation only
+     from information the user provides in the current conversation.
 4. Prepare one numbered review manifest containing both:
    - each pending memo candidate, including title, categories, memo types,
      proposed public/private visibility, and proposed project link when one is
