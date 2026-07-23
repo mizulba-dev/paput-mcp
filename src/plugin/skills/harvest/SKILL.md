@@ -25,18 +25,24 @@ periodic catch-up. There is no separate "init" step.
    - Claude: `~/.claude/projects/**/*.jsonl`
    - Codex: `~/.codex/sessions/**/*.jsonl`
      Decisively agent-driven transcripts are OUT OF SCOPE at discovery: Claude
-     files whose basename starts with `agent-`, and Codex files whose
-     first-line `session_meta` carries `payload.source` of `exec` or a
-     `{"subagent": ...}` value. Checking the basename or that first metadata
-     line IS the filter and is always allowed; what out-of-scope prohibits is
-     reading the transcript body, counting the file into the backlog, and
-     marking it. Their yield (reviewer/implementer-side practices) has proven
-     to saturate, and the verdict is recomputable from the file itself on every
-     run, so keeping processed markers for them would only add per-run write
-     cost. Files with missing or unrecognized origin metadata stay in scope
-     (safe side). Reading agent-driven transcripts remains possible only as an
-     explicit opt-in — the user names them, or a backfill run is asked to
-     include them.
+     files whose basename starts with `agent-` or whose `entrypoint` is
+     `sdk-cli` (equivalently, the first user prompt's `promptSource` is `sdk`) —
+     a headless `claude -p` / SDK launch — and Codex files whose first-line
+     `session_meta` carries `payload.source` of `exec` or a
+     `{"subagent": ...}` value. Checking the basename, the `entrypoint`, or that
+     first metadata line IS the filter and is always allowed; what out-of-scope
+     prohibits is reading the transcript body, counting the file into the
+     backlog, and marking it. (For Claude, `entrypoint` is not on the file's
+     first line — the leading bookkeeping entries lack it — so scan to the first
+     entry that carries it, normally the first user prompt; a first-line-only
+     check like Codex's would miss it and leave the file wrongly in scope.) Their yield (reviewer/implementer-side practices)
+     has proven to saturate, and the verdict is recomputable from the file
+     itself on every run, so keeping processed markers for them would only add
+     per-run write cost. Claude files whose `entrypoint` is `cli`, and any file
+     with missing or unrecognized origin metadata, stay in scope (safe side); if
+     a single file ever mixes `cli` and `sdk-cli`, keep it in scope. Reading
+     agent-driven transcripts remains possible only as an explicit opt-in — the
+     user names them, or a backfill run is asked to include them.
 3. For each file, derive:
    - `source`: `claude` or `codex`
    - `session_id`: file basename without `.jsonl`
@@ -107,11 +113,13 @@ skipped:
   `vscode` record a human launch path. Do not use `payload.originator` as a
   substitute — it disagrees with `source` on subagent sessions (they can
   carry `codex-tui`). Claude: `agent-*.jsonl` files are subagent transcripts,
-  decisively agent-driven; but the absence of the prefix is only a prior, not
-  a verdict — headless `claude -p` / SDK spawns write regular `<uuid>.jsonl`
-  files — so non-`agent-*` Claude files, and any session whose metadata is
-  missing or unrecognized (older clients, other formats), still go through
-  the delegation heuristic below.
+  and any session whose `entrypoint` is `sdk-cli` (equivalently, the first user
+  prompt's `promptSource` is `sdk`) is a headless `claude -p` / SDK launch —
+  both are decisively agent-driven. `entrypoint` sits on session entries
+  (user / assistant); `promptSource` sits on the first user prompt. An
+  `entrypoint` of `cli` records a human TUI launch; only files whose
+  `entrypoint` is `cli`, missing, or unrecognized (older clients, other
+  formats) still go through the delegation heuristic below.
 - **Delegation heuristic (fallback when origin metadata is inconclusive).** A
   session is likely an agent-driven one-shot run (a reviewer or implementer
   spawned by another agent, not driven by the human — distinct from
