@@ -1,0 +1,2 @@
+{"type":"user","message":{"role":"user","content":"レビュー"},"entrypoint":"cli"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"ok"}]}}

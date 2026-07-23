@@ -43,7 +43,10 @@ periodic catch-up. There is no separate "init" step.
      a single file ever mixes `cli` and `sdk-cli`, keep it in scope. Reading
      agent-driven transcripts remains possible only as an explicit opt-in — the
      user names them, or a backfill run is asked to include them.
-3. For each file, derive:
+3. For each file, derive the following (the scanner in Running the discovery /
+   triage scan emits all of these — `project_hint` is the Claude project
+   directory name or the Codex `cwd`; resolve worktree paths to their parent
+   repository when mapping to a PaPut project):
    - `source`: `claude` or `codex`
    - `session_id`: file basename without `.jsonl`
    - `source_session_updated_at`: file modified time in ISO 8601 format
@@ -51,7 +54,8 @@ periodic catch-up. There is no separate "init" step.
      file path (`~/.claude/projects/<project-dir>/...`); for Codex, the `cwd`
      recorded near the top of the file. Worktree paths resolve to their parent
      repository.
-4. Skip sessions already returned by `paput_list_processed_sessions`.
+4. Skip sessions already returned by `paput_list_processed_sessions` (pass them
+   to the scanner via `--processed` so `summary` is already the backlog).
 5. Report the count and a short summary of unprocessed sessions to the user.
 6. Only when the user wants it, read the relevant session transcript directly
    from the JSONL file and create candidates that meet the extraction criteria.
@@ -91,11 +95,44 @@ not — triage sessions first (see Session Triage) to spend reading effort where
 the yield is, and run the scope decision through the user (see Large-Backlog
 Funnel) instead of choosing a strategy yourself.
 
+## Running the discovery / triage scan
+
+Steps 2–4 and the Session Triage signals below are mechanical: they read every
+session file once and derive fixed fields. Do not hand-assemble grep/jq for
+them — run the bundled scanner and interpret its JSON:
+
+```
+node <this skill's references/harvest-scan.mjs absolute path> [--processed <file>] [--sessions] [--limit N]
+```
+
+- It walks `~/.claude/projects/**` and `~/.codex/sessions/**` (override with
+  `--claude-root` / `--codex-root`), applies the Step 2 scope filter, and emits
+  `{ summary, sessions? }`. `--sessions` adds the per-session in-scope array;
+  `--processed` takes the `paput_list_processed_sessions` JSON and drops
+  already-processed sessions (Codex markers matched by both the rollout basename
+  and the bare-UUID form) so `summary` is the real backlog.
+- Each in-scope session carries the Step 3 fields (`source`, `session_id`,
+  `source_session_updated_at`, `project_hint`) plus the Session Triage signals (`origin`,
+  `in_scope`, `triage`, `capture_signal`, `real_user_msgs`,
+  `likely_agent_driven`, `first_user_message`), and `summary.buckets` gives the
+  project × month × capture-signal breakdown the Large-Backlog Funnel needs.
+- The script attaches signals only; it decides no reading. You still judge what
+  to read, mark, and ask (Session Triage, Large-Backlog Funnel), resolve
+  `project_hint` to a PaPut project, and read transcript bodies for extraction.
+- The signal definitions are canonical in design_doc #216 and in the prose
+  below; the script fixes them in executable form. If `node` is unavailable,
+  fall back to the manual pass: apply the Step 2 scope filter and read each
+  file's metadata line and first user entries yourself to reproduce the same
+  signals.
+
 ## Session Triage
 
 When the unprocessed backlog is too large to read in one pass, rank sessions
 with cheap machine signals before reading. All are computable by scanning each
-JSONL once, without reading the full transcript. Check the origin metadata
+JSONL once, without reading the full transcript — this is exactly what
+`harvest-scan.mjs` (see Running the discovery / triage scan) emits per session,
+so read the signals from its JSON rather than recomputing them by hand. The
+definitions below are the meaning of each signal. Check the origin metadata
 first — when it yields a decisive verdict the delegation heuristic is
 skipped:
 
@@ -185,14 +222,15 @@ everything overspends; marking sessions processed without reading on your own
 judgment overreaches. Neither default is yours to take.
 
 1. **Prepare the evidence before asking.** Without reading full transcripts:
-   build a project × month × capture-signal breakdown of the backlog; run the
-   Session Triage signals and spot-check the newest 1-2 sessions against the
-   transcript to confirm the signals hold (one spot-check catches a
-   miscalibrated capture signal before it discards real backlog); then extract
-   the first real user message of each session without a capture signal (skip
-   injected instruction files, environment blocks, and command echoes) and
-   bucket the sessions by request type. Typical buckets and their observed
-   yield:
+   run `harvest-scan.mjs --processed <markers> --sessions` to get the
+   project × month × capture-signal breakdown (`summary.buckets`) and the
+   per-session signals, including each in-scope session's `first_user_message`
+   (the script already skips injected instruction files, environment blocks, and
+   command echoes). Spot-check the newest 1-2 sessions against the transcript to
+   confirm the signals hold (one spot-check catches a miscalibrated capture
+   signal before it discards real backlog); then bucket the sessions without a
+   capture signal by request type using their `first_user_message`. Typical
+   buckets and their observed yield:
    - implementation / fix / design-consultation requests — highest yield; user
      judgment and corrections concentrate here
    - review-request one-shots — yield starts high but saturates once a

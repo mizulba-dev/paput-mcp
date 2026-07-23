@@ -1,0 +1,3 @@
+{"type":"session_meta","payload":{"source":"cli","cwd":"/x","session_id":"bbbbbbbb-0000-0000-0000-0000000000b8"}}
+{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"相談"}]}}
+{"type":"response_item","payload":{"type":"function_call","name":"paput_add_knowledge_candidates","arguments":"{}"}}

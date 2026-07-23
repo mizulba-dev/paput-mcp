@@ -1,0 +1,2 @@
+{"type":"session_meta","payload":{"source":"cli","cwd":"/x","session_id":"bbbbbbbb-0000-0000-0000-000000000007"}}
+{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"<system-reminder>background event</system-reminder>"}]}}

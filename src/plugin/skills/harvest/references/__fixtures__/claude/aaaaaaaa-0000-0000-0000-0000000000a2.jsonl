@@ -1,0 +1,2 @@
+{"type":"user","message":{"role":"user","content":"設計相談"},"entrypoint":"cli","promptSource":"typed"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","name":"mcp__paput__paput_add_knowledge_candidates","input":{}}]}}

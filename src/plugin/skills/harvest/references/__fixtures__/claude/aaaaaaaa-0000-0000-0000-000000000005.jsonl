@@ -1,0 +1,11 @@
+{"type":"summary","summary":"s"}
+{"type":"mode","mode":"default"}
+{"type":"permission-mode","permissionMode":"default"}
+{"type":"bridge-session","bridge":true}
+{"type":"file-history-snapshot","snapshot":1}
+{"type":"file-history-snapshot","snapshot":2}
+{"type":"file-history-snapshot","snapshot":3}
+{"type":"ai-title","title":"t"}
+{"type":"last-prompt","prompt":"p"}
+{"type":"attachment","attachment":"a"}
+{"type":"user","message":{"role":"user","content":"レビューしてください"},"entrypoint":"sdk-cli","promptSource":"sdk"}

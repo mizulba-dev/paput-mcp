@@ -1,0 +1,1 @@
+{"type":"user","message":{"role":"user","content":"このバグを直してテストを通してください"},"entrypoint":"sdk-cli","promptSource":"sdk"}

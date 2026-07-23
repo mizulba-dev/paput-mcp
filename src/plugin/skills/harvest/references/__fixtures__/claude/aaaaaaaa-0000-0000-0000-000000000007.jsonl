@@ -1,0 +1,5 @@
+{"type":"user","message":{"role":"user","content":"レビューしてください。must-fix を対応。"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"ok"}]}}
+{"type":"user","message":{"role":"user","content":"ここも直して"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"ok"}]}}
+{"type":"user","message":{"role":"user","content":"それと確認して"}}
