@@ -6,11 +6,22 @@
 // 使い方:
 //   node harvest-scan.mjs [--claude-root <dir>] [--codex-root <dir>]
 //                         [--processed <json-file>] [--sessions] [--limit N]
-// 出力: { summary, sessions? } の JSON を stdout へ。
+//                         [--user-messages] [--min-sessions N] [--top N]
+//                         [--digest-cache <file>]
+// 出力: { summary, clusters?, sessions? } の JSON を stdout へ。
 //   --sessions を付けると in-scope の per-session 判定配列も出す（既定は summary のみ）。
 //   --processed に paput_list_processed_sessions の JSON を渡すと処理済みを除いた backlog を集計する。
+//   --user-messages で全実 user メッセージを正規化・クラスタ化した再発指示表 clusters を出す
+//   （backfill sweep の機械前段。agent-driven セッションのメッセージは数えない）。
+//   --digest-cache でファイル単位のスキャン結果を mtime+size キーで差分キャッシュする。
 
-import { readdirSync, statSync, createReadStream, readFileSync } from 'node:fs';
+import {
+  readdirSync,
+  statSync,
+  createReadStream,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { createInterface } from 'node:readline';
 import { homedir } from 'node:os';
 import { join, basename } from 'node:path';
@@ -44,10 +55,16 @@ const INJECTED_MARKERS = [
   '<command-name>', // slash-command echo（通常 user エントリで isMeta なし）を実 user テキストから除外
   '<command-message>',
   '<local-command-stdout>',
+  '[Request interrupted by user', // ESC 中断でクライアントが user role に差し込む定型文
+  '<turn_aborted>',
 ];
 
 const CAPTURE_TOOL = 'paput_add_knowledge_candidates';
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+// user_messages の上限（メモリ・キャッシュ肥大の抑制。クラスタリングには冒頭 400 字で十分）
+const MAX_MSGS_PER_SESSION = 500;
+const MAX_MSG_CHARS = 400;
 
 function isInjectedText(t) {
   return INJECTED_MARKERS.some((m) => t.includes(m));
@@ -78,6 +95,10 @@ function parseArgs(argv) {
     processed: null,
     sessions: false,
     limit: Infinity,
+    userMessages: false,
+    minSessions: 2,
+    top: 100,
+    digestCache: null,
   };
   const need = (i, name) => {
     if (i >= argv.length) {
@@ -101,7 +122,27 @@ function parseArgs(argv) {
         process.exit(1);
       }
       o.limit = v;
-    } else {
+    } else if (a === '--user-messages') o.userMessages = true;
+    else if (a === '--min-sessions') {
+      const v = Number(need((i += 1), a));
+      if (!Number.isInteger(v) || v < 1) {
+        process.stderr.write(
+          `harvest-scan: --min-sessions は 1 以上の整数を要求します: ${argv[i]}\n`,
+        );
+        process.exit(1);
+      }
+      o.minSessions = v;
+    } else if (a === '--top') {
+      const v = Number(need((i += 1), a));
+      if (!Number.isInteger(v) || v < 1) {
+        process.stderr.write(
+          `harvest-scan: --top は 1 以上の整数を要求します: ${argv[i]}\n`,
+        );
+        process.exit(1);
+      }
+      o.top = v;
+    } else if (a === '--digest-cache') o.digestCache = need((i += 1), a);
+    else {
       process.stderr.write(`harvest-scan: 未知の引数: ${a}\n`);
       process.exit(1);
     }
@@ -139,6 +180,7 @@ async function scanClaude(path) {
     prompt_source: null,
     real_user_msgs: 0,
     first_user_message: null,
+    user_messages: [],
     capture_signal: false,
     delegation_marker_in_first: false,
   };
@@ -196,6 +238,8 @@ async function scanClaude(path) {
       }
       if (text && text.trim() && !isInjectedText(text)) {
         s.real_user_msgs += 1;
+        if (s.user_messages.length < MAX_MSGS_PER_SESSION)
+          s.user_messages.push(text.trim().slice(0, MAX_MSG_CHARS));
         if (s.first_user_message == null) {
           s.first_user_message = text.trim().slice(0, 300);
           s.delegation_marker_in_first = hasDelegationMarker(text);
@@ -224,6 +268,7 @@ async function scanCodex(path) {
     cwd: null,
     real_user_msgs: 0,
     first_user_message: null,
+    user_messages: [],
     capture_signal: false,
     delegation_marker_in_first: false,
   };
@@ -288,6 +333,8 @@ async function scanCodex(path) {
       } else if (typeof c === 'string') text = c;
       if (text && text.trim() && !isInjectedText(text)) {
         s.real_user_msgs += 1;
+        if (s.user_messages.length < MAX_MSGS_PER_SESSION)
+          s.user_messages.push(text.trim().slice(0, MAX_MSG_CHARS));
         if (s.first_user_message == null) {
           s.first_user_message = text.trim().slice(0, 300);
           s.delegation_marker_in_first = hasDelegationMarker(text);
@@ -376,6 +423,179 @@ function isProcessed(s, p) {
   return u != null && p.codexUuids.has(u);
 }
 
+// ---- 再発指示クラスタリング（--user-messages） ----
+// ユーザーは同じ指示をほぼ同文で打つ（字面ベースで実用的に拾える）前提の機械前段。
+// 可変部（数値・パス・URL・コード・画像）を畳んで完全一致でグループ化し、3-gram Jaccard で近接重複をマージする。
+// 意味的な言い換えの統合は担わない — それは LLM / サーバー側 pgvector の仕事。
+function normalizeMessage(t) {
+  return t
+    .replace(/```[\s\S]*?```/g, ' <code> ')
+    .replace(/<\/?image[^>]*>/gi, ' ')
+    .replace(/\[image \d+\]/gi, ' ')
+    .replace(/https?:\/\/[^\s>"')]+/g, ' <url> ')
+    .replace(/(?:~\/|\/)[\w.@-]+(?:\/[\w.@-]+)+/g, ' <path> ')
+    .replace(/[0-9]+/g, '#')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_MSG_CHARS);
+}
+
+// プレースホルダ・記号・空白を除いた実質文字数（挨拶・画像のみ等のノイズ除外に使う）
+const NOISE_STRIP_RE = /<(code|url|path)>|[#\s[\]().,、。!?！？:：;；\-—…]/g;
+
+function shingles(t, n = 3) {
+  const set = new Set();
+  for (let i = 0; i <= t.length - n; i += 1) set.add(t.slice(i, i + n));
+  return set;
+}
+
+function jaccard(a, b) {
+  if (a.size === 0 || b.size === 0) return 0;
+  const [small, large] = a.size <= b.size ? [a, b] : [b, a];
+  let inter = 0;
+  for (const x of small) if (large.has(x)) inter += 1;
+  return inter / (a.size + b.size - inter);
+}
+
+// 再発は「セッション横断」で数える（単一セッション内の連打はリトライノイズであって再発ではない）。
+// agent-driven（out-of-scope / p3）のメッセージは委譲テンプレの逐語繰り返しで
+// クラスタを偽装するため決して数えない（SKILL.md の backfill 規則の実装）。
+function clusterUserMessages(sessions, { minSessions = 2 } = {}) {
+  const groups = new Map(); // norm -> group
+  for (const s of sessions) {
+    if (!s.in_scope || s.likely_agent_driven) continue;
+    for (const raw of s.user_messages ?? []) {
+      const norm = normalizeMessage(raw);
+      if (norm.replace(NOISE_STRIP_RE, '').length < 4) continue;
+      let g = groups.get(norm);
+      if (!g) {
+        g = {
+          norm,
+          msg_count: 0,
+          session_ids: new Set(),
+          projects: new Map(),
+          months: new Set(),
+          examples: [],
+        };
+        groups.set(norm, g);
+      }
+      g.msg_count += 1;
+      g.session_ids.add(s.session_id);
+      if (s.project_hint)
+        g.projects.set(
+          s.project_hint,
+          (g.projects.get(s.project_hint) ?? 0) + 1,
+        );
+      if (s.month) g.months.add(s.month);
+      const ex = raw.trim().slice(0, 200);
+      if (g.examples.length < 3 && !g.examples.includes(ex))
+        g.examples.push(ex);
+    }
+  }
+
+  // 近接重複マージ: 転置索引で共有 shingle ≥3 の組だけ Jaccard 計算（df>200 の頻出 shingle は候補生成から除外）
+  const list = [...groups.values()];
+  const sh = list.map((g) => shingles(g.norm));
+  const posting = new Map(); // shingle -> group index[]
+  sh.forEach((set, i) => {
+    for (const x of set) {
+      let p = posting.get(x);
+      if (!p) posting.set(x, (p = []));
+      p.push(i);
+    }
+  });
+  const parent = list.map((_, i) => i);
+  const find = (i) => {
+    while (parent[i] !== i) {
+      parent[i] = parent[parent[i]];
+      i = parent[i];
+    }
+    return i;
+  };
+  for (let i = 0; i < list.length; i += 1) {
+    const tally = new Map();
+    for (const x of sh[i]) {
+      const p = posting.get(x);
+      if (!p || p.length > 200) continue;
+      for (const j of p) if (j < i) tally.set(j, (tally.get(j) ?? 0) + 1);
+    }
+    for (const [j, shared] of tally) {
+      if (shared < 3) continue;
+      if (jaccard(sh[i], sh[j]) < 0.5) continue;
+      const ri = find(i);
+      const rj = find(j);
+      if (ri !== rj) parent[ri] = rj;
+    }
+  }
+
+  const merged = new Map(); // root -> group[]
+  list.forEach((g, i) => {
+    const r = find(i);
+    let m = merged.get(r);
+    if (!m) merged.set(r, (m = []));
+    m.push(g);
+  });
+
+  const clusters = [];
+  for (const subs of merged.values()) {
+    subs.sort((a, b) => b.msg_count - a.msg_count);
+    const sessionIds = new Set();
+    const months = new Set();
+    const projects = new Map();
+    const variants = [];
+    let msgCount = 0;
+    for (const g of subs) {
+      msgCount += g.msg_count;
+      for (const id of g.session_ids) sessionIds.add(id);
+      for (const m of g.months) months.add(m);
+      for (const [k, v] of g.projects)
+        projects.set(k, (projects.get(k) ?? 0) + v);
+      for (const ex of g.examples)
+        if (variants.length < 4 && !variants.includes(ex)) variants.push(ex);
+    }
+    if (sessionIds.size < minSessions) continue;
+    clusters.push({
+      representative: variants[0] ?? '',
+      variants: variants.slice(1),
+      msg_count: msgCount,
+      session_count: sessionIds.size,
+      projects: Object.fromEntries(
+        [...projects.entries()].sort((a, b) => b[1] - a[1]),
+      ),
+      months: [...months].sort(),
+      session_ids: [...sessionIds].slice(0, 10),
+    });
+  }
+  clusters.sort(
+    (a, b) => b.session_count - a.session_count || b.msg_count - a.msg_count,
+  );
+  return clusters;
+}
+
+// ---- 差分キャッシュ（--digest-cache） ----
+// mtime+size 一致でスキャン結果を再利用する fail-open キャッシュ。scan フィールドを変えたら SCAN_VERSION を上げる
+// （版不一致は全捨てで自己無効化）。decorate は保存しない — mtime 由来フィールドは毎回計算し直す。
+const SCAN_VERSION = 2;
+
+function loadDigestCache(path) {
+  try {
+    const raw = JSON.parse(readFileSync(path, 'utf8'));
+    if (
+      raw?.version === SCAN_VERSION &&
+      raw.entries != null &&
+      typeof raw.entries === 'object'
+    )
+      return { version: SCAN_VERSION, entries: raw.entries };
+  } catch (err) {
+    if (err?.code !== 'ENOENT')
+      process.stderr.write(
+        `harvest-scan: --digest-cache 読み込み失敗（空キャッシュで続行）: ${err.message}\n`,
+      );
+  }
+  return { version: SCAN_VERSION, entries: {} };
+}
+
 // ---- 集計 ----
 function summarize(sessions) {
   const inc = (o, k) => {
@@ -421,9 +641,53 @@ async function main() {
   const claudeFiles = walkJsonl(o.claudeRoot);
   const codexFiles = walkJsonl(o.codexRoot);
 
+  const cache = o.digestCache ? loadDigestCache(o.digestCache) : null;
+  const nextEntries = {};
+  const cacheStats = { hits: 0, misses: 0 };
+  async function scanFile(kind, path) {
+    const scanner = kind === 'claude' ? scanClaude : scanCodex;
+    if (!cache) return scanner(path);
+    let st = null;
+    try {
+      st = statSync(path);
+    } catch {
+      return scanner(path);
+    }
+    const prev = cache.entries[path];
+    if (prev && prev.mtimeMs === st.mtimeMs && prev.size === st.size) {
+      cacheStats.hits += 1;
+      nextEntries[path] = prev;
+      return structuredClone(prev.scan);
+    }
+    cacheStats.misses += 1;
+    const scan = await scanner(path);
+    nextEntries[path] = {
+      mtimeMs: st.mtimeMs,
+      size: st.size,
+      scan: structuredClone(scan),
+    };
+    return scan;
+  }
+
   const sessions = [];
-  for (const f of claudeFiles) sessions.push(decorate(await scanClaude(f)));
-  for (const f of codexFiles) sessions.push(decorate(await scanCodex(f)));
+  for (const f of claudeFiles)
+    sessions.push(decorate(await scanFile('claude', f)));
+  for (const f of codexFiles)
+    sessions.push(decorate(await scanFile('codex', f)));
+
+  if (cache) {
+    // 現存ファイルのみ書き戻す（削除済みエントリの併せ掃除）。書けなくても集計は返す。
+    try {
+      writeFileSync(
+        o.digestCache,
+        JSON.stringify({ version: SCAN_VERSION, entries: nextEntries }),
+      );
+    } catch (err) {
+      process.stderr.write(
+        `harvest-scan: --digest-cache 書き込み失敗（キャッシュ無しで続行）: ${err.message}\n`,
+      );
+    }
+  }
 
   let backlog = sessions;
   if (processed) backlog = sessions.filter((s) => !isProcessed(s, processed));
@@ -432,6 +696,14 @@ async function main() {
   out.summary.processed_filtered = processed
     ? sessions.length - backlog.length
     : null;
+  out.summary.digest_cache = cache ? cacheStats : null;
+  if (o.userMessages) {
+    // 切り詰めは黙って行わない: 全体数を summary に出し、上限は --top で動かせる
+    const all = clusterUserMessages(backlog, { minSessions: o.minSessions });
+    out.summary.clusters_total = all.length;
+    out.summary.clusters_truncated = all.length > o.top;
+    out.clusters = all.slice(0, o.top);
+  }
   if (o.sessions) {
     out.sessions = backlog
       .filter((s) => s.in_scope) // out-of-scope は本文を読まないので既定で省く
@@ -440,7 +712,8 @@ async function main() {
           a.source_session_updated_at ?? '',
         ),
       )
-      .slice(0, o.limit === Infinity ? undefined : o.limit);
+      .slice(0, o.limit === Infinity ? undefined : o.limit)
+      .map(({ user_messages, ...rest }) => rest); // 本文相当の肥大化を防ぐ（clusters 側で参照する）
   }
   process.stdout.write(JSON.stringify(out, null, 2) + '\n');
 }
@@ -463,4 +736,6 @@ export {
   buildProcessed,
   isProcessed,
   summarize,
+  normalizeMessage,
+  clusterUserMessages,
 };

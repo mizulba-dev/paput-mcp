@@ -1,0 +1,3 @@
+{"type":"user","message":{"role":"user","content":"リベース中です。 branch 42 のコンフリクトを解消してください"},"entrypoint":"cli"}
+{"type":"user","message":{"role":"user","content":"PR 456 コメントを取得して、精査してください。"}}
+{"type":"user","message":{"role":"user","content":"一回だけのユニークな依頼です"}}

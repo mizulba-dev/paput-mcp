@@ -1,0 +1,4 @@
+{"type":"user","message":{"role":"user","content":"リベース中です。コンフリクトを解消してください。"},"entrypoint":"cli"}
+{"type":"user","message":{"role":"user","content":"[Request interrupted by user]"}}
+{"type":"user","message":{"role":"user","content":"<turn_aborted>"}}
+{"type":"user","message":{"role":"user","content":"PR 123 コメントを取得して精査してください。"}}

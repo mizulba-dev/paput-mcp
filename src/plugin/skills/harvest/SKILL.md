@@ -102,15 +102,42 @@ session file once and derive fixed fields. Do not hand-assemble grep/jq for
 them — run the bundled scanner and interpret its JSON:
 
 ```
-node <this skill's references/harvest-scan.mjs absolute path> [--processed <file>] [--sessions] [--limit N]
+node <this skill's references/harvest-scan.mjs absolute path> [--processed <file>] [--sessions] [--limit N] [--user-messages] [--min-sessions N] [--top N] [--digest-cache <file>]
 ```
 
 - It walks `~/.claude/projects/**` and `~/.codex/sessions/**` (override with
   `--claude-root` / `--codex-root`), applies the Step 2 scope filter, and emits
-  `{ summary, sessions? }`. `--sessions` adds the per-session in-scope array;
+  `{ summary, clusters?, sessions? }`. `--sessions` adds the per-session in-scope array;
   `--processed` takes the `paput_list_processed_sessions` JSON and drops
   already-processed sessions (Codex markers matched by both the rollout basename
   and the bare-UUID form) so `summary` is the real backlog.
+- `--user-messages` adds `clusters`: recurring near-verbatim user instructions,
+  grouped mechanically without reading any transcript yourself. The scanner
+  collects every real user message (injected blocks, command echoes, and
+  interrupt markers excluded), normalizes away numbers, paths, URLs, code
+  blocks, and images, groups identical normalized texts, and merges near
+  duplicates by 3-gram similarity. Each cluster carries `representative`,
+  `variants`, `msg_count`, `session_count`, `projects`, `months`, and up to 10
+  source `session_ids` for follow-up reading. Only in-scope sessions outside
+  the `p3` delegation heuristic feed the table — agent-driven delegation
+  templates repeat verbatim and must never look like user recurrence.
+  Recurrence is counted across sessions, not within one (same-session repeats
+  are retry noise); `--min-sessions` sets the floor (default 2). The emitted
+  list is capped at `--top` clusters (default 100), best-recurring first;
+  `summary.clusters_total` / `summary.clusters_truncated` report what the cap
+  dropped — when truncated, raise `--top` or process in `--min-sessions`
+  tiers rather than assuming the table is complete. Semantic paraphrase
+  merging is intentionally out of scope — that judgment stays with you (and
+  the server's semantic dedup when routing to project documents).
+- `--digest-cache <file>` keeps a per-file scan cache keyed by mtime+size, so
+  later runs re-read only changed session files (`summary.digest_cache`
+  reports hits/misses). The cache is version-stamped and self-invalidates when
+  the scanner's scan fields change; a corrupt cache file is discarded with a
+  warning (fail-open). Reuse one cache path across runs — normal and backfill
+  runs share it. Always place it OUTSIDE any repository (canonical:
+  `~/.cache/paput-harvest-digest.json`): the cache holds plaintext excerpts of
+  the user's session messages, so a cwd-relative path inside a repo would put
+  transcript content on the commit path.
 - Each in-scope session carries the Step 3 fields (`source`, `session_id`,
   `source_session_updated_at`, `project_hint`) plus the Session Triage signals (`origin`,
   `in_scope`, `triage`, `capture_signal`, `real_user_msgs`,
@@ -335,13 +362,25 @@ were marked processed and are never re-reviewed, so the repeated instructions
 they contain never reach the server-side repetition counter and no skill
 proposal can fire. This sweep recovers that history.
 
-1. Discover session files as in Steps 2–3, but do NOT skip processed sessions.
-2. Read user messages only (see JSONL Parsing Guide; `role: user`). Skip
-   assistant output and tool results — this keeps the sweep cheap. With a large
-   history, start from the most recent sessions or the projects the user names,
-   report progress per batch, and ask before expanding further back.
-3. Collect recurring same-shape user instructions: declared constraints,
-   requested procedures, and corrections that appear across sessions.
+1. Discover session files as in Steps 2–3, but do NOT skip processed sessions
+   (run the scanner without `--processed`).
+2. Build the recurrence table mechanically: run the scanner with
+   `--user-messages` (add `--digest-cache` so repeat sweeps only re-read
+   changed files). It reads user messages only — assistant output and tool
+   results are never read — and emits `clusters`, the recurring same-shape
+   instructions with counts, projects, months, and source `session_ids`,
+   replacing any hand-read pass over transcripts. Messages from agent-driven
+   sessions are never counted (scope filter + `p3` heuristic). First-message
+   inspection alone is NOT a substitute: recurrence concentrates mid-session
+   (a first-message-only sweep missed the most repeated instructions in
+   practice), which is exactly what the cluster table surfaces.
+3. Review the clusters yourself, top-down: judge which are real recurring user
+   instructions — declared constraints, requested procedures, and corrections
+   that appear across sessions — and which are noise (greetings, one-word
+   nudges like "続けて", client-generated approvals). For an ambiguous
+   cluster, read the user messages of a couple of its `session_ids` before
+   deciding. With a large history, process the table in batches, report
+   progress per batch, and ask before expanding further back.
 4. Separate standing norms from task procedures. A recurring instruction that
    is a standing behavioral norm — one meant to apply to every turn or session
    rather than to a triggerable task (respond in a given language, keep

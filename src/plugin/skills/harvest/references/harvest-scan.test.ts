@@ -1,5 +1,11 @@
 import { execFile } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  cpSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +20,8 @@ import {
   decorate,
   buildProcessed,
   isProcessed,
+  normalizeMessage,
+  clusterUserMessages,
 } from './harvest-scan.mjs';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -37,6 +45,8 @@ const CL_CAPTURE = 'aaaaaaaa-0000-0000-0000-000000000008';
 const CL_CMD_ECHO = 'aaaaaaaa-0000-0000-0000-0000000000a0';
 const CL_MIX = 'aaaaaaaa-0000-0000-0000-0000000000a1';
 const CL_CAPTURE_PREFIXED = 'aaaaaaaa-0000-0000-0000-0000000000a2';
+const CL_REPEAT_A = 'aaaaaaaa-0000-0000-0000-0000000000a3';
+const CL_REPEAT_B = 'aaaaaaaa-0000-0000-0000-0000000000a4';
 
 // Codex fixtures
 const CX_CLI =
@@ -378,6 +388,270 @@ describe('EC-HS-3 source 不明マーカー分岐', () => {
     const claudeSession = { source: 'claude', session_id: CL_HUMAN };
     expect(isProcessed(codexSession, p)).toBe(true);
     expect(isProcessed(claudeSession, p)).toBe(false); // 別 UUID の Claude は残る
+  });
+});
+
+// ==================== EC-HS-6: user_messages 収集と中断マーカー除外 ====================
+describe('EC-HS-6 user_messages 収集', () => {
+  // 反証: 中断定型文を除外しない対照は real_user_msgs=4 / user_messages に定型文が混ざり fail する
+  it('中断マーカー（[Request interrupted by user] / <turn_aborted>）は実 user に数えない', async () => {
+    const s = await scanClaude(claudeFile(CL_REPEAT_A));
+    expect(s.real_user_msgs).toBe(2);
+    expect(s.user_messages).toEqual([
+      'リベース中です。コンフリクトを解消してください。',
+      'PR 123 コメントを取得して精査してください。',
+    ]);
+  });
+
+  it('--sessions 出力に user_messages は含めない（肥大化防止の契約）', async () => {
+    const r = await runCli([
+      '--claude-root',
+      claudeRoot,
+      '--codex-root',
+      codexRoot,
+      '--sessions',
+    ]);
+    expect(r.code).toBe(0);
+    const out = JSON.parse(r.stdout);
+    expect(out.sessions.length).toBeGreaterThan(0);
+    for (const s of out.sessions) expect(s).not.toHaveProperty('user_messages');
+  });
+});
+
+// ==================== EC-HS-7: 正規化と再発クラスタリング ====================
+describe('EC-HS-7 正規化とクラスタリング', () => {
+  it('normalizeMessage: 数値・URL・パス・コード・画像タグを畳む', () => {
+    expect(normalizeMessage('PR 123 を見て https://example.com/x を確認')).toBe(
+      'pr # を見て <url> を確認',
+    );
+    expect(normalizeMessage('/Users/x/git/foo/bar.ts を修正')).toBe(
+      '<path> を修正',
+    );
+    expect(normalizeMessage('見て```js\nconst x=1;\n```直して')).toBe(
+      '見て <code> 直して',
+    );
+    expect(normalizeMessage('<image name=[Image 42]>')).toBe('');
+  });
+
+  interface FakeSession {
+    session_id: string;
+    in_scope: boolean;
+    likely_agent_driven: boolean;
+    project_hint: string;
+    month: string;
+    user_messages: string[];
+  }
+  const mk = (
+    id: string,
+    msgs: string[],
+    extra: Partial<FakeSession> = {},
+  ): FakeSession => ({
+    session_id: id,
+    in_scope: true,
+    likely_agent_driven: false,
+    project_hint: 'proj',
+    month: '2026-07',
+    user_messages: msgs,
+    ...extra,
+  });
+
+  it('セッション横断の同文はクラスタになる', () => {
+    const cs = clusterUserMessages([
+      mk('s1', ['コンフリクトを解消してください']),
+      mk('s2', ['コンフリクトを解消してください']),
+    ]);
+    expect(cs).toHaveLength(1);
+    expect(cs[0].session_count).toBe(2);
+    expect(cs[0].msg_count).toBe(2);
+  });
+
+  // 反証: メッセージ総数で数える対照は単一セッション連打をクラスタ化して fail する
+  it('単一セッション内の繰り返しは再発と数えない（セッション横断のみ）', () => {
+    const cs = clusterUserMessages([
+      mk('s1', ['同じ指示', '同じ指示', '同じ指示']),
+    ]);
+    expect(cs).toHaveLength(0);
+  });
+
+  it('数値・句読点ゆらぎの近接重複はマージされる', () => {
+    const cs = clusterUserMessages([
+      mk('s1', ['PR 123 コメントを取得して精査してください。']),
+      mk('s2', ['PR 456 コメントを取得して、精査してください']),
+    ]);
+    expect(cs).toHaveLength(1);
+    expect(cs[0].session_count).toBe(2);
+  });
+
+  // 反証: p3 を除外しない対照は委譲テンプレの逐語繰り返しでクラスタを量産し fail する
+  it('agent-driven（p3 ヒューリスティック）セッションのメッセージは数えない', () => {
+    const cs = clusterUserMessages([
+      mk('s1', ['未コミット diff を静的検証してください'], {
+        likely_agent_driven: true,
+      }),
+      mk('s2', ['未コミット diff を静的検証してください'], {
+        likely_agent_driven: true,
+      }),
+    ]);
+    expect(cs).toHaveLength(0);
+  });
+
+  it('out-of-scope セッションも数えない', () => {
+    const cs = clusterUserMessages([
+      mk('s1', ['同じ指示です'], { in_scope: false }),
+      mk('s2', ['同じ指示です'], { in_scope: false }),
+    ]);
+    expect(cs).toHaveLength(0);
+  });
+});
+
+// ==================== EC-HS-8: CLI --user-messages / --digest-cache ====================
+describe('EC-HS-8 CLI クラスタ出力と差分キャッシュ', () => {
+  const roots = [
+    '--claude-root',
+    claudeRoot,
+    '--codex-root',
+    codexRoot,
+  ] as const;
+
+  it('--user-messages で clusters を出し、fixture の繰り返し2組（近接重複含む）を検出する', async () => {
+    const r = await runCli([...roots, '--user-messages']);
+    expect(r.code).toBe(0);
+    const out = JSON.parse(r.stdout);
+    const reps: string[] = out.clusters.map(
+      (c: { representative: string }) => c.representative,
+    );
+    expect(reps.some((t) => t.includes('コンフリクトを解消'))).toBe(true);
+    expect(reps.some((t) => t.includes('コメントを取得'))).toBe(true);
+    for (const c of out.clusters) {
+      expect(c.session_count).toBeGreaterThanOrEqual(2);
+      expect(c.session_ids.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('--min-sessions 3 で 2 セッション再発は落ちる', async () => {
+    const r = await runCli([
+      ...roots,
+      '--user-messages',
+      '--min-sessions',
+      '3',
+    ]);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).clusters).toHaveLength(0);
+  });
+
+  it('--min-sessions の 0 以下・非整数は exit 1', async () => {
+    expect((await runCli(['--min-sessions', '0'])).code).toBe(1);
+    expect((await runCli(['--min-sessions', 'x'])).code).toBe(1);
+  });
+
+  it('--digest-cache: 2回目は全ファイル hit し、clusters 出力が一致する', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hs-'));
+    const cachePath = join(dir, 'digest.json');
+    const r1 = await runCli([
+      ...roots,
+      '--user-messages',
+      '--digest-cache',
+      cachePath,
+    ]);
+    expect(r1.code).toBe(0);
+    const o1 = JSON.parse(r1.stdout);
+    expect(o1.summary.digest_cache.hits).toBe(0);
+    expect(o1.summary.digest_cache.misses).toBeGreaterThan(0);
+    const r2 = await runCli([
+      ...roots,
+      '--user-messages',
+      '--digest-cache',
+      cachePath,
+    ]);
+    const o2 = JSON.parse(r2.stdout);
+    expect(o2.summary.digest_cache.misses).toBe(0);
+    expect(o2.summary.digest_cache.hits).toBe(o1.summary.digest_cache.misses);
+    expect(o2.clusters).toEqual(o1.clusters);
+    expect(o2.summary.total).toBe(o1.summary.total);
+  });
+
+  it('壊れたキャッシュファイルは stderr 警告 + 空キャッシュで続行（fail-open, exit 0）', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hs-'));
+    const cachePath = join(dir, 'digest.json');
+    writeFileSync(cachePath, '{ broken');
+    const r = await runCli([...roots, '--digest-cache', cachePath]);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toContain('digest-cache');
+  });
+
+  // 反証: mtime+size 比較を落として `if (prev)` だけにする退行は、追記後も全 hit + 新クラスタ不在で fail する
+  it('変更されたファイルは miss になり再スキャンで新内容が clusters に反映される（stale 提供の反証）', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hs-'));
+    const root = join(dir, 'claude');
+    cpSync(claudeRoot, root, { recursive: true });
+    const cachePath = join(dir, 'digest.json');
+    const args = [
+      '--claude-root',
+      root,
+      '--codex-root',
+      '/no/such/dir/zzz',
+      '--user-messages',
+      '--digest-cache',
+      cachePath,
+    ];
+    const o1 = JSON.parse((await runCli(args)).stdout);
+    const total = o1.summary.digest_cache.misses;
+    expect(
+      o1.clusters.some((c: { representative: string }) =>
+        c.representative.includes('追記された新しい繰り返し指示'),
+      ),
+    ).toBe(false);
+    const line =
+      '\n' +
+      JSON.stringify({
+        type: 'user',
+        message: { role: 'user', content: '追記された新しい繰り返し指示です' },
+      }) +
+      '\n';
+    appendFileSync(join(root, `${CL_HUMAN}.jsonl`), line);
+    appendFileSync(join(root, `${CL_MISSING}.jsonl`), line);
+    const o2 = JSON.parse((await runCli(args)).stdout);
+    expect(o2.summary.digest_cache.misses).toBe(2);
+    expect(o2.summary.digest_cache.hits).toBe(total - 2);
+    expect(
+      o2.clusters.some((c: { representative: string }) =>
+        c.representative.includes('追記された新しい繰り返し指示'),
+      ),
+    ).toBe(true);
+  });
+
+  // 反証: 版チェックを落とす退行は旧版キャッシュで全 hit になり fail する
+  it('SCAN_VERSION 不一致のキャッシュは全捨てして再スキャンし、書き戻しで現行版に戻る', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hs-'));
+    const cachePath = join(dir, 'digest.json');
+    const args = [...roots, '--digest-cache', cachePath];
+    const o1 = JSON.parse((await runCli(args)).stdout);
+    const total = o1.summary.digest_cache.misses;
+    const cached = JSON.parse(readFileSync(cachePath, 'utf8'));
+    writeFileSync(
+      cachePath,
+      JSON.stringify({ ...cached, version: cached.version - 1 }),
+    );
+    const o2 = JSON.parse((await runCli(args)).stdout);
+    expect(o2.summary.digest_cache.hits).toBe(0);
+    expect(o2.summary.digest_cache.misses).toBe(total);
+    expect(JSON.parse(readFileSync(cachePath, 'utf8')).version).toBe(
+      cached.version,
+    );
+  });
+
+  it('--top で clusters を切り詰め、clusters_total / clusters_truncated に痕跡を残す', async () => {
+    const r = await runCli([...roots, '--user-messages', '--top', '1']);
+    expect(r.code).toBe(0);
+    const out = JSON.parse(r.stdout);
+    expect(out.clusters).toHaveLength(1);
+    expect(out.summary.clusters_total).toBeGreaterThan(1);
+    expect(out.summary.clusters_truncated).toBe(true);
+  });
+
+  it('--top の 0 以下・非整数は exit 1', async () => {
+    expect((await runCli(['--top', '0'])).code).toBe(1);
+    expect((await runCli(['--top', 'x'])).code).toBe(1);
   });
 });
 
