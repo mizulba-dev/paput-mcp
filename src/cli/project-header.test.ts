@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-// headersHelper は `npx -y paput-mcp project-header <dir>` として実行される。
+// headersHelper は `npx -y paput-mcp@<version> project-header <dir>` として実行される。
 // 実プロセスでしか確かめられない契約（終了コードと stdout の形）をここで守る。
 const ENTRY = fileURLToPath(new URL('../../dist/index.js', import.meta.url));
 

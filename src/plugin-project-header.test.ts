@@ -274,10 +274,23 @@ describe('plugin MCP configuration', () => {
 
     // 配布物へ実行可能スクリプトを同梱すると Claude Desktop が marketplace ごと拒否する。
     // helper は npm パッケージのサブコマンドを呼ぶ形に保つ。
-    expect(helper).toContain('paput-mcp project-header');
+    expect(helper).toContain('project-header');
     expect(helper).toContain('${CLAUDE_PROJECT_DIR}');
     expect(helper).not.toContain('.sh');
     expect(helper).not.toContain('CLAUDE_PLUGIN_ROOT');
+  });
+
+  it('pins the npx launcher to the package version', () => {
+    const helper = claudeConfig.mcpServers.paput.headersHelper ?? '';
+    const { version } = JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL('../package.json', import.meta.url)),
+        'utf8',
+      ),
+    ) as { version: string };
+
+    // Claude ディレクトリは版未固定の npx launcher を Blocks にする。
+    expect(helper).toContain(`npx -y paput-mcp@${version} project-header`);
   });
 
 });

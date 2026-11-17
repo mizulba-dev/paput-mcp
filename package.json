@@ -20,7 +20,7 @@
     "prepare": "npm run build",
     "format": "prettier --write .",
     "type-check": "tsc --noEmit",
-    "version": "node scripts/sync-plugin-version.mjs && git add src/plugin/.claude-plugin/plugin.json src/plugin/.codex-plugin/plugin.json"
+    "version": "node scripts/sync-plugin-version.mjs && git add src/plugin/.claude-plugin/plugin.json src/plugin/.codex-plugin/plugin.json src/plugin/mcp/claude.json"
   },
   "keywords": [
     "mcp",

@@ -44,7 +44,7 @@ All skills are invoked with the `paput` namespace, e.g. `/paput:capture`.
 
 The bundled connection can pin a PaPut project context via a project alias (3–40 lowercase alphanumeric characters).
 
-- **Claude Code**: the alias is resolved per project from your working directory, so one plugin install covers every repository. Requires Claude Code v2.1.195 or later, which is when plugin-provided `headersHelper` entries started expanding `${CLAUDE_PROJECT_DIR}`; on older versions the connection still works but never carries a project context. List your projects in `~/.paput/projects`, one per line, as the alias, any run of spaces or a tab, then the absolute path:
+- **Claude Code**: the alias is resolved per project from your working directory, so one plugin install covers every repository. Requires Claude Code v2.1.195 or later, which is when plugin-provided `headersHelper` entries started expanding `${CLAUDE_PROJECT_DIR}`; on older versions the connection still works but never carries a project context. To resolve the alias, Claude Code runs `npx -y paput-mcp@<plugin version> project-header "${CLAUDE_PROJECT_DIR}"` on connect; the package version is pinned to the plugin version. npx may fetch that pinned package from the npm registry; the CLI itself makes no network requests — it only reads `~/.paput/projects` and prints the header, which Claude Code sends to `mcp.paput.io` with the connection. List your projects in `~/.paput/projects`, one per line, as the alias, any run of spaces or a tab, then the absolute path:
 
 ```
 # alias        path

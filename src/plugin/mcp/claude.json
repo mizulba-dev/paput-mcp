@@ -3,7 +3,7 @@
     "paput": {
       "type": "http",
       "url": "https://mcp.paput.io/mcp",
-      "headersHelper": "npx -y paput-mcp project-header \"${CLAUDE_PROJECT_DIR}\""
+      "headersHelper": "npx -y paput-mcp@4.2.57 project-header \"${CLAUDE_PROJECT_DIR}\""
     }
   }
 }
